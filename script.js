@@ -1,0 +1,475 @@
+const dictationDate = document.getElementById("dictation-date");
+const dictationName = document.getElementById("dictation-name");
+const youtubeLink = document.getElementById("youtube-link");
+
+const dictationType = document.getElementById("dictation-type");
+
+const categoriesContainer = document.getElementById(
+    "categories-container"
+);
+
+const saveButton = document.getElementById("save-button");
+
+const savedDictationsContainer = document.getElementById(
+    "saved-dictations-container"
+);
+
+const showSavedButton = document.getElementById(
+    "show-saved-button"
+);
+
+const savedDictationsSection = document.getElementById(
+    "saved-dictations-section"
+);
+
+const manageCategoriesButton = document.getElementById(
+    "manage-categories-button"
+);
+
+const categoryManager = document.getElementById(
+    "category-manager"
+);
+
+const newCategoryInput = document.getElementById(
+    "new-category"
+);
+
+const editableCategoriesContainer = document.getElementById(
+    "editable-categories-container"
+);
+
+const addCategoryButton = document.getElementById(
+    "add-category-button"
+);
+
+const showStatisticsButton = document.getElementById(
+    "show-statistics-button"
+);
+
+const statisticsSection = document.getElementById(
+    "statistics-section"
+);
+
+const statisticsContainer = document.getElementById(
+    "statistics-container"
+);
+
+const defaultCategories = {
+    rhythmic: ["Metrica", "Pause", "Gruppi irregolari"],
+    melodic: ["Tonalità", "Ritmo", "Intervalli", "Modulazioni"],
+    harmonic: ["Basso", "Soprano", "Accordi"]
+};
+
+const savedCategoriesJSON =
+    localStorage.getItem("categories");
+
+let categories;
+
+if (savedCategoriesJSON === null) {
+    categories = defaultCategories;
+} else {
+    categories = JSON.parse(savedCategoriesJSON);
+}
+
+dictationType.addEventListener("change", function () {
+    const selectedType = dictationType.value;
+    manageCategoriesButton.hidden = selectedType === "";
+
+    categoriesContainer.innerHTML = "";
+
+    if (selectedType === "") {
+        return;
+    }
+
+    const selectedCategories = categories[selectedType];
+
+    for (const category of selectedCategories) {
+        const categoryRow = document.createElement("div");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = category;
+
+        const label = document.createElement("label");
+        label.textContent = category;
+
+        categoryRow.appendChild(checkbox);
+        categoryRow.appendChild(label);
+
+        if (!categoryManager.hidden) {
+            const removeCategoryButton =
+                document.createElement("button");
+
+            removeCategoryButton.textContent = "Rimuovi";
+            removeCategoryButton.classList.add(
+                "remove-category-button"
+            );
+
+            removeCategoryButton.addEventListener("click", function () {
+                const confirmed = confirm(
+                    `Vuoi davvero rimuovere la categoria "${category}"?`
+                );
+
+                if (!confirmed) {
+                    return;
+                }
+
+                const categoryIndex =
+                    categories[selectedType].indexOf(category);
+
+                categories[selectedType].splice(categoryIndex, 1);
+
+                localStorage.setItem(
+                    "categories",
+                    JSON.stringify(categories)
+                );
+
+                dictationType.dispatchEvent(new Event("change"));
+            });
+
+            categoryRow.appendChild(removeCategoryButton);
+        }
+
+        categoriesContainer.appendChild(categoryRow);
+    }
+});
+
+saveButton.addEventListener("click", function () {
+
+    if (
+        dictationDate.value === "" ||
+        dictationName.value.trim() === "" ||
+        youtubeLink.value.trim() === "" ||
+        dictationType.value === ""
+    ) {
+        alert("Compila tutti i campi prima di salvare.");
+        return;
+    }
+
+    const checkedBoxes = categoriesContainer.querySelectorAll(
+        'input[type="checkbox"]:checked'
+    );
+
+    const correctCategories = [];
+
+    for (const checkbox of checkedBoxes) {
+        correctCategories.push(checkbox.value);
+    }
+
+    const typedName = dictationName.value.trim();
+
+    const formattedName =
+        typedName.charAt(0).toUpperCase() +
+        typedName.slice(1);
+
+    const dictation = {
+        date: dictationDate.value,
+        name: formattedName,
+        youtubeLink: youtubeLink.value,
+        type: dictationType.value,
+        availableCategories: [...categories[dictationType.value]],
+        correctCategories: correctCategories
+    };
+
+    const savedDictationsJSON =
+        localStorage.getItem("savedDictations");
+
+    let savedDictations;
+
+    if (savedDictationsJSON === null) {
+        savedDictations = [];
+    } else {
+        savedDictations = JSON.parse(savedDictationsJSON);
+    }
+
+    savedDictations.push(dictation);
+
+    localStorage.setItem(
+        "savedDictations",
+        JSON.stringify(savedDictations)
+    );
+
+    displaySavedDictations();
+
+    dictationDate.value = "";
+    dictationName.value = "";
+    youtubeLink.value = "";
+    dictationType.value = "";
+
+    categoriesContainer.innerHTML = "";
+
+    manageCategoriesButton.hidden = true;
+    manageCategoriesButton.textContent =
+        "Gestisci categorie";
+
+    categoryManager.hidden = true;
+
+    console.log(savedDictations);
+});
+
+function displaySavedDictations() {
+    const savedDictationsJSON =
+        localStorage.getItem("savedDictations");
+
+    if (savedDictationsJSON === null) {
+        savedDictationsContainer.textContent =
+            "Non ci sono ancora dettati salvati.";
+
+        return;
+    }
+
+    const savedDictations =
+        JSON.parse(savedDictationsJSON);
+
+    if (savedDictations.length === 0) {
+        savedDictationsContainer.textContent =
+            "Non ci sono ancora dettati salvati.";
+
+        return;
+    }
+
+    savedDictations.sort(function (a, b) {
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    savedDictationsContainer.innerHTML = "";
+
+    savedDictations.forEach(function (dictation, index) {
+        const details = document.createElement("details");
+
+        const summary = document.createElement("summary");
+
+        summary.textContent =
+            `${dictation.date} - ${dictation.name}`;
+
+        const typeParagraph = document.createElement("p");
+
+        const typeNames = {
+            rhythmic: "Ritmico",
+            melodic: "Melodico",
+            harmonic: "Armonico"
+        };
+
+        typeParagraph.textContent =
+            `Tipo: ${typeNames[dictation.type]}`;
+
+        const categoriesParagraph = document.createElement("p");
+
+        categoriesParagraph.textContent =
+            `Categorie corrette: ${dictation.correctCategories.join(", ")}`;
+
+        const linkParagraph = document.createElement("p");
+
+        const link = document.createElement("a");
+
+        link.href = dictation.youtubeLink;
+        link.textContent = "Apri video";
+        link.target = "_blank";
+
+        linkParagraph.textContent = "Link: ";
+        linkParagraph.appendChild(link);
+
+        const deleteButton = document.createElement("button");
+
+        deleteButton.textContent = "Elimina";
+        deleteButton.classList.add("delete-button");
+
+        deleteButton.addEventListener("click", function () {
+
+            const confirmed = confirm(
+                "Vuoi davvero eliminare questo dettato?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+            savedDictations.splice(index, 1);
+
+            localStorage.setItem(
+                "savedDictations",
+                JSON.stringify(savedDictations)
+            );
+
+            displaySavedDictations();
+
+        });
+
+        details.appendChild(summary);
+        details.appendChild(typeParagraph);
+        details.appendChild(categoriesParagraph);
+        details.appendChild(linkParagraph);
+        details.appendChild(deleteButton);
+
+        savedDictationsContainer.appendChild(details);
+    })
+}
+
+showSavedButton.addEventListener("click", function () {
+    savedDictationsSection.hidden =
+        !savedDictationsSection.hidden;
+
+    if (savedDictationsSection.hidden) {
+        showSavedButton.textContent =
+            "Vedi dettati salvati";
+    } else {
+        showSavedButton.textContent =
+            "Nascondi dettati salvati";
+
+        displaySavedDictations();
+    }
+});
+
+manageCategoriesButton.addEventListener("click", function () {
+    categoryManager.hidden = !categoryManager.hidden;
+
+    if (categoryManager.hidden) {
+        manageCategoriesButton.textContent =
+            "Gestisci categorie";
+    } else {
+        manageCategoriesButton.textContent =
+            "Nascondi gestione categorie";
+    }
+
+    dictationType.dispatchEvent(new Event("change"));
+});
+
+addCategoryButton.addEventListener("click", function () {
+    const typedCategory = newCategoryInput.value.trim();
+
+    const newCategory =
+        typedCategory.charAt(0).toUpperCase() +
+        typedCategory.slice(1);
+
+    if (newCategory === "") {
+        return;
+    }
+
+    const selectedType = dictationType.value;
+
+    categories[selectedType].push(newCategory);
+
+    localStorage.setItem(
+        "categories",
+        JSON.stringify(categories)
+    );
+
+    dictationType.dispatchEvent(new Event("change"));
+
+    newCategoryInput.value = "";
+});
+
+showStatisticsButton.addEventListener("click", function () {
+    statisticsSection.hidden =
+        !statisticsSection.hidden;
+
+    if (statisticsSection.hidden) {
+        showStatisticsButton.textContent =
+            "Vedi statistiche";
+    } else {
+        showStatisticsButton.textContent =
+            "Nascondi statistiche";
+
+        displayStatistics();
+    }
+});
+
+function displayStatistics() {
+    const savedDictationsJSON =
+        localStorage.getItem("savedDictations");
+
+    if (savedDictationsJSON === null) {
+        statisticsContainer.textContent =
+            "Non ci sono ancora dati sufficienti.";
+
+        return;
+    }
+
+    const savedDictations =
+        JSON.parse(savedDictationsJSON);
+
+    let rhythmicCount = 0;
+    let melodicCount = 0;
+    let harmonicCount = 0;
+
+    const categoryStats = {
+        rhythmic: {},
+        melodic: {},
+        harmonic: {}
+    };
+
+    for (const dictation of savedDictations) {
+        if (dictation.type === "rhythmic") {
+            rhythmicCount++;
+        } else if (dictation.type === "melodic") {
+            melodicCount++;
+        } else if (dictation.type === "harmonic") {
+            harmonicCount++;
+        }
+
+        const availableCategories =
+            dictation.availableCategories || [];
+
+        for (const category of availableCategories) {
+            const typeStats = categoryStats[dictation.type];
+
+            if (!typeStats[category]) {
+                typeStats[category] = {
+                    total: 0,
+                    correct: 0
+                };
+            }
+
+            typeStats[category].total++;
+
+            if (dictation.correctCategories.includes(category)) {
+                typeStats[category].correct++;
+            }
+        }
+    }
+
+    statisticsContainer.innerHTML = `
+        <p>Dettati totali: ${savedDictations.length}</p>
+        <p>Ritmici: ${rhythmicCount}</p>
+        <p>Melodici: ${melodicCount}</p>
+        <p>Armonici: ${harmonicCount}</p>
+    `;
+
+    const categoryTitle = document.createElement("h3");
+
+    categoryTitle.textContent =
+        "Statistiche per categoria";
+
+    statisticsContainer.appendChild(categoryTitle);
+
+    const typeNames = {
+        rhythmic: "Ritmico",
+        melodic: "Melodico",
+        harmonic: "Armonico"
+    };
+
+    for (const type in categoryStats) {
+        const typeTitle = document.createElement("h4");
+
+        typeTitle.textContent = typeNames[type];
+
+        statisticsContainer.appendChild(typeTitle);
+
+        const typeStats = categoryStats[type];
+
+        for (const category in typeStats) {
+            const total = typeStats[category].total;
+            const correct = typeStats[category].correct;
+
+            const percentage = Math.round(
+                (correct / total) * 100
+            );
+
+            const paragraph = document.createElement("p");
+
+            paragraph.textContent =
+                `${category}: ${correct} su ${total} corrette (${percentage}%)`;
+
+            statisticsContainer.appendChild(paragraph);
+        }
+    }
+}

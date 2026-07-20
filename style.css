@@ -1,0 +1,145 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f7;
+    margin: 0;
+    padding: 20px;
+}
+
+main {
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    margin-top: 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+label {
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input,
+select {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+button:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+#show-saved-button,
+#show-statistics-button {
+    margin-top: 12px;
+}
+
+#save-button {
+    background-color: #6f86a6;
+    color: white;
+}
+
+#save-button:hover {
+    background-color: #5f7491;
+}
+
+#categories-container {
+    margin-top: 10px;
+}
+
+#categories-container>div {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    margin-bottom: 8px;
+}
+
+#categories-container input[type="checkbox"] {
+    margin: 0;
+    padding: 0;
+}
+
+#categories-container label {
+    margin: 0;
+    min-width: 0;
+}
+
+.new-category-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.new-category-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+#add-category-button {
+    width: auto;
+    padding: 8px 12px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+#add-category-button:hover {
+    background-color: #5f7491;
+}
+
+details {
+    margin-bottom: 16px;
+}
+
+details p {
+    margin: 8px 0;
+}
+
+.delete-button {
+    width: auto;
+    padding: 8px 12px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c9302c;
+}
+
+.remove-category-button {
+    width: auto;
+    padding: 4px 8px;
+    margin: 0;
+    font-size: 14px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.remove-category-button:hover {
+    background-color: #c9302c;
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Music Study Tracker</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main>
+        <h1>Music Study Tracker</h1>
+
+        <p>Traccia i progressi nei tuoi esercizi musicali.</p>
+
+        <h2>Nuovo dettato</h2>
+
+        <div class="form-group">
+            <label for="dictation-date">
+                Data
+            </label>
+
+            <input type="date" id="dictation-date">
+        </div>
+
+        <div class="form-group">
+            <label for="dictation-name">
+                Nome del dettato
+            </label>
+
+            <input type="text" id="dictation-name" placeholder="Es. Dettato melodico n. 1">
+        </div>
+
+        <div class="form-group">
+            <label for="youtube-link">
+                Link YouTube
+            </label>
+
+            <input type="url" id="youtube-link" placeholder="https://youtube.com/...">
+        </div>
+
+        <div class="form-group">
+            <label for="dictation-type">
+                Tipo di dettato
+            </label>
+
+            <select id="dictation-type">
+                <option value="">
+                    Seleziona un tipo
+                </option>
+
+                <option value="rhythmic">
+                    Ritmico
+                </option>
+
+                <option value="melodic">
+                    Melodico
+                </option>
+
+                <option value="harmonic">
+                    Armonico
+                </option>
+            </select>
+        </div>
+
+        <button id="manage-categories-button" type="button" hidden>
+            Gestisci categorie
+        </button>
+
+        <div id="category-manager" hidden>
+            <label for="new-category">
+                Nuova categoria
+            </label>
+
+            <div class="new-category-row">
+                <input type="text" id="new-category" placeholder="Es. Suddivisione">
+
+                <button id="add-category-button" type="button">
+                    Aggiungi
+                </button>
+            </div>
+        </div>
+
+        <div id="categories-container"></div>
+
+        <button id="save-button" type="button">
+            Salva dettato
+        </button>
+
+        <button id="show-saved-button" type="button">
+            Vedi dettati salvati
+        </button>
+
+        <section id="saved-dictations-section" hidden>
+            <h2>Dettati salvati</h2>
+
+            <div id="saved-dictations-container"></div>
+        </section>
+
+        <button id="show-statistics-button" type="button">
+            Vedi statistiche
+        </button>
+
+        <section id="statistics-section" hidden>
+            <h2>Statistiche</h2>
+
+            <div id="statistics-container"></div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
