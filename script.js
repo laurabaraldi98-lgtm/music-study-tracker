@@ -624,6 +624,9 @@ function displayStatistics() {
                 (correct / total) * 100
             );
 
+            const categoryStat = document.createElement("div");
+            categoryStat.classList.add("category-stat");
+
             const paragraph = document.createElement("p");
 
             const correctLabel =
@@ -634,7 +637,25 @@ function displayStatistics() {
             paragraph.textContent =
                 `${category}: ${correct}/${total} ${correctLabel} (${percentage}%)`;
 
-            statisticsContainer.appendChild(paragraph);
+            const barContainer = document.createElement("div");
+            barContainer.classList.add("statistics-bar");
+
+            const barFill = document.createElement("div");
+            barFill.classList.add("statistics-bar-fill");
+            barFill.style.width = `${percentage}%`;
+
+            if (percentage > 0) {
+                barFill.textContent = `${percentage}%`;
+            } else {
+                barFill.textContent = "";
+            }
+
+            barContainer.appendChild(barFill);
+
+            categoryStat.appendChild(paragraph);
+            categoryStat.appendChild(barContainer);
+
+            statisticsContainer.appendChild(categoryStat);
         }
     }
 }
