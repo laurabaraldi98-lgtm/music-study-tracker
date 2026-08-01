@@ -2,7 +2,7 @@
 
 Music Study Tracker is a responsive web application built for a music student based on her specific study needs.
 
-The app allows users to record and organize music dictation practice sessions, track correctly identified musical categories, and review progress through saved sessions, graphical statistics, and a monthly calendar.
+The app allows users to record and organize music dictation practice sessions, track correctly identified musical categories, and review progress through saved sessions, graphical statistics, and an interactive monthly calendar.
 
 ## Live Demo
 
@@ -25,6 +25,8 @@ The app allows users to record and organize music dictation practice sessions, t
 - Browse a monthly calendar
 - Navigate between previous and following months
 - Highlight days containing saved dictation sessions
+- Click highlighted calendar days to view all sessions completed on that date
+- View session details inside a modal window, including type, collection, correctly identified categories, and YouTube link
 - Store data locally using localStorage
 - Use the app from desktop and mobile browsers
 
@@ -41,7 +43,7 @@ The app allows users to record and organize music dictation practice sessions, t
 
 This project was developed from the requirements of a real music student who needed a simple way to organize and review music dictation practice.
 
-The first version was designed around her existing study workflow. The intended user then tested the application and provided feedback, which led to the addition of custom collections, clearer statistics, graphical progress indicators, and a monthly calendar.
+The first version was designed around her existing study workflow. The intended user then tested the application and provided feedback, which led to the addition of custom collections, clearer statistics, graphical progress indicators, an interactive monthly calendar, and improvements to the user interface.
 
 The project is being developed iteratively, with each new feature based on real user needs and feedback.
 
@@ -49,15 +51,22 @@ The project is being developed iteratively, with each new feature based on real 
 
 The application currently includes the main features required for recording, organizing, and reviewing dictation practice.
 
+Recent improvements include:
+
+- Interactive calendar days
+- A modal displaying all sessions completed on a selected date
+- Clearer category management layout
+- Reusable functions for reading and saving dictation data
+
 Planned improvements include:
 
-- Clickable calendar days showing the sessions completed on that date
 - Further user interface improvements
 - JavaScript refactoring and separation into modules
 - Database integration
 - Data synchronization across devices
 - User authentication
-- A Node.js backend
+- A Node.js and Express backend
+- PostgreSQL data storage
 
 ## Current Data Storage
 
@@ -69,4 +78,4 @@ This means that:
 - data is not synchronized between devices
 - clearing browser data may remove saved sessions
 
-A future version may use an online database and a Node.js backend to provide persistent and synchronized storage across devices.
+A future version is planned to use PostgreSQL and a Node.js and Express backend to provide persistent and synchronized storage across devices.
