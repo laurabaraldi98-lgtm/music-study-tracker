@@ -285,23 +285,11 @@ saveButton.addEventListener("click", function () {
         correctCategories: correctCategories
     };
 
-    const savedDictationsJSON =
-        localStorage.getItem("savedDictations");
-
-    let savedDictations;
-
-    if (savedDictationsJSON === null) {
-        savedDictations = [];
-    } else {
-        savedDictations = JSON.parse(savedDictationsJSON);
-    }
+    const savedDictations = getSavedDictations();
 
     savedDictations.push(dictation);
 
-    localStorage.setItem(
-        "savedDictations",
-        JSON.stringify(savedDictations)
-    );
+    saveDictations(savedDictations);
 
     displaySavedDictations();
 
@@ -323,18 +311,7 @@ saveButton.addEventListener("click", function () {
 });
 
 function displaySavedDictations() {
-    const savedDictationsJSON =
-        localStorage.getItem("savedDictations");
-
-    if (savedDictationsJSON === null) {
-        savedDictationsContainer.textContent =
-            "Non ci sono ancora dettati salvati.";
-
-        return;
-    }
-
-    const savedDictations =
-        JSON.parse(savedDictationsJSON);
+    const savedDictations = getSavedDictations();
 
     if (savedDictations.length === 0) {
         savedDictationsContainer.textContent =
@@ -407,10 +384,7 @@ function displaySavedDictations() {
             }
             savedDictations.splice(index, 1);
 
-            localStorage.setItem(
-                "savedDictations",
-                JSON.stringify(savedDictations)
-            );
+            saveDictations(savedDictations);
 
             displaySavedDictations();
 
@@ -536,6 +510,13 @@ function getSavedDictations() {
     return json === null
         ? []
         : JSON.parse(json);
+}
+
+function saveDictations(dictations) {
+    localStorage.setItem(
+        "savedDictations",
+        JSON.stringify(dictations)
+    );
 }
 
 let displayedMonth = new Date().getMonth();
@@ -711,18 +692,7 @@ showStatisticsButton.addEventListener("click", function () {
 });
 
 function displayStatistics() {
-    const savedDictationsJSON =
-        localStorage.getItem("savedDictations");
-
-    if (savedDictationsJSON === null) {
-        statisticsContainer.textContent =
-            "Non ci sono ancora dati sufficienti.";
-
-        return;
-    }
-
-    const savedDictations =
-        JSON.parse(savedDictationsJSON);
+    const savedDictations = getSavedDictations();
 
     let rhythmicCount = 0;
     let melodicCount = 0;
