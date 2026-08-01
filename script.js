@@ -67,6 +67,26 @@ const categoriesQuestion = document.getElementById(
     "categories-question"
 );
 
+const dictationCollection = document.getElementById(
+    "dictation-collection"
+);
+
+const manageCollectionsButton = document.getElementById(
+    "manage-collections-button"
+);
+
+const collectionManager = document.getElementById(
+    "collection-manager"
+);
+
+const newCollectionInput = document.getElementById(
+    "new-collection"
+);
+
+const addCollectionButton = document.getElementById(
+    "add-collection-button"
+);
+
 let categories;
 
 if (savedCategoriesJSON === null) {
@@ -74,6 +94,82 @@ if (savedCategoriesJSON === null) {
 } else {
     categories = JSON.parse(savedCategoriesJSON);
 }
+
+const savedCollectionsJSON =
+    localStorage.getItem("collections");
+
+const collectionsList = document.getElementById(
+    "collections-list"
+);
+
+let collections;
+
+if (savedCollectionsJSON === null) {
+    collections = [];
+} else {
+    collections = JSON.parse(savedCollectionsJSON);
+}
+
+function displayCollections() {
+    dictationCollection.innerHTML = `
+        <option value="">
+            Nessuna raccolta
+        </option>
+    `;
+
+    collectionsList.innerHTML = "";
+
+    for (const collection of collections) {
+        const option = document.createElement("option");
+
+        option.value = collection;
+        option.textContent = collection;
+
+        dictationCollection.appendChild(option);
+
+        const collectionRow = document.createElement("div");
+
+        const collectionName = document.createElement("span");
+        collectionName.textContent = collection;
+
+        const removeCollectionButton =
+            document.createElement("button");
+
+        removeCollectionButton.textContent = "Rimuovi";
+        removeCollectionButton.classList.add(
+            "remove-collection-button"
+        );
+
+        removeCollectionButton.addEventListener("click", function () {
+            const confirmed = confirm(
+                `Vuoi davvero rimuovere la raccolta "${collection}"?`
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const collectionIndex =
+                collections.indexOf(collection);
+
+            collections.splice(collectionIndex, 1);
+
+            localStorage.setItem(
+                "collections",
+                JSON.stringify(collections)
+            );
+
+            displayCollections();
+        });
+
+        collectionRow.appendChild(collectionName);
+        collectionRow.appendChild(removeCollectionButton);
+
+        collectionsList.appendChild(collectionRow);
+    }
+}
+
+displayCollections();
 
 dictationType.addEventListener("change", function () {
     const selectedType = dictationType.value;
@@ -172,6 +268,7 @@ saveButton.addEventListener("click", function () {
         name: formattedName,
         youtubeLink: youtubeLink.value,
         type: dictationType.value,
+        collection: dictationCollection.value,
         availableCategories: [...categories[dictationType.value]],
         correctCategories: correctCategories
     };
@@ -199,6 +296,7 @@ saveButton.addEventListener("click", function () {
     dictationDate.value = "";
     dictationName.value = "";
     youtubeLink.value = "";
+    dictationCollection.value = "";
     dictationType.value = "";
 
     categoriesContainer.innerHTML = "";
@@ -258,6 +356,13 @@ function displaySavedDictations() {
         typeParagraph.textContent =
             `Tipo: ${typeNames[dictation.type]}`;
 
+        const collectionParagraph = document.createElement("p");
+
+        collectionParagraph.textContent =
+            dictation.collection
+                ? `Raccolta: ${dictation.collection}`
+                : "Raccolta: Nessuna";
+
         const categoriesParagraph = document.createElement("p");
 
         categoriesParagraph.textContent =
@@ -301,6 +406,7 @@ function displaySavedDictations() {
 
         details.appendChild(summary);
         details.appendChild(typeParagraph);
+        details.appendChild(collectionParagraph);
         details.appendChild(categoriesParagraph);
         details.appendChild(linkParagraph);
         details.appendChild(deleteButton);
@@ -336,6 +442,55 @@ manageCategoriesButton.addEventListener("click", function () {
     }
 
     dictationType.dispatchEvent(new Event("change"));
+});
+
+manageCollectionsButton.addEventListener("click", function () {
+    collectionManager.hidden = !collectionManager.hidden;
+
+    if (collectionManager.hidden) {
+        manageCollectionsButton.textContent =
+            "Gestisci raccolte";
+    } else {
+        manageCollectionsButton.textContent =
+            "Nascondi gestione raccolte";
+    }
+});
+
+addCollectionButton.addEventListener("click", function () {
+    const typedCollection =
+        newCollectionInput.value.trim();
+
+    const newCollection =
+        typedCollection.charAt(0).toUpperCase() +
+        typedCollection.slice(1);
+
+    if (newCollection === "") {
+        return;
+    }
+
+    const collectionAlreadyExists = collections.some(
+        collection =>
+            collection.toLowerCase() ===
+            newCollection.toLowerCase()
+    );
+
+    if (collectionAlreadyExists) {
+        alert("Questa raccolta esiste già.");
+        return;
+    }
+
+    collections.push(newCollection);
+
+    localStorage.setItem(
+        "collections",
+        JSON.stringify(collections)
+    );
+
+    displayCollections();
+
+    dictationCollection.value = newCollection;
+
+    newCollectionInput.value = "";
 });
 
 addCategoryButton.addEventListener("click", function () {

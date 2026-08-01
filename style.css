@@ -148,3 +148,61 @@ details p {
     margin: 14px 0 10px;
     font-weight: bold;
 }
+
+#manage-collections-button {
+    margin-bottom: 18px;
+}
+
+#collection-manager {
+    margin-top: 18px;
+    margin-bottom: 18px;
+}
+
+.new-collection-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.new-collection-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+#add-collection-button {
+    width: auto;
+    padding: 8px 12px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+#add-collection-button:hover {
+    background-color: #5f7491;
+}
+
+#collection-manager>label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 6px;
+}
+
+#collections-list>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.remove-collection-button {
+    width: auto;
+    padding: 4px 8px;
+    margin: 0;
+    font-size: 14px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.remove-collection-button:hover {
+    background-color: #c9302c;
+}

@@ -20,6 +20,40 @@
         <h2>Nuovo dettato</h2>
 
         <div class="form-group">
+            <label for="dictation-collection">
+                Raccolta
+            </label>
+
+            <select id="dictation-collection">
+                <option value="">
+                    Nessuna raccolta
+                </option>
+            </select>
+        </div>
+
+        <button id="manage-collections-button" type="button">
+            Gestisci raccolte
+        </button>
+
+        <div id="collection-manager" hidden>
+            <label for="new-collection">
+                Nuova raccolta
+            </label>
+
+            <div class="new-collection-row">
+                <input type="text" id="new-collection" placeholder="Es. Corali di Bach">
+
+                <button id="add-collection-button" type="button">
+                    Aggiungi
+                </button>
+            </div>
+
+            <div id="collections-list"></div>
+        </div>
+
+
+
+        <div class="form-group">
             <label for="dictation-date">
                 Data
             </label>
