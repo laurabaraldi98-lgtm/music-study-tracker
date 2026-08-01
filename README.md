@@ -1,8 +1,8 @@
 # Music Study Tracker
 
-Music Study Tracker is a web application built for a music student based on her specific study needs.
+Music Study Tracker is a responsive web application built for a music student based on her specific study needs.
 
-The app allows users to record and organize music dictation practice sessions, track correctly completed categories, and review progress through statistics.
+The app allows users to record and organize music dictation practice sessions, track correctly identified musical categories, and review progress through saved sessions, graphical statistics, and a monthly calendar.
 
 ## Live Demo
 
@@ -12,13 +12,19 @@ The app allows users to record and organize music dictation practice sessions, t
 
 - Save the date, title, and YouTube link of each dictation session
 - Organize sessions into rhythmic, melodic, and harmonic types
+- Create optional custom collections, such as study books or exercise groups
 - Add and remove custom categories
-- Mark correctly completed categories
+- Mark the categories identified correctly during each exercise
 - View saved dictation sessions
-- Sort sessions by date
+- Sort saved sessions by date
+- Display the collection associated with each session
 - Delete saved sessions
-- View general statistics
-- View category-based success percentages
+- View general statistics for each dictation type
+- View success percentages for individual categories
+- Display graphical progress bars for category results
+- Browse a monthly calendar
+- Navigate between previous and following months
+- Highlight days containing saved dictation sessions
 - Store data locally using localStorage
 - Use the app from desktop and mobile browsers
 
@@ -28,26 +34,30 @@ The app allows users to record and organize music dictation practice sessions, t
 - CSS
 - JavaScript
 - localStorage
+- Git and GitHub
 - Netlify
 
 ## Project Background
 
-This project was developed from the requirements of a real user who needed a simple way to organize music dictation practice.
+This project was developed from the requirements of a real music student who needed a simple way to organize and review music dictation practice.
 
-The first version was designed around her study workflow and is currently being tested by the intended user. Feedback from this testing phase will guide future improvements.
+The first version was designed around her existing study workflow. The intended user then tested the application and provided feedback, which led to the addition of custom collections, clearer statistics, graphical progress indicators, and a monthly calendar.
+
+The project is being developed iteratively, with each new feature based on real user needs and feedback.
 
 ## Project Status
 
-This is the first working version of the project.
+The application currently includes the main features required for recording, organizing, and reviewing dictation practice.
 
 Planned improvements include:
 
-- Charts for statistics
+- Clickable calendar days showing the sessions completed on that date
 - Further user interface improvements
-- Better mobile optimization
+- JavaScript refactoring and separation into modules
 - Database integration
 - Data synchronization across devices
 - User authentication
+- A Node.js backend
 
 ## Current Data Storage
 
@@ -59,4 +69,4 @@ This means that:
 - data is not synchronized between devices
 - clearing browser data may remove saved sessions
 
-A future version may use an online database to provide persistent and synchronized storage.
+A future version may use an online database and a Node.js backend to provide persistent and synchronized storage across devices.
