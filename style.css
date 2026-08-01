@@ -67,8 +67,14 @@ button:active {
     background-color: #5f7491;
 }
 
+#categories-question {
+    margin: 14px 0 10px;
+    font-weight: bold;
+}
+
 #categories-container {
     margin-top: 10px;
+    margin-bottom: 12px;
 }
 
 #categories-container>div {
@@ -77,6 +83,10 @@ button:active {
     align-items: center;
     column-gap: 8px;
     margin-bottom: 8px;
+}
+
+#categories-container>div:last-child {
+    margin-bottom: 0;
 }
 
 #categories-container input[type="checkbox"] {
@@ -89,9 +99,8 @@ button:active {
     min-width: 0;
 }
 
-#categories-question {
-    margin: 14px 0 10px;
-    font-weight: bold;
+#manage-categories-button {
+    margin-bottom: 12px;
 }
 
 .new-category-row {
@@ -292,32 +301,7 @@ details p {
     background-color: #6f86a6;
     color: white;
     font-weight: bold;
-}
-
-@media (max-width: 500px) {
-    body {
-        padding: 10px;
-    }
-
-    main {
-        margin: 20px auto;
-        padding: 20px;
-    }
-
-    .calendar-grid {
-        gap: 3px;
-    }
-
-    .calendar-weekday {
-        padding: 6px 1px;
-        font-size: 12px;
-    }
-
-    .calendar-day {
-        min-height: 36px;
-        font-size: 13px;
-        border-radius: 6px;
-    }
+    cursor: pointer;
 }
 
 .modal {
@@ -376,4 +360,30 @@ details p {
 .calendar-modal-dictation:last-child {
     padding-bottom: 0;
     border-bottom: none;
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 10px;
+    }
+
+    main {
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .calendar-weekday {
+        padding: 6px 1px;
+        font-size: 12px;
+    }
+
+    .calendar-day {
+        min-height: 36px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
 }
