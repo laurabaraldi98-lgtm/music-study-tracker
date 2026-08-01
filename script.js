@@ -114,6 +114,26 @@ const calendarContainer = document.getElementById(
     "calendar-container"
 );
 
+const calendarModal = document.getElementById(
+    "calendar-modal"
+);
+
+const closeCalendarModalButton = document.getElementById(
+    "close-calendar-modal"
+);
+
+const calendarModalTitle = document.getElementById(
+    "calendar-modal-title"
+);
+
+const calendarModalDictations = document.getElementById(
+    "calendar-modal-dictations"
+);
+
+closeCalendarModalButton.addEventListener("click", function () {
+    calendarModal.hidden = true;
+});
+
 let collections;
 
 if (savedCollectionsJSON === null) {
@@ -632,6 +652,55 @@ function displayCalendar() {
 
         if (hasDictation) {
             dayElement.classList.add("has-dictation");
+
+            dayElement.addEventListener("click", function () {
+                const dictationsForDay = savedDictations.filter(
+                    dictation => dictation.date === fullDate
+                );
+
+                calendarModalTitle.textContent =
+                    `Dettati del ${dayNumber}/${monthNumber}/${year}`;
+
+                calendarModalDictations.innerHTML = "";
+
+                for (const dictation of dictationsForDay) {
+                    const dictationBlock = document.createElement("div");
+
+                    dictationBlock.classList.add("calendar-modal-dictation");
+
+                    const typeNames = {
+                        rhythmic: "Ritmico",
+                        melodic: "Melodico",
+                        harmonic: "Armonico"
+                    };
+
+                    dictationBlock.innerHTML = `
+                <h4>${dictation.name}</h4>
+                <p>Tipo: ${typeNames[dictation.type]}</p>
+                <p>
+                    Raccolta:
+                    ${dictation.collection || "Nessuna"}
+                </p>
+                <p>
+                    Sentito correttamente:
+                    ${dictation.correctCategories.length > 0
+                            ? dictation.correctCategories.join(", ")
+                            : "Nessuna categoria"
+                        }
+                </p>
+                <a
+                    href="${dictation.youtubeLink}"
+                    target="_blank"
+                >
+                    Apri video
+                </a>
+            `;
+
+                    calendarModalDictations.appendChild(dictationBlock);
+                }
+
+                calendarModal.hidden = false;
+            });
         }
 
         calendarGrid.appendChild(dayElement);
