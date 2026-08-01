@@ -63,6 +63,10 @@ const defaultCategories = {
 const savedCategoriesJSON =
     localStorage.getItem("categories");
 
+const categoriesQuestion = document.getElementById(
+    "categories-question"
+);
+
 let categories;
 
 if (savedCategoriesJSON === null) {
@@ -73,6 +77,7 @@ if (savedCategoriesJSON === null) {
 
 dictationType.addEventListener("change", function () {
     const selectedType = dictationType.value;
+    categoriesQuestion.hidden = selectedType === "";
     manageCategoriesButton.hidden = selectedType === "";
 
     categoriesContainer.innerHTML = "";

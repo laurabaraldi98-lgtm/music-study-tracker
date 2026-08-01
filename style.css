@@ -143,3 +143,8 @@ details p {
 .remove-category-button:hover {
     background-color: #c9302c;
 }
+
+#categories-question {
+    margin: 14px 0 10px;
+    font-weight: bold;
+}
