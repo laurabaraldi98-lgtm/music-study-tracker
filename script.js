@@ -471,8 +471,13 @@ function displayStatistics() {
 
             const paragraph = document.createElement("p");
 
+            const correctLabel =
+                correct === 1
+                    ? "sentito correttamente"
+                    : "sentiti correttamente";
+
             paragraph.textContent =
-                `${category}: ${correct} su ${total} corrette (${percentage}%)`;
+                `${category}: ${correct}/${total} ${correctLabel} (${percentage}%)`;
 
             statisticsContainer.appendChild(paragraph);
         }
