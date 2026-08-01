@@ -89,6 +89,11 @@ button:active {
     min-width: 0;
 }
 
+#categories-question {
+    margin: 14px 0 10px;
+    font-weight: bold;
+}
+
 .new-category-row {
     display: flex;
     gap: 8px;
@@ -111,27 +116,6 @@ button:active {
     background-color: #5f7491;
 }
 
-details {
-    margin-bottom: 16px;
-}
-
-details p {
-    margin: 8px 0;
-}
-
-.delete-button {
-    width: auto;
-    padding: 8px 12px;
-    margin-top: 12px;
-    margin-bottom: 8px;
-    background-color: #d9534f;
-    color: white;
-}
-
-.delete-button:hover {
-    background-color: #c9302c;
-}
-
 .remove-category-button {
     width: auto;
     padding: 4px 8px;
@@ -145,11 +129,6 @@ details p {
     background-color: #c9302c;
 }
 
-#categories-question {
-    margin: 14px 0 10px;
-    font-weight: bold;
-}
-
 #manage-collections-button {
     margin-bottom: 18px;
 }
@@ -157,6 +136,12 @@ details p {
 #collection-manager {
     margin-top: 18px;
     margin-bottom: 18px;
+}
+
+#collection-manager>label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 6px;
 }
 
 .new-collection-row {
@@ -181,12 +166,6 @@ details p {
     background-color: #5f7491;
 }
 
-#collection-manager>label {
-    display: block;
-    margin-top: 18px;
-    margin-bottom: 6px;
-}
-
 #collections-list>div {
     display: flex;
     justify-content: space-between;
@@ -205,6 +184,27 @@ details p {
 }
 
 .remove-collection-button:hover {
+    background-color: #c9302c;
+}
+
+details {
+    margin-bottom: 16px;
+}
+
+details p {
+    margin: 8px 0;
+}
+
+.delete-button {
+    width: auto;
+    padding: 8px 12px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.delete-button:hover {
     background-color: #c9302c;
 }
 
@@ -235,9 +235,30 @@ details p {
     line-height: 14px;
 }
 
-#calendar-container h3 {
-    text-align: center;
+.calendar-header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 16px;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    text-align: center;
+}
+
+.calendar-navigation-button {
+    width: 44px;
+    height: 40px;
+    padding: 0;
+    font-size: 20px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+.calendar-navigation-button:hover {
+    background-color: #5f7491;
 }
 
 .calendar-grid {
@@ -273,28 +294,28 @@ details p {
     font-weight: bold;
 }
 
-.calendar-header {
-    display: grid;
-    grid-template-columns: 44px 1fr 44px;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
+@media (max-width: 500px) {
+    body {
+        padding: 10px;
+    }
 
-.calendar-header h3 {
-    margin: 0;
-    text-align: center;
-}
+    main {
+        margin: 20px auto;
+        padding: 20px;
+    }
 
-.calendar-navigation-button {
-    width: 44px;
-    height: 40px;
-    padding: 0;
-    font-size: 20px;
-    background-color: #6f86a6;
-    color: white;
-}
+    .calendar-grid {
+        gap: 3px;
+    }
 
-.calendar-navigation-button:hover {
-    background-color: #5f7491;
+    .calendar-weekday {
+        padding: 6px 1px;
+        font-size: 12px;
+    }
+
+    .calendar-day {
+        min-height: 36px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
 }
