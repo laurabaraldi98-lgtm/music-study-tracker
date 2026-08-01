@@ -53,6 +53,7 @@ button:active {
 }
 
 #show-saved-button,
+#show-calendar-button,
 #show-statistics-button {
     margin-top: 12px;
 }
@@ -232,4 +233,68 @@ details p {
     font-weight: bold;
     text-align: center;
     line-height: 14px;
+}
+
+#calendar-container h3 {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: bold;
+    padding: 8px 4px;
+}
+
+.calendar-day {
+    min-height: 44px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    background-color: #f7f7f9;
+}
+
+.calendar-day.empty {
+    border: none;
+    background-color: transparent;
+}
+
+.calendar-day.has-dictation {
+    background-color: #6f86a6;
+    color: white;
+    font-weight: bold;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    text-align: center;
+}
+
+.calendar-navigation-button {
+    width: 44px;
+    height: 40px;
+    padding: 0;
+    font-size: 20px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+.calendar-navigation-button:hover {
+    background-color: #5f7491;
 }
