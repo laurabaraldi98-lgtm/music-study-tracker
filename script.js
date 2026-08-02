@@ -338,8 +338,29 @@ saveButton.addEventListener("click", async function () {
     console.log(savedDictations);
 });
 
-function displaySavedDictations() {
-    const savedDictations = getSavedDictations();
+async function displaySavedDictations() {
+    let savedDictations;
+
+    try {
+        savedDictations = await getDictationsFromServer();
+    } catch (error) {
+        console.error(error);
+        alert("Non è stato possibile recuperare i dettati dal database.");
+        return;
+    }
+
+    savedDictations = savedDictations.map(function (dictation) {
+        return {
+            id: dictation.id,
+            date: dictation.date.slice(0, 10),
+            name: dictation.name,
+            youtubeLink: dictation.youtube_link,
+            type: dictation.type,
+            collection: dictation.collection,
+            availableCategories: dictation.available_categories || [],
+            correctCategories: dictation.correct_categories || []
+        };
+    });
 
     if (savedDictations.length === 0) {
         savedDictationsContainer.textContent =
@@ -401,7 +422,7 @@ function displaySavedDictations() {
         deleteButton.textContent = "Elimina";
         deleteButton.classList.add("delete-button");
 
-        deleteButton.addEventListener("click", function () {
+        deleteButton.addEventListener("click", async function () {
 
             const confirmed = confirm(
                 "Vuoi davvero eliminare questo dettato?"
@@ -410,11 +431,13 @@ function displaySavedDictations() {
             if (!confirmed) {
                 return;
             }
-            savedDictations.splice(index, 1);
-
-            saveDictations(savedDictations);
-
-            displaySavedDictations();
+            try {
+                await deleteDictationFromServer(dictation.id);
+                displaySavedDictations();
+            } catch (error) {
+                console.error(error);
+                alert("Non è stato possibile eliminare il dettato.");
+            }
 
         });
 
@@ -561,6 +584,33 @@ async function saveDictationToServer(dictation) {
 
     if (!response.ok) {
         throw new Error("Errore durante il salvataggio");
+    }
+
+    return response.json();
+}
+
+async function getDictationsFromServer() {
+    const response = await fetch(
+        "http://localhost:3000/dictations"
+    );
+
+    if (!response.ok) {
+        throw new Error("Errore durante il recupero dei dettati");
+    }
+
+    return response.json();
+}
+
+async function deleteDictationFromServer(id) {
+    const response = await fetch(
+        `http://localhost:3000/dictations/${id}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Errore durante l'eliminazione");
     }
 
     return response.json();

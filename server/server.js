@@ -95,6 +95,33 @@ app.post("/dictations", async function (request, response) {
     }
 });
 
+app.delete("/dictations/:id", async function (request, response) {
+    const id = request.params.id;
+
+    try {
+        const result = await pool.query(
+            "DELETE FROM dictations WHERE id = $1 RETURNING *",
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            response.status(404).json({
+                error: "Dettato non trovato"
+            });
+
+            return;
+        }
+
+        response.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante l'eliminazione del dettato"
+        });
+    }
+});
+
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });
