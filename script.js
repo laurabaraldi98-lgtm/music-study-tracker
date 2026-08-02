@@ -619,11 +619,32 @@ async function deleteDictationFromServer(id) {
 let displayedMonth = new Date().getMonth();
 let displayedYear = new Date().getFullYear();
 
-function displayCalendar() {
+async function displayCalendar() {
     const year = displayedYear;
     const month = displayedMonth;
 
-    const savedDictations = getSavedDictations();
+    let savedDictations;
+
+    try {
+        savedDictations = await getDictationsFromServer();
+    } catch (error) {
+        console.error(error);
+        alert("Non è stato possibile caricare il calendario.");
+        return;
+    }
+
+    savedDictations = savedDictations.map(function (dictation) {
+        return {
+            id: dictation.id,
+            date: dictation.date.slice(0, 10),
+            name: dictation.name,
+            youtubeLink: dictation.youtube_link,
+            type: dictation.type,
+            collection: dictation.collection,
+            availableCategories: dictation.available_categories || [],
+            correctCategories: dictation.correct_categories || []
+        };
+    });
 
     const monthNames = [
         "Gennaio",
@@ -837,8 +858,29 @@ showStatisticsButton.addEventListener("click", function () {
     }
 });
 
-function displayStatistics() {
-    const savedDictations = getSavedDictations();
+async function displayStatistics() {
+    let savedDictations;
+
+    try {
+        savedDictations = await getDictationsFromServer();
+    } catch (error) {
+        console.error(error);
+        alert("Non è stato possibile caricare le statistiche.");
+        return;
+    }
+
+    savedDictations = savedDictations.map(function (dictation) {
+        return {
+            id: dictation.id,
+            date: dictation.date.slice(0, 10),
+            name: dictation.name,
+            youtubeLink: dictation.youtube_link,
+            type: dictation.type,
+            collection: dictation.collection,
+            availableCategories: dictation.available_categories || [],
+            correctCategories: dictation.correct_categories || []
+        };
+    });
 
     let rhythmicCount = 0;
     let melodicCount = 0;
