@@ -267,7 +267,7 @@ dictationType.addEventListener("change", function () {
     }
 });
 
-saveButton.addEventListener("click", function () {
+saveButton.addEventListener("click", async function () {
 
     if (
         dictationDate.value === "" ||
@@ -304,6 +304,14 @@ saveButton.addEventListener("click", function () {
         availableCategories: [...categories[dictationType.value]],
         correctCategories: correctCategories
     };
+
+    try {
+        await saveDictationToServer(dictation);
+    } catch (error) {
+        console.error(error);
+        alert("Non è stato possibile salvare il dettato nel database.");
+        return;
+    }
 
     const savedDictations = getSavedDictations();
 
@@ -537,6 +545,25 @@ function saveDictations(dictations) {
         "savedDictations",
         JSON.stringify(dictations)
     );
+}
+
+async function saveDictationToServer(dictation) {
+    const response = await fetch(
+        "http://localhost:3000/dictations",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dictation)
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Errore durante il salvataggio");
+    }
+
+    return response.json();
 }
 
 let displayedMonth = new Date().getMonth();
