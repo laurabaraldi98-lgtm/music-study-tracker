@@ -227,9 +227,7 @@ function displayCollections() {
     }
 }
 
-displayCollections();
 loadCollections();
-displayCollections()
 
 dictationType.addEventListener("change", function () {
     const selectedType = dictationType.value;
@@ -343,7 +341,11 @@ saveButton.addEventListener("click", async function () {
         youtubeLink: youtubeLink.value,
         type: dictationType.value,
         collection: dictationCollection.value,
-        availableCategories: [...categories[dictationType.value]],
+        availableCategories: categories[
+            dictationType.value
+        ].map(function (category) {
+            return category.name;
+        }),
         correctCategories: correctCategories
     };
 
@@ -370,8 +372,6 @@ saveButton.addEventListener("click", async function () {
         "Gestisci categorie";
 
     categoryManager.hidden = true;
-
-    console.log(savedDictations);
 });
 
 async function displaySavedDictations() {
@@ -611,15 +611,18 @@ addCategoryButton.addEventListener("click", async function () {
         name: newCategory
     };
 
+    let savedCategory;
+
     try {
-        await saveCategoryToServer(category);
+        savedCategory =
+            await saveCategoryToServer(category);
     } catch (error) {
         console.error(error);
         alert("Non è stato possibile salvare la categoria.");
         return;
     }
 
-    categories[selectedType].push(newCategory);
+    categories[selectedType].push(savedCategory);
 
     dictationType.dispatchEvent(new Event("change"));
 
@@ -1070,26 +1073,6 @@ showCalendarButton.addEventListener("click", function () {
     }
 });
 
-showStatisticsButton.addEventListener("click", function () {
-    statisticsSection.hidden =
-        !statisticsSection.hidden;
-
-    if (statisticsSection.hidden) {
-        showStatisticsButton.textContent =
-            "Vedi statistiche";
-    } else {
-        showStatisticsButton.textContent =
-            "Nascondi statistiche";
-
-        displayStatistics();
-    }
-});
-
-statisticsCollectionFilter.addEventListener(
-    "change",
-    displayStatistics
-);
-
 async function displayStatistics() {
     let savedDictations;
 
@@ -1228,3 +1211,23 @@ async function displayStatistics() {
         }
     }
 }
+
+showStatisticsButton.addEventListener("click", function () {
+    statisticsSection.hidden =
+        !statisticsSection.hidden;
+
+    if (statisticsSection.hidden) {
+        showStatisticsButton.textContent =
+            "Vedi statistiche";
+    } else {
+        showStatisticsButton.textContent =
+            "Nascondi statistiche";
+
+        displayStatistics();
+    }
+});
+
+statisticsCollectionFilter.addEventListener(
+    "change",
+    displayStatistics
+);
