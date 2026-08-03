@@ -120,6 +120,15 @@ closeCalendarModalButton.addEventListener("click", function () {
     calendarModal.hidden = true;
 });
 
+const savedCollectionFilter =
+    document.getElementById("saved-collection-filter");
+
+const calendarCollectionFilter =
+    document.getElementById("calendar-collection-filter");
+
+const statisticsCollectionFilter =
+    document.getElementById("statistics-collection-filter");
+
 let collections = [];
 
 function displayCollections() {
@@ -131,6 +140,20 @@ function displayCollections() {
 
     collectionsList.innerHTML = "";
 
+    const collectionFilters = [
+        savedCollectionFilter,
+        calendarCollectionFilter,
+        statisticsCollectionFilter
+    ];
+
+    for (const filter of collectionFilters) {
+        filter.innerHTML = `
+        <option value="">
+            Tutte le raccolte
+        </option>
+    `;
+    }
+
     for (const collection of collections) {
         const option = document.createElement("option");
 
@@ -138,6 +161,15 @@ function displayCollections() {
         option.textContent = collection.name;
 
         dictationCollection.appendChild(option);
+
+        for (const filter of collectionFilters) {
+            const filterOption = document.createElement("option");
+
+            filterOption.value = collection.name;
+            filterOption.textContent = collection.name;
+
+            filter.appendChild(filterOption);
+        }
 
         const collectionRow = document.createElement("div");
 
@@ -197,6 +229,7 @@ function displayCollections() {
 
 displayCollections();
 loadCollections();
+displayCollections()
 
 dictationType.addEventListener("change", function () {
     const selectedType = dictationType.value;
@@ -356,6 +389,17 @@ async function displaySavedDictations() {
         formatDictationFromDatabase
     );
 
+    const selectedCollection =
+        savedCollectionFilter.value;
+
+    if (selectedCollection !== "") {
+        savedDictations = savedDictations.filter(
+            function (dictation) {
+                return dictation.collection === selectedCollection;
+            }
+        );
+    }
+
     if (savedDictations.length === 0) {
         savedDictationsContainer.textContent =
             "Non ci sono ancora dettati salvati.";
@@ -445,6 +489,11 @@ async function displaySavedDictations() {
         savedDictationsContainer.appendChild(details);
     })
 }
+
+savedCollectionFilter.addEventListener(
+    "change",
+    displaySavedDictations
+);
 
 showSavedButton.addEventListener("click", function () {
     savedDictationsSection.hidden =
@@ -808,6 +857,17 @@ async function displayCalendar() {
         formatDictationFromDatabase
     );
 
+    const selectedCollection =
+        calendarCollectionFilter.value;
+
+    if (selectedCollection !== "") {
+        savedDictations = savedDictations.filter(
+            function (dictation) {
+                return dictation.collection === selectedCollection;
+            }
+        );
+    }
+
     const monthNames = [
         "Gennaio",
         "Febbraio",
@@ -991,6 +1051,11 @@ async function displayCalendar() {
     });
 }
 
+calendarCollectionFilter.addEventListener(
+    "change",
+    displayCalendar
+);
+
 showCalendarButton.addEventListener("click", function () {
     calendarSection.hidden = !calendarSection.hidden;
 
@@ -1020,6 +1085,11 @@ showStatisticsButton.addEventListener("click", function () {
     }
 });
 
+statisticsCollectionFilter.addEventListener(
+    "change",
+    displayStatistics
+);
+
 async function displayStatistics() {
     let savedDictations;
 
@@ -1034,6 +1104,17 @@ async function displayStatistics() {
     savedDictations = savedDictations.map(
         formatDictationFromDatabase
     );
+
+    const selectedCollection =
+        statisticsCollectionFilter.value;
+
+    if (selectedCollection !== "") {
+        savedDictations = savedDictations.filter(
+            function (dictation) {
+                return dictation.collection === selectedCollection;
+            }
+        );
+    }
 
     let rhythmicCount = 0;
     let melodicCount = 0;
