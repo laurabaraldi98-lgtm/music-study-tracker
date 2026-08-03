@@ -122,6 +122,54 @@ app.delete("/dictations/:id", async function (request, response) {
     }
 });
 
+app.get("/categories", async function (request, response) {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM categories ORDER BY type, id"
+        );
+
+        response.json(result.rows);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante il recupero delle categorie"
+        });
+    }
+});
+
+app.post("/categories", async function (request, response) {
+    const {
+        type,
+        name
+    } = request.body;
+
+    try {
+        const result = await pool.query(
+            `
+            INSERT INTO categories (
+                type,
+                name
+            )
+            VALUES ($1, $2)
+            RETURNING *
+            `,
+            [
+                type,
+                name
+            ]
+        );
+
+        response.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante il salvataggio della categoria"
+        });
+    }
+});
+
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });

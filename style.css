@@ -387,3 +387,8 @@ details p {
         border-radius: 6px;
     }
 }
+
+#category-manager label {
+    display: block;
+    margin-bottom: 8px;
+}

@@ -60,9 +60,6 @@ const defaultCategories = {
     harmonic: ["Basso", "Soprano", "Accordi"]
 };
 
-const savedCategoriesJSON =
-    localStorage.getItem("categories");
-
 const categoriesQuestion = document.getElementById(
     "categories-question"
 );
@@ -86,14 +83,6 @@ const newCollectionInput = document.getElementById(
 const addCollectionButton = document.getElementById(
     "add-collection-button"
 );
-
-let categories;
-
-if (savedCategoriesJSON === null) {
-    categories = defaultCategories;
-} else {
-    categories = JSON.parse(savedCategoriesJSON);
-}
 
 const savedCollectionsJSON =
     localStorage.getItem("collections");
@@ -515,7 +504,7 @@ addCollectionButton.addEventListener("click", function () {
     newCollectionInput.value = "";
 });
 
-addCategoryButton.addEventListener("click", function () {
+addCategoryButton.addEventListener("click", async function () {
     const typedCategory = newCategoryInput.value.trim();
 
     const newCategory =
@@ -528,12 +517,20 @@ addCategoryButton.addEventListener("click", function () {
 
     const selectedType = dictationType.value;
 
-    categories[selectedType].push(newCategory);
+    const category = {
+        type: selectedType,
+        name: newCategory
+    };
 
-    localStorage.setItem(
-        "categories",
-        JSON.stringify(categories)
-    );
+    try {
+        await saveCategoryToServer(category);
+    } catch (error) {
+        console.error(error);
+        alert("Non è stato possibile salvare la categoria.");
+        return;
+    }
+
+    categories[selectedType].push(newCategory);
 
     dictationType.dispatchEvent(new Event("change"));
 
@@ -558,6 +555,52 @@ async function saveDictationToServer(dictation) {
 
     return response.json();
 }
+
+async function getCategoriesFromServer() {
+    const response = await fetch(
+        "http://localhost:3000/categories"
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Errore durante il recupero delle categorie"
+        );
+    }
+
+    return response.json();
+}
+
+function formatCategoriesFromDatabase(categoryRows) {
+    const formattedCategories = {
+        rhythmic: [],
+        melodic: [],
+        harmonic: []
+    };
+
+    for (const category of categoryRows) {
+        formattedCategories[category.type].push(category.name);
+    }
+
+    return formattedCategories;
+}
+
+async function loadCategories() {
+    try {
+        const categoryRows = await getCategoriesFromServer();
+
+        categories = formatCategoriesFromDatabase(categoryRows);
+    } catch (error) {
+        console.error(error);
+
+        categories = defaultCategories;
+
+        alert(
+            "Non è stato possibile caricare le categorie dal database."
+        );
+    }
+}
+
+loadCategories()
 
 async function getDictationsFromServer() {
     const response = await fetch(
@@ -594,6 +637,25 @@ async function deleteDictationFromServer(id) {
 
     if (!response.ok) {
         throw new Error("Errore durante l'eliminazione");
+    }
+
+    return response.json();
+}
+
+async function saveCategoryToServer(category) {
+    const response = await fetch(
+        "http://localhost:3000/categories",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(category)
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error("Errore durante il salvataggio della categoria");
     }
 
     return response.json();
