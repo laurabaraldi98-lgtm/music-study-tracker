@@ -1,3 +1,38 @@
+const showCalendarButton = document.getElementById(
+    "show-calendar-button"
+);
+
+const calendarSection = document.getElementById(
+    "calendar-section"
+);
+
+const calendarContainer = document.getElementById(
+    "calendar-container"
+);
+
+const calendarModal = document.getElementById(
+    "calendar-modal"
+);
+
+const closeCalendarModalButton = document.getElementById(
+    "close-calendar-modal"
+);
+
+const calendarModalTitle = document.getElementById(
+    "calendar-modal-title"
+);
+
+const calendarModalDictations = document.getElementById(
+    "calendar-modal-dictations"
+);
+
+closeCalendarModalButton.addEventListener("click", function () {
+    calendarModal.hidden = true;
+});
+
+const calendarCollectionFilter =
+    document.getElementById("calendar-collection-filter");
+
 let displayedMonth = new Date().getMonth();
 let displayedYear = new Date().getFullYear();
 
