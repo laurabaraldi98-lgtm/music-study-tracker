@@ -343,18 +343,9 @@ async function displaySavedDictations() {
         return;
     }
 
-    savedDictations = savedDictations.map(function (dictation) {
-        return {
-            id: dictation.id,
-            date: dictation.date.slice(0, 10),
-            name: dictation.name,
-            youtubeLink: dictation.youtube_link,
-            type: dictation.type,
-            collection: dictation.collection,
-            availableCategories: dictation.available_categories || [],
-            correctCategories: dictation.correct_categories || []
-        };
-    });
+    savedDictations = savedDictations.map(
+        formatDictationFromDatabase
+    );
 
     if (savedDictations.length === 0) {
         savedDictationsContainer.textContent =
@@ -580,6 +571,19 @@ async function getDictationsFromServer() {
     return response.json();
 }
 
+function formatDictationFromDatabase(dictation) {
+    return {
+        id: dictation.id,
+        date: dictation.date,
+        name: dictation.name,
+        youtubeLink: dictation.youtube_link,
+        type: dictation.type,
+        collection: dictation.collection,
+        availableCategories: dictation.available_categories || [],
+        correctCategories: dictation.correct_categories || []
+    };
+}
+
 async function deleteDictationFromServer(id) {
     const response = await fetch(
         `http://localhost:3000/dictations/${id}`,
@@ -612,18 +616,9 @@ async function displayCalendar() {
         return;
     }
 
-    savedDictations = savedDictations.map(function (dictation) {
-        return {
-            id: dictation.id,
-            date: dictation.date.slice(0, 10),
-            name: dictation.name,
-            youtubeLink: dictation.youtube_link,
-            type: dictation.type,
-            collection: dictation.collection,
-            availableCategories: dictation.available_categories || [],
-            correctCategories: dictation.correct_categories || []
-        };
-    });
+    savedDictations = savedDictations.map(
+        formatDictationFromDatabase
+    );
 
     const monthNames = [
         "Gennaio",
@@ -848,18 +843,9 @@ async function displayStatistics() {
         return;
     }
 
-    savedDictations = savedDictations.map(function (dictation) {
-        return {
-            id: dictation.id,
-            date: dictation.date.slice(0, 10),
-            name: dictation.name,
-            youtubeLink: dictation.youtube_link,
-            type: dictation.type,
-            collection: dictation.collection,
-            availableCategories: dictation.available_categories || [],
-            correctCategories: dictation.correct_categories || []
-        };
-    });
+    savedDictations = savedDictations.map(
+        formatDictationFromDatabase
+    );
 
     let rhythmicCount = 0;
     let melodicCount = 0;
