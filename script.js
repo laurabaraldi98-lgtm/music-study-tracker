@@ -210,10 +210,10 @@ dictationType.addEventListener("change", function () {
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
-        checkbox.value = category;
+        checkbox.value = category.name;
 
         const label = document.createElement("label");
-        label.textContent = category;
+        label.textContent = category.name;
 
         categoryRow.appendChild(checkbox);
         categoryRow.appendChild(label);
@@ -227,27 +227,41 @@ dictationType.addEventListener("change", function () {
                 "remove-category-button"
             );
 
-            removeCategoryButton.addEventListener("click", function () {
-                const confirmed = confirm(
-                    `Vuoi davvero rimuovere la categoria "${category}"?`
-                );
+            removeCategoryButton.addEventListener(
+                "click",
+                async function () {
+                    const confirmed = confirm(
+                        `Vuoi davvero rimuovere la categoria "${category.name}"?`
+                    );
 
-                if (!confirmed) {
-                    return;
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    try {
+                        await deleteCategoryFromServer(category.id);
+                    } catch (error) {
+                        console.error(error);
+
+                        alert(
+                            "Non è stato possibile eliminare la categoria."
+                        );
+
+                        return;
+                    }
+
+                    const categoryIndex =
+                        categories[selectedType].findIndex(
+                            function (savedCategory) {
+                                return savedCategory.id === category.id;
+                            }
+                        );
+
+                    categories[selectedType].splice(categoryIndex, 1);
+
+                    dictationType.dispatchEvent(new Event("change"));
                 }
-
-                const categoryIndex =
-                    categories[selectedType].indexOf(category);
-
-                categories[selectedType].splice(categoryIndex, 1);
-
-                localStorage.setItem(
-                    "categories",
-                    JSON.stringify(categories)
-                );
-
-                dictationType.dispatchEvent(new Event("change"));
-            });
+            );
 
             categoryRow.appendChild(removeCategoryButton);
         }
@@ -578,7 +592,10 @@ function formatCategoriesFromDatabase(categoryRows) {
     };
 
     for (const category of categoryRows) {
-        formattedCategories[category.type].push(category.name);
+        formattedCategories[category.type].push({
+            id: category.id,
+            name: category.name
+        });
     }
 
     return formattedCategories;
@@ -656,6 +673,23 @@ async function saveCategoryToServer(category) {
 
     if (!response.ok) {
         throw new Error("Errore durante il salvataggio della categoria");
+    }
+
+    return response.json();
+}
+
+async function deleteCategoryFromServer(categoryId) {
+    const response = await fetch(
+        `http://localhost:3000/categories/${categoryId}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Errore durante la cancellazione della categoria"
+        );
     }
 
     return response.json();

@@ -170,6 +170,35 @@ app.post("/categories", async function (request, response) {
     }
 });
 
+app.delete("/categories/:id", async function (request, response) {
+    const categoryId = request.params.id;
+
+    try {
+        const result = await pool.query(
+            `
+            DELETE FROM categories
+            WHERE id = $1
+            RETURNING *
+            `,
+            [categoryId]
+        );
+
+        if (result.rows.length === 0) {
+            return response.status(404).json({
+                error: "Categoria non trovata"
+            });
+        }
+
+        response.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante la cancellazione della categoria"
+        });
+    }
+});
+
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });
