@@ -130,6 +130,22 @@ const statisticsCollectionFilter =
     document.getElementById("statistics-collection-filter");
 
 let collections = [];
+let categories = defaultCategories;
+
+async function loadCollections() {
+    try {
+        collections =
+            await getCollectionsFromServer();
+
+        displayCollections();
+    } catch (error) {
+        console.error(error);
+
+        alert(
+            "Non è stato possibile caricare le raccolte dal database."
+        );
+    }
+}
 
 function displayCollections() {
     dictationCollection.innerHTML = `
@@ -629,39 +645,6 @@ addCategoryButton.addEventListener("click", async function () {
     newCategoryInput.value = "";
 });
 
-async function saveDictationToServer(dictation) {
-    const response = await fetch(
-        "http://localhost:3000/dictations",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(dictation)
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Errore durante il salvataggio");
-    }
-
-    return response.json();
-}
-
-async function getCategoriesFromServer() {
-    const response = await fetch(
-        "http://localhost:3000/categories"
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            "Errore durante il recupero delle categorie"
-        );
-    }
-
-    return response.json();
-}
-
 function formatCategoriesFromDatabase(categoryRows) {
     const formattedCategories = {
         rhythmic: [],
@@ -681,9 +664,13 @@ function formatCategoriesFromDatabase(categoryRows) {
 
 async function loadCategories() {
     try {
-        const categoryRows = await getCategoriesFromServer();
+        const categoryRows =
+            await getCategoriesFromServer();
 
-        categories = formatCategoriesFromDatabase(categoryRows);
+        categories =
+            formatCategoriesFromDatabase(
+                categoryRows
+            );
     } catch (error) {
         console.error(error);
 
@@ -697,18 +684,6 @@ async function loadCategories() {
 
 loadCategories()
 
-async function getDictationsFromServer() {
-    const response = await fetch(
-        "http://localhost:3000/dictations"
-    );
-
-    if (!response.ok) {
-        throw new Error("Errore durante il recupero dei dettati");
-    }
-
-    return response.json();
-}
-
 function formatDictationFromDatabase(dictation) {
     return {
         id: dictation.id,
@@ -720,123 +695,6 @@ function formatDictationFromDatabase(dictation) {
         availableCategories: dictation.available_categories || [],
         correctCategories: dictation.correct_categories || []
     };
-}
-
-async function deleteDictationFromServer(id) {
-    const response = await fetch(
-        `http://localhost:3000/dictations/${id}`,
-        {
-            method: "DELETE"
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Errore durante l'eliminazione");
-    }
-
-    return response.json();
-}
-
-async function saveCategoryToServer(category) {
-    const response = await fetch(
-        "http://localhost:3000/categories",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(category)
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Errore durante il salvataggio della categoria");
-    }
-
-    return response.json();
-}
-
-async function deleteCategoryFromServer(categoryId) {
-    const response = await fetch(
-        `http://localhost:3000/categories/${categoryId}`,
-        {
-            method: "DELETE"
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            "Errore durante la cancellazione della categoria"
-        );
-    }
-
-    return response.json();
-}
-
-async function saveCollectionToServer(collection) {
-    const response = await fetch(
-        "http://localhost:3000/collections",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(collection)
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            "Errore durante il salvataggio della raccolta"
-        );
-    }
-
-    return response.json();
-}
-
-async function getCollectionsFromServer() {
-    const response = await fetch(
-        "http://localhost:3000/collections"
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            "Errore durante il recupero delle raccolte"
-        );
-    }
-
-    return response.json();
-}
-
-async function loadCollections() {
-    try {
-        collections = await getCollectionsFromServer();
-
-        displayCollections();
-    } catch (error) {
-        console.error(error);
-
-        alert(
-            "Non è stato possibile caricare le raccolte dal database."
-        );
-    }
-}
-
-async function deleteCollectionFromServer(collectionId) {
-    const response = await fetch(
-        `http://localhost:3000/collections/${collectionId}`,
-        {
-            method: "DELETE"
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error(
-            "Errore durante la cancellazione della raccolta"
-        );
-    }
-
-    return response.json();
 }
 
 let displayedMonth = new Date().getMonth();
