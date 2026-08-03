@@ -27,7 +27,6 @@ saveButton.addEventListener("click", async function () {
         alert("Compila tutti i campi prima di salvare.");
         return;
     }
-
     const checkedBoxes = categoriesContainer.querySelectorAll(
         'input[type="checkbox"]:checked'
     );
@@ -82,6 +81,7 @@ saveButton.addEventListener("click", async function () {
 
     categoryManager.hidden = true;
 });
+
 
 async function displaySavedDictations() {
     let savedDictations;
