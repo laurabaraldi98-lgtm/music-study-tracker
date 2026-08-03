@@ -313,12 +313,6 @@ saveButton.addEventListener("click", async function () {
         return;
     }
 
-    const savedDictations = getSavedDictations();
-
-    savedDictations.push(dictation);
-
-    saveDictations(savedDictations);
-
     displaySavedDictations();
 
     dictationDate.value = "";
@@ -554,21 +548,6 @@ addCategoryButton.addEventListener("click", function () {
 
     newCategoryInput.value = "";
 });
-
-function getSavedDictations() {
-    const json = localStorage.getItem("savedDictations");
-
-    return json === null
-        ? []
-        : JSON.parse(json);
-}
-
-function saveDictations(dictations) {
-    localStorage.setItem(
-        "savedDictations",
-        JSON.stringify(dictations)
-    );
-}
 
 async function saveDictationToServer(dictation) {
     const response = await fetch(
