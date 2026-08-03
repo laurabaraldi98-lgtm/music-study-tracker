@@ -84,9 +84,6 @@ const addCollectionButton = document.getElementById(
     "add-collection-button"
 );
 
-const savedCollectionsJSON =
-    localStorage.getItem("collections");
-
 const collectionsList = document.getElementById(
     "collections-list"
 );
@@ -123,13 +120,7 @@ closeCalendarModalButton.addEventListener("click", function () {
     calendarModal.hidden = true;
 });
 
-let collections;
-
-if (savedCollectionsJSON === null) {
-    collections = [];
-} else {
-    collections = JSON.parse(savedCollectionsJSON);
-}
+let collections = [];
 
 function displayCollections() {
     dictationCollection.innerHTML = `
@@ -143,15 +134,15 @@ function displayCollections() {
     for (const collection of collections) {
         const option = document.createElement("option");
 
-        option.value = collection;
-        option.textContent = collection;
+        option.value = collection.name;
+        option.textContent = collection.name;
 
         dictationCollection.appendChild(option);
 
         const collectionRow = document.createElement("div");
 
         const collectionName = document.createElement("span");
-        collectionName.textContent = collection;
+        collectionName.textContent = collection.name;
 
         const removeCollectionButton =
             document.createElement("button");
@@ -161,27 +152,41 @@ function displayCollections() {
             "remove-collection-button"
         );
 
-        removeCollectionButton.addEventListener("click", function () {
-            const confirmed = confirm(
-                `Vuoi davvero rimuovere la raccolta "${collection}"?`
-            );
+        removeCollectionButton.addEventListener(
+            "click",
+            async function () {
+                const confirmed = confirm(
+                    `Vuoi davvero rimuovere la raccolta "${collection.name}"?`
+                );
 
-            if (!confirmed) {
-                return;
+                if (!confirmed) {
+                    return;
+                }
+
+                try {
+                    await deleteCollectionFromServer(collection.id);
+                } catch (error) {
+                    console.error(error);
+
+                    alert(
+                        "Non è stato possibile eliminare la raccolta."
+                    );
+
+                    return;
+                }
+
+                const collectionIndex =
+                    collections.findIndex(
+                        function (savedCollection) {
+                            return savedCollection.id === collection.id;
+                        }
+                    );
+
+                collections.splice(collectionIndex, 1);
+
+                displayCollections();
             }
-
-            const collectionIndex =
-                collections.indexOf(collection);
-
-            collections.splice(collectionIndex, 1);
-
-            localStorage.setItem(
-                "collections",
-                JSON.stringify(collections)
-            );
-
-            displayCollections();
-        });
+        );
 
         collectionRow.appendChild(collectionName);
         collectionRow.appendChild(removeCollectionButton);
@@ -191,6 +196,7 @@ function displayCollections() {
 }
 
 displayCollections();
+loadCollections();
 
 dictationType.addEventListener("change", function () {
     const selectedType = dictationType.value;
@@ -481,42 +487,62 @@ manageCollectionsButton.addEventListener("click", function () {
     }
 });
 
-addCollectionButton.addEventListener("click", function () {
-    const typedCollection =
-        newCollectionInput.value.trim();
+addCollectionButton.addEventListener(
+    "click",
+    async function () {
+        const typedCollection =
+            newCollectionInput.value.trim();
 
-    const newCollection =
-        typedCollection.charAt(0).toUpperCase() +
-        typedCollection.slice(1);
+        const newCollection =
+            typedCollection.charAt(0).toUpperCase() +
+            typedCollection.slice(1);
 
-    if (newCollection === "") {
-        return;
+        if (newCollection === "") {
+            return;
+        }
+
+        const collectionAlreadyExists = collections.some(
+            collection =>
+                collection.name.toLowerCase() ===
+                newCollection.toLowerCase()
+        );
+
+        if (collectionAlreadyExists) {
+            alert("Questa raccolta esiste già.");
+            return;
+        }
+
+        const collectionToSave = {
+            name: newCollection
+        };
+
+        let savedCollection;
+
+        try {
+            savedCollection =
+                await saveCollectionToServer(
+                    collectionToSave
+                );
+        } catch (error) {
+            console.error(error);
+
+            alert(
+                "Non è stato possibile salvare la raccolta."
+            );
+
+            return;
+        }
+
+        collections.push(savedCollection);
+
+        displayCollections();
+
+        dictationCollection.value =
+            savedCollection.name;
+
+        newCollectionInput.value = "";
     }
-
-    const collectionAlreadyExists = collections.some(
-        collection =>
-            collection.toLowerCase() ===
-            newCollection.toLowerCase()
-    );
-
-    if (collectionAlreadyExists) {
-        alert("Questa raccolta esiste già.");
-        return;
-    }
-
-    collections.push(newCollection);
-
-    localStorage.setItem(
-        "collections",
-        JSON.stringify(collections)
-    );
-
-    displayCollections();
-
-    dictationCollection.value = newCollection;
-
-    newCollectionInput.value = "";
-});
+);
 
 addCategoryButton.addEventListener("click", async function () {
     const typedCategory = newCategoryInput.value.trim();
@@ -689,6 +715,72 @@ async function deleteCategoryFromServer(categoryId) {
     if (!response.ok) {
         throw new Error(
             "Errore durante la cancellazione della categoria"
+        );
+    }
+
+    return response.json();
+}
+
+async function saveCollectionToServer(collection) {
+    const response = await fetch(
+        "http://localhost:3000/collections",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(collection)
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Errore durante il salvataggio della raccolta"
+        );
+    }
+
+    return response.json();
+}
+
+async function getCollectionsFromServer() {
+    const response = await fetch(
+        "http://localhost:3000/collections"
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Errore durante il recupero delle raccolte"
+        );
+    }
+
+    return response.json();
+}
+
+async function loadCollections() {
+    try {
+        collections = await getCollectionsFromServer();
+
+        displayCollections();
+    } catch (error) {
+        console.error(error);
+
+        alert(
+            "Non è stato possibile caricare le raccolte dal database."
+        );
+    }
+}
+
+async function deleteCollectionFromServer(collectionId) {
+    const response = await fetch(
+        `http://localhost:3000/collections/${collectionId}`,
+        {
+            method: "DELETE"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            "Errore durante la cancellazione della raccolta"
         );
     }
 

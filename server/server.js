@@ -199,6 +199,76 @@ app.delete("/categories/:id", async function (request, response) {
     }
 });
 
+app.get("/collections", async function (request, response) {
+    try {
+        const result = await pool.query(
+            "SELECT * FROM collections ORDER BY id"
+        );
+
+        response.json(result.rows);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante il recupero delle raccolte"
+        });
+    }
+});
+
+app.post("/collections", async function (request, response) {
+    const { name } = request.body;
+
+    try {
+        const result = await pool.query(
+            `
+            INSERT INTO collections (
+                name
+            )
+            VALUES ($1)
+            RETURNING *
+            `,
+            [name]
+        );
+
+        response.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante il salvataggio della raccolta"
+        });
+    }
+});
+
+app.delete("/collections/:id", async function (request, response) {
+    const collectionId = request.params.id;
+
+    try {
+        const result = await pool.query(
+            `
+            DELETE FROM collections
+            WHERE id = $1
+            RETURNING *
+            `,
+            [collectionId]
+        );
+
+        if (result.rows.length === 0) {
+            return response.status(404).json({
+                error: "Raccolta non trovata"
+            });
+        }
+
+        response.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante la cancellazione della raccolta"
+        });
+    }
+});
+
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });
