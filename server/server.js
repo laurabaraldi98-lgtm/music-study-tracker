@@ -59,7 +59,13 @@ app.get("/dictations", async function (request, response) {
 
     try {
         const result = await pool.query(
-            "SELECT * FROM dictations ORDER BY date DESC"
+            `
+            SELECT *
+            FROM dictations
+            WHERE user_id = $1
+            ORDER BY date DESC
+            `,
+            [auth.userId]
         );
 
         response.json(result.rows);
@@ -73,6 +79,14 @@ app.get("/dictations", async function (request, response) {
 });
 
 app.post("/dictations", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const {
         date,
         name,
@@ -93,9 +107,10 @@ app.post("/dictations", async function (request, response) {
                 type,
                 collection,
                 available_categories,
-                correct_categories
+                correct_categories,
+                user_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *
             `,
             [
@@ -105,7 +120,8 @@ app.post("/dictations", async function (request, response) {
                 type,
                 collection || null,
                 availableCategories || [],
-                correctCategories || []
+                correctCategories || [],
+                auth.userId
             ]
         );
 

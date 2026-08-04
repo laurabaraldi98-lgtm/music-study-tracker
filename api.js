@@ -23,7 +23,7 @@ async function getDictationsFromServer() {
 }
 
 async function saveDictationToServer(dictation) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/dictations",
         {
             method: "POST",
