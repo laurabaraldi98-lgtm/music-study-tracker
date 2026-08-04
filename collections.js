@@ -212,5 +212,9 @@ addCollectionButton.addEventListener(
 
 window.addEventListener(
     "clerk-ready",
-    loadCollections
+    function () {
+        if (Clerk.user) {
+            loadCollections();
+        }
+    }
 );

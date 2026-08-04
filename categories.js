@@ -214,4 +214,11 @@ async function loadCategories() {
     }
 }
 
-window.addEventListener("clerk-ready", loadCategories);
+window.addEventListener(
+    "clerk-ready",
+    function () {
+        if (Clerk.user) {
+            loadCategories();
+        }
+    }
+);
