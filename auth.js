@@ -5,6 +5,8 @@ window.addEventListener("load", async function () {
         }
     });
 
+    window.dispatchEvent(new Event("clerk-ready"));
+
     const authContainer =
         document.getElementById("auth-container");
 

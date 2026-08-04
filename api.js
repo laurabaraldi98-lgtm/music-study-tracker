@@ -57,7 +57,7 @@ async function deleteDictationFromServer(id) {
 }
 
 async function getCategoriesFromServer() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/categories"
     );
 
@@ -71,7 +71,7 @@ async function getCategoriesFromServer() {
 }
 
 async function saveCategoryToServer(category) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/categories",
         {
             method: "POST",
@@ -92,7 +92,7 @@ async function saveCategoryToServer(category) {
 }
 
 async function deleteCategoryFromServer(categoryId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `http://localhost:3000/categories/${categoryId}`,
         {
             method: "DELETE"

@@ -19,6 +19,19 @@ app.use(express.json());
 
 const PORT = 3000;
 
+const defaultCategories = [
+    ["rhythmic", "Metrica"],
+    ["rhythmic", "Pause"],
+    ["rhythmic", "Gruppi irregolari"],
+    ["melodic", "Tonalità"],
+    ["melodic", "Ritmo"],
+    ["melodic", "Intervalli"],
+    ["melodic", "Modulazioni"],
+    ["harmonic", "Basso"],
+    ["harmonic", "Soprano"],
+    ["harmonic", "Accordi"]
+];
+
 app.get("/", function (request, response) {
     response.send("Il server funziona!");
 });
@@ -174,9 +187,68 @@ app.delete("/dictations/:id", async function (request, response) {
 });
 
 app.get("/categories", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     try {
+        const settingsResult = await pool.query(
+            `
+            SELECT categories_initialized
+            FROM user_settings
+            WHERE user_id = $1
+            `,
+            [auth.userId]
+        );
+
+        const categoriesInitialized =
+            settingsResult.rows[0]?.categories_initialized;
+
+        if (!categoriesInitialized) {
+            for (const [type, name] of defaultCategories) {
+                await pool.query(
+                    `
+                    INSERT INTO categories (
+                        type,
+                        name,
+                        user_id
+                    )
+                    VALUES ($1, $2, $3)
+                    `,
+                    [
+                        type,
+                        name,
+                        auth.userId
+                    ]
+                );
+            }
+
+            await pool.query(
+                `
+                INSERT INTO user_settings (
+                    user_id,
+                    categories_initialized
+                )
+                VALUES ($1, TRUE)
+                ON CONFLICT (user_id)
+                DO UPDATE SET categories_initialized = TRUE
+                `,
+                [auth.userId]
+            );
+        }
+
         const result = await pool.query(
-            "SELECT * FROM categories ORDER BY type, id"
+            `
+            SELECT *
+            FROM categories
+            WHERE user_id = $1
+            ORDER BY type, id
+            `,
+            [auth.userId]
         );
 
         response.json(result.rows);
@@ -188,8 +260,15 @@ app.get("/categories", async function (request, response) {
         });
     }
 });
-
 app.post("/categories", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const {
         type,
         name
@@ -200,14 +279,16 @@ app.post("/categories", async function (request, response) {
             `
             INSERT INTO categories (
                 type,
-                name
+                name,
+                user_id
             )
-            VALUES ($1, $2)
+            VALUES ($1, $2, $3)
             RETURNING *
             `,
             [
                 type,
-                name
+                name,
+                auth.userId
             ]
         );
 
@@ -222,6 +303,14 @@ app.post("/categories", async function (request, response) {
 });
 
 app.delete("/categories/:id", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const categoryId = request.params.id;
 
     try {
@@ -229,9 +318,13 @@ app.delete("/categories/:id", async function (request, response) {
             `
             DELETE FROM categories
             WHERE id = $1
+            AND user_id = $2
             RETURNING *
             `,
-            [categoryId]
+            [
+                categoryId,
+                auth.userId
+            ]
         );
 
         if (result.rows.length === 0) {

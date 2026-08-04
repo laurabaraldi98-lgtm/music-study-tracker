@@ -214,4 +214,4 @@ async function loadCategories() {
     }
 }
 
-loadCategories()
+window.addEventListener("clerk-ready", loadCategories);
