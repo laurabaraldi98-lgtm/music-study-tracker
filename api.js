@@ -109,7 +109,7 @@ async function deleteCategoryFromServer(categoryId) {
 }
 
 async function getCollectionsFromServer() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/collections"
     );
 
@@ -123,7 +123,7 @@ async function getCollectionsFromServer() {
 }
 
 async function saveCollectionToServer(collection) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/collections",
         {
             method: "POST",
@@ -144,7 +144,7 @@ async function saveCollectionToServer(collection) {
 }
 
 async function deleteCollectionFromServer(collectionId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `http://localhost:3000/collections/${collectionId}`,
         {
             method: "DELETE"

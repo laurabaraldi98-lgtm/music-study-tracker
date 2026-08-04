@@ -210,4 +210,7 @@ addCollectionButton.addEventListener(
     }
 );
 
-loadCollections();
+window.addEventListener(
+    "clerk-ready",
+    loadCollections
+);

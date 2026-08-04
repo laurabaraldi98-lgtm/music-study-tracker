@@ -344,9 +344,23 @@ app.delete("/categories/:id", async function (request, response) {
 });
 
 app.get("/collections", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     try {
         const result = await pool.query(
-            "SELECT * FROM collections ORDER BY id"
+            `
+            SELECT *
+            FROM collections
+            WHERE user_id = $1
+            ORDER BY id
+            `,
+            [auth.userId]
         );
 
         response.json(result.rows);
@@ -360,18 +374,30 @@ app.get("/collections", async function (request, response) {
 });
 
 app.post("/collections", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const { name } = request.body;
 
     try {
         const result = await pool.query(
             `
             INSERT INTO collections (
-                name
+                name,
+                user_id
             )
-            VALUES ($1)
+            VALUES ($1, $2)
             RETURNING *
             `,
-            [name]
+            [
+                name,
+                auth.userId
+            ]
         );
 
         response.status(201).json(result.rows[0]);
@@ -385,6 +411,14 @@ app.post("/collections", async function (request, response) {
 });
 
 app.delete("/collections/:id", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const collectionId = request.params.id;
 
     try {
@@ -392,9 +426,13 @@ app.delete("/collections/:id", async function (request, response) {
             `
             DELETE FROM collections
             WHERE id = $1
+            AND user_id = $2
             RETURNING *
             `,
-            [collectionId]
+            [
+                collectionId,
+                auth.userId
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -412,7 +450,6 @@ app.delete("/collections/:id", async function (request, response) {
         });
     }
 });
-
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });
