@@ -1,5 +1,17 @@
+async function authenticatedFetch(url, options = {}) {
+    const token = await Clerk.session.getToken();
+
+    return fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
 async function getDictationsFromServer() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         "http://localhost:3000/dictations"
     );
 

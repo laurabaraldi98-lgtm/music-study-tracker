@@ -49,6 +49,14 @@ app.get("/database-test", async function (request, response) {
 });
 
 app.get("/dictations", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     try {
         const result = await pool.query(
             "SELECT * FROM dictations ORDER BY date DESC"

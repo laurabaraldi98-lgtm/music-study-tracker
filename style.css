@@ -392,3 +392,7 @@ details p {
     display: block;
     margin-bottom: 8px;
 }
+
+#app-container {
+    display: none;
+}

@@ -5,25 +5,20 @@ window.addEventListener("load", async function () {
         }
     });
 
-    const authContainer = document.getElementById("auth-container");
+    const authContainer =
+        document.getElementById("auth-container");
+
+    const appContainer =
+        document.getElementById("app-container");
 
     if (Clerk.user) {
-        const token = await Clerk.session.getToken();
+        authContainer.innerHTML = "";
+        appContainer.style.display = "block";
 
-        const response = await fetch("http://localhost:3000/auth-test", {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        const authResult = await response.json();
-
-        console.log("Risultato backend:", authResult);
-    }
-
-    if (Clerk.user) {
         Clerk.mountUserButton(authContainer);
     } else {
+        appContainer.style.display = "none";
+
         Clerk.mountSignIn(authContainer);
     }
 });
