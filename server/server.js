@@ -13,7 +13,9 @@ const app = express();
 
 app.use(clerkMiddleware());
 
-app.use(cors());
+app.use(cors({
+    origin: "http://127.0.0.1:5500"
+}));
 
 app.use(express.json());
 
@@ -34,31 +36,6 @@ const defaultCategories = [
 
 app.get("/", function (request, response) {
     response.send("Il server funziona!");
-});
-
-app.get("/auth-test", function (request, response) {
-    const auth = getAuth(request);
-
-    response.json({
-        isAuthenticated: auth.isAuthenticated,
-        userId: auth.userId
-    });
-});
-
-app.get("/database-test", async function (request, response) {
-    try {
-        const result = await pool.query(
-            "SELECT NOW() AS current_time"
-        );
-
-        response.json(result.rows[0]);
-    } catch (error) {
-        console.error(error);
-
-        response.status(500).json({
-            error: "Errore di connessione al database"
-        });
-    }
 });
 
 app.get("/dictations", async function (request, response) {
@@ -450,6 +427,7 @@ app.delete("/collections/:id", async function (request, response) {
         });
     }
 });
+
 app.listen(PORT, function () {
     console.log(`Server avviato su http://localhost:${PORT}`);
 });

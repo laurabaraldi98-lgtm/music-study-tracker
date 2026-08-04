@@ -16,10 +16,6 @@ const newCategoryInput = document.getElementById(
     "new-category"
 );
 
-const editableCategoriesContainer = document.getElementById(
-    "editable-categories-container"
-);
-
 const addCategoryButton = document.getElementById(
     "add-category-button"
 );

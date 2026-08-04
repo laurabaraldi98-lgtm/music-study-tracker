@@ -1,3 +1,5 @@
+const API_BASE_URL = "http://localhost:3000";
+
 async function authenticatedFetch(url, options = {}) {
     const token = await Clerk.session.getToken();
 
@@ -12,11 +14,13 @@ async function authenticatedFetch(url, options = {}) {
 
 async function getDictationsFromServer() {
     const response = await authenticatedFetch(
-        "http://localhost:3000/dictations"
+        `${API_BASE_URL}/dictations`
     );
 
     if (!response.ok) {
-        throw new Error("Errore durante il recupero dei dettati");
+        throw new Error(
+            "Errore durante il recupero dei dettati"
+        );
     }
 
     return response.json();
@@ -24,7 +28,7 @@ async function getDictationsFromServer() {
 
 async function saveDictationToServer(dictation) {
     const response = await authenticatedFetch(
-        "http://localhost:3000/dictations",
+        `${API_BASE_URL}/dictations`,
         {
             method: "POST",
             headers: {
@@ -35,7 +39,9 @@ async function saveDictationToServer(dictation) {
     );
 
     if (!response.ok) {
-        throw new Error("Errore durante il salvataggio");
+        throw new Error(
+            "Errore durante il salvataggio"
+        );
     }
 
     return response.json();
@@ -43,14 +49,16 @@ async function saveDictationToServer(dictation) {
 
 async function deleteDictationFromServer(id) {
     const response = await authenticatedFetch(
-        `http://localhost:3000/dictations/${id}`,
+        `${API_BASE_URL}/dictations/${id}`,
         {
             method: "DELETE"
         }
     );
 
     if (!response.ok) {
-        throw new Error("Errore durante l'eliminazione");
+        throw new Error(
+            "Errore durante l'eliminazione"
+        );
     }
 
     return response.json();
@@ -58,7 +66,7 @@ async function deleteDictationFromServer(id) {
 
 async function getCategoriesFromServer() {
     const response = await authenticatedFetch(
-        "http://localhost:3000/categories"
+        `${API_BASE_URL}/categories`
     );
 
     if (!response.ok) {
@@ -72,7 +80,7 @@ async function getCategoriesFromServer() {
 
 async function saveCategoryToServer(category) {
     const response = await authenticatedFetch(
-        "http://localhost:3000/categories",
+        `${API_BASE_URL}/categories`,
         {
             method: "POST",
             headers: {
@@ -93,7 +101,7 @@ async function saveCategoryToServer(category) {
 
 async function deleteCategoryFromServer(categoryId) {
     const response = await authenticatedFetch(
-        `http://localhost:3000/categories/${categoryId}`,
+        `${API_BASE_URL}/categories/${categoryId}`,
         {
             method: "DELETE"
         }
@@ -110,7 +118,7 @@ async function deleteCategoryFromServer(categoryId) {
 
 async function getCollectionsFromServer() {
     const response = await authenticatedFetch(
-        "http://localhost:3000/collections"
+        `${API_BASE_URL}/collections`
     );
 
     if (!response.ok) {
@@ -124,7 +132,7 @@ async function getCollectionsFromServer() {
 
 async function saveCollectionToServer(collection) {
     const response = await authenticatedFetch(
-        "http://localhost:3000/collections",
+        `${API_BASE_URL}/collections`,
         {
             method: "POST",
             headers: {
@@ -145,7 +153,7 @@ async function saveCollectionToServer(collection) {
 
 async function deleteCollectionFromServer(collectionId) {
     const response = await authenticatedFetch(
-        `http://localhost:3000/collections/${collectionId}`,
+        `${API_BASE_URL}/collections/${collectionId}`,
         {
             method: "DELETE"
         }

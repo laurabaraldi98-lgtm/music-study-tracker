@@ -191,28 +191,39 @@ async function displayCalendar() {
                         harmonic: "Armonico"
                     };
 
-                    dictationBlock.innerHTML = `
-                <h4>${dictation.name}</h4>
-                <p>Tipo: ${typeNames[dictation.type]}</p>
-                <p>
-                    Raccolta:
-                    ${dictation.collection || "Nessuna"}
-                </p>
-                <p>
-                    Sentito correttamente:
-                    ${dictation.correctCategories.length > 0
+                    const dictationTitle = document.createElement("h4");
+                    dictationTitle.textContent = dictation.name;
+
+                    const typeParagraph = document.createElement("p");
+                    typeParagraph.textContent =
+                        `Tipo: ${typeNames[dictation.type]}`;
+
+                    const collectionParagraph = document.createElement("p");
+                    collectionParagraph.textContent =
+                        `Raccolta: ${dictation.collection || "Nessuna"}`;
+
+                    const correctCategoriesParagraph =
+                        document.createElement("p");
+
+                    correctCategoriesParagraph.textContent =
+                        `Sentito correttamente: ${dictation.correctCategories.length > 0
                             ? dictation.correctCategories.join(", ")
                             : "Nessuna categoria"
-                        }
-                </p>
-                <a
-                    href="${dictation.youtubeLink}"
-                    target="_blank"
-                >
-                    Apri video
-                </a>
-            `;
+                        }`;
 
+                    const videoLink = document.createElement("a");
+                    videoLink.href = dictation.youtubeLink;
+                    videoLink.target = "_blank";
+                    videoLink.rel = "noopener noreferrer";
+                    videoLink.textContent = "Apri video";
+
+                    dictationBlock.appendChild(dictationTitle);
+                    dictationBlock.appendChild(typeParagraph);
+                    dictationBlock.appendChild(collectionParagraph);
+                    dictationBlock.appendChild(
+                        correctCategoriesParagraph
+                    );
+                    dictationBlock.appendChild(videoLink);
                     calendarModalDictations.appendChild(dictationBlock);
                 }
 
