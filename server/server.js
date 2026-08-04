@@ -1,10 +1,17 @@
 const express = require("express");
 
+const {
+    clerkMiddleware,
+    getAuth
+} = require("@clerk/express");
+
 const cors = require("cors");
 
 const pool = require("./db");
 
 const app = express();
+
+app.use(clerkMiddleware());
 
 app.use(cors());
 
@@ -14,6 +21,15 @@ const PORT = 3000;
 
 app.get("/", function (request, response) {
     response.send("Il server funziona!");
+});
+
+app.get("/auth-test", function (request, response) {
+    const auth = getAuth(request);
+
+    response.json({
+        isAuthenticated: auth.isAuthenticated,
+        userId: auth.userId
+    });
 });
 
 app.get("/database-test", async function (request, response) {

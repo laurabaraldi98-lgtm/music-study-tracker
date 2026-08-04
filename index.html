@@ -12,6 +12,7 @@
 </head>
 
 <body>
+    <div id="auth-container"></div>
     <main>
         <h1>Music Study Tracker</h1>
 
@@ -207,6 +208,18 @@
             </div>
         </div>
     </main>
+
+    <script defer crossorigin="anonymous"
+        src="https://fast-collie-31.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js" type="text/javascript">
+        </script>
+
+    <script defer crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_ZmFzdC1jb2xsaWUtMzEuY2xlcmsuYWNjb3VudHMuZGV2JA"
+        src="https://fast-collie-31.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+        type="text/javascript">
+        </script>
+
+    <script defer src="auth.js"></script>
 
     <script src="api.js"></script>
     <script src="collections.js"></script>
