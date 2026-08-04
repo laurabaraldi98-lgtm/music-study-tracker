@@ -42,7 +42,7 @@ async function saveDictationToServer(dictation) {
 }
 
 async function deleteDictationFromServer(id) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `http://localhost:3000/dictations/${id}`,
         {
             method: "DELETE"

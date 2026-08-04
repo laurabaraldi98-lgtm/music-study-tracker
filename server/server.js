@@ -136,20 +136,31 @@ app.post("/dictations", async function (request, response) {
 });
 
 app.delete("/dictations/:id", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
     const id = request.params.id;
 
     try {
         const result = await pool.query(
-            "DELETE FROM dictations WHERE id = $1 RETURNING *",
-            [id]
+            `
+            DELETE FROM dictations
+            WHERE id = $1
+            AND user_id = $2
+            RETURNING *
+            `,
+            [id, auth.userId]
         );
 
         if (result.rows.length === 0) {
-            response.status(404).json({
+            return response.status(404).json({
                 error: "Dettato non trovato"
             });
-
-            return;
         }
 
         response.json(result.rows[0]);
