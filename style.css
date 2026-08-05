@@ -396,3 +396,16 @@ details p {
 #app-container {
     display: none;
 }
+
+#sign-in-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: 40px auto;
+}
+
+#user-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
