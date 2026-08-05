@@ -39,7 +39,10 @@ async function saveDictationToServer(dictation) {
     );
 
     if (!response.ok) {
+        const errorData = await response.json();
+
         throw new Error(
+            errorData.error ||
             "Errore durante il salvataggio"
         );
     }

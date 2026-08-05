@@ -34,6 +34,19 @@ const defaultCategories = [
     ["harmonic", "Accordi"]
 ];
 
+function isValidHttpUrl(value) {
+    try {
+        const url = new URL(value);
+
+        return (
+            url.protocol === "http:" ||
+            url.protocol === "https:"
+        );
+    } catch {
+        return false;
+    }
+}
+
 app.get("/", function (request, response) {
     response.send("Il server funziona!");
 });
@@ -86,6 +99,84 @@ app.post("/dictations", async function (request, response) {
         availableCategories,
         correctCategories
     } = request.body;
+
+    const allowedTypes = [
+        "rhythmic",
+        "melodic",
+        "harmonic"
+    ];
+
+    if (
+        typeof date !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(date)
+    ) {
+        return response.status(400).json({
+            error: "Data non valida"
+        });
+    }
+
+    if (
+        typeof name !== "string" ||
+        name.trim() === "" ||
+        name.trim().length > 100
+    ) {
+        return response.status(400).json({
+            error: "Nome del dettato non valido"
+        });
+    }
+
+    if (!isValidHttpUrl(youtubeLink)) {
+        return response.status(400).json({
+            error: "Link non valido"
+        });
+    }
+
+    if (!allowedTypes.includes(type)) {
+        return response.status(400).json({
+            error: "Tipo di dettato non valido"
+        });
+    }
+
+    if (
+        collection !== null &&
+        collection !== undefined &&
+        typeof collection !== "string"
+    ) {
+        return response.status(400).json({
+            error: "Raccolta non valida"
+        });
+    }
+
+    if (
+        typeof collection === "string" &&
+        collection.length > 100
+    ) {
+        return response.status(400).json({
+            error: "Nome della raccolta troppo lungo"
+        });
+    }
+
+    if (
+        !Array.isArray(availableCategories) ||
+        !availableCategories.every(
+            category => typeof category === "string"
+        )
+    ) {
+        return response.status(400).json({
+            error: "Categorie disponibili non valide"
+        });
+    }
+
+    if (
+        !Array.isArray(correctCategories) ||
+        !correctCategories.every(
+            category => typeof category === "string"
+        )
+    ) {
+        return response.status(400).json({
+            error: "Categorie corrette non valide"
+        });
+    }
 
     try {
         const result = await pool.query(
