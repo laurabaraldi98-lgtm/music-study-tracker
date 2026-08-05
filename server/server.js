@@ -6,10 +6,10 @@ const {
 } = require("@clerk/express");
 
 const cors = require("cors");
-
 const pool = require("./db");
 
 const app = express();
+const PORT = 3000;
 
 app.use(clerkMiddleware());
 
@@ -18,8 +18,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-const PORT = 3000;
 
 const defaultCategories = [
     ["rhythmic", "Metrica"],
@@ -34,7 +32,17 @@ const defaultCategories = [
     ["harmonic", "Accordi"]
 ];
 
+const allowedTypes = [
+    "rhythmic",
+    "melodic",
+    "harmonic"
+];
+
 function isValidHttpUrl(value) {
+    if (typeof value !== "string") {
+        return false;
+    }
+
     try {
         const url = new URL(value);
 
@@ -50,6 +58,10 @@ function isValidHttpUrl(value) {
 app.get("/", function (request, response) {
     response.send("Il server funziona!");
 });
+
+/*
+    DETTATI
+*/
 
 app.get("/dictations", async function (request, response) {
     const auth = getAuth(request);
@@ -100,12 +112,6 @@ app.post("/dictations", async function (request, response) {
         correctCategories
     } = request.body;
 
-    const allowedTypes = [
-        "rhythmic",
-        "melodic",
-        "harmonic"
-    ];
-
     if (
         typeof date !== "string" ||
         !/^\d{4}-\d{2}-\d{2}$/.test(date)
@@ -149,7 +155,7 @@ app.post("/dictations", async function (request, response) {
 
     if (
         typeof collection === "string" &&
-        collection.length > 100
+        collection.trim().length > 100
     ) {
         return response.status(400).json({
             error: "Nome della raccolta troppo lungo"
@@ -178,6 +184,12 @@ app.post("/dictations", async function (request, response) {
         });
     }
 
+    const cleanCollection =
+        typeof collection === "string" &&
+            collection.trim() !== ""
+            ? collection.trim()
+            : null;
+
     try {
         const result = await pool.query(
             `
@@ -196,12 +208,12 @@ app.post("/dictations", async function (request, response) {
             `,
             [
                 date,
-                name,
+                name.trim(),
                 youtubeLink,
                 type,
-                collection || null,
-                availableCategories || [],
-                correctCategories || [],
+                cleanCollection,
+                availableCategories,
+                correctCategories,
                 auth.userId
             ]
         );
@@ -225,7 +237,16 @@ app.delete("/dictations/:id", async function (request, response) {
         });
     }
 
-    const id = request.params.id;
+    const dictationId = Number(request.params.id);
+
+    if (
+        !Number.isInteger(dictationId) ||
+        dictationId <= 0
+    ) {
+        return response.status(400).json({
+            error: "ID del dettato non valido"
+        });
+    }
 
     try {
         const result = await pool.query(
@@ -235,7 +256,10 @@ app.delete("/dictations/:id", async function (request, response) {
             AND user_id = $2
             RETURNING *
             `,
-            [id, auth.userId]
+            [
+                dictationId,
+                auth.userId
+            ]
         );
 
         if (result.rows.length === 0) {
@@ -253,6 +277,10 @@ app.delete("/dictations/:id", async function (request, response) {
         });
     }
 });
+
+/*
+    CATEGORIE
+*/
 
 app.get("/categories", async function (request, response) {
     const auth = getAuth(request);
@@ -328,6 +356,7 @@ app.get("/categories", async function (request, response) {
         });
     }
 });
+
 app.post("/categories", async function (request, response) {
     const auth = getAuth(request);
 
@@ -342,6 +371,22 @@ app.post("/categories", async function (request, response) {
         name
     } = request.body;
 
+    if (!allowedTypes.includes(type)) {
+        return response.status(400).json({
+            error: "Tipo di categoria non valido"
+        });
+    }
+
+    if (
+        typeof name !== "string" ||
+        name.trim() === "" ||
+        name.trim().length > 50
+    ) {
+        return response.status(400).json({
+            error: "Nome della categoria non valido"
+        });
+    }
+
     try {
         const result = await pool.query(
             `
@@ -355,7 +400,7 @@ app.post("/categories", async function (request, response) {
             `,
             [
                 type,
-                name,
+                name.trim(),
                 auth.userId
             ]
         );
@@ -379,7 +424,16 @@ app.delete("/categories/:id", async function (request, response) {
         });
     }
 
-    const categoryId = request.params.id;
+    const categoryId = Number(request.params.id);
+
+    if (
+        !Number.isInteger(categoryId) ||
+        categoryId <= 0
+    ) {
+        return response.status(400).json({
+            error: "ID della categoria non valido"
+        });
+    }
 
     try {
         const result = await pool.query(
@@ -410,6 +464,10 @@ app.delete("/categories/:id", async function (request, response) {
         });
     }
 });
+
+/*
+    RACCOLTE
+*/
 
 app.get("/collections", async function (request, response) {
     const auth = getAuth(request);
@@ -452,6 +510,16 @@ app.post("/collections", async function (request, response) {
 
     const { name } = request.body;
 
+    if (
+        typeof name !== "string" ||
+        name.trim() === "" ||
+        name.trim().length > 100
+    ) {
+        return response.status(400).json({
+            error: "Nome della raccolta non valido"
+        });
+    }
+
     try {
         const result = await pool.query(
             `
@@ -463,7 +531,7 @@ app.post("/collections", async function (request, response) {
             RETURNING *
             `,
             [
-                name,
+                name.trim(),
                 auth.userId
             ]
         );
@@ -487,7 +555,16 @@ app.delete("/collections/:id", async function (request, response) {
         });
     }
 
-    const collectionId = request.params.id;
+    const collectionId = Number(request.params.id);
+
+    if (
+        !Number.isInteger(collectionId) ||
+        collectionId <= 0
+    ) {
+        return response.status(400).json({
+            error: "ID della raccolta non valido"
+        });
+    }
 
     try {
         const result = await pool.query(

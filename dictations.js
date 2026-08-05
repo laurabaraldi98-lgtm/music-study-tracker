@@ -61,7 +61,7 @@ saveButton.addEventListener("click", async function () {
         await saveDictationToServer(dictation);
     } catch (error) {
         console.error(error);
-        alert("Non è stato possibile salvare il dettato nel database.");
+        alert(error.message);
         return;
     }
 
@@ -160,6 +160,7 @@ async function displaySavedDictations() {
         link.href = dictation.youtubeLink;
         link.textContent = "Apri video";
         link.target = "_blank";
+        link.rel = "noopener noreferrer";
 
         linkParagraph.textContent = "Link: ";
         linkParagraph.appendChild(link);
