@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = "https://music-study-tracker-backend.vercel.app";
 
 async function authenticatedFetch(url, options = {}) {
     const token = await Clerk.session.getToken();
