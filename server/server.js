@@ -13,8 +13,22 @@ const PORT = process.env.PORT || 3000;
 
 app.use(clerkMiddleware());
 
+const allowedOrigins = [
+    "http://127.0.0.1:5500",
+    "https://music-study-tracker.netlify.app"
+];
+
 app.use(cors({
-    origin: "http://127.0.0.1:5500"
+    origin: function (origin, callback) {
+        if (
+            !origin ||
+            allowedOrigins.includes(origin)
+        ) {
+            callback(null, true);
+        } else {
+            callback(new Error("Origine non autorizzata"));
+        }
+    }
 }));
 
 app.use(express.json());
