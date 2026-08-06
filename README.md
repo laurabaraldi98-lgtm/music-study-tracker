@@ -87,6 +87,8 @@ Node.js and Express REST API on Vercel
 PostgreSQL database on Neon
 ```
 
+Both the frontend and backend use continuous deployment: every push to the main branch automatically triggers a new build and deploy on Netlify and Vercel respectively, without any manual intervention.
+
 The backend verifies the authenticated user and uses the corresponding Clerk user ID when reading, creating, or deleting data.
 
 This prevents users from accessing records belonging to another account.
