@@ -253,3 +253,96 @@ describe("POST /categories", function () {
         });
     });
 });
+
+describe("DELETE /categories/:id", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .delete("/categories/1");
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test("returns 400 when the category ID is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .delete("/categories/abc");
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "ID della categoria non valido"
+        });
+    });
+
+    test("returns 404 when the category is not found", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockResolvedValue({
+            rows: []
+        });
+
+        const response = await request(app)
+            .delete("/categories/1");
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Categoria non trovata"
+        });
+    });
+
+    test("deletes and returns the category", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const deletedCategory = {
+            id: 11,
+            type: "melodic",
+            name: "Memoria melodica",
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [deletedCategory]
+        });
+
+        const response = await request(app)
+            .delete("/categories/11");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(deletedCategory);
+    });
+
+    test("returns 500 when deleting a category fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .delete("/categories/11");
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante la cancellazione della categoria"
+        });
+    });
+});
