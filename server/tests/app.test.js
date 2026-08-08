@@ -93,3 +93,98 @@ describe("GET /dictations", function () {
         });
     });
 });
+
+describe("POST /dictations", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({});
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test("returns 400 when the date is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "08-08-2026"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Data non valida"
+        });
+    });
+
+    test("returns 400 when the dictation name is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "   "
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Nome del dettato non valido"
+        });
+    });
+
+    test("returns 400 when the YouTube link is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "not-a-valid-url"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Link non valido"
+        });
+    });
+
+    test("returns 400 when the dictation type is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "invalid-type"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Tipo di dettato non valido"
+        });
+    });
+});
