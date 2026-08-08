@@ -75,3 +75,93 @@ describe("GET /collections", function () {
         });
     });
 });
+
+describe("POST /collections", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .post("/collections")
+            .send({});
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test.each([
+        ["empty", "   "],
+        ["not a string", 123],
+        ["too long", "a".repeat(101)]
+    ])(
+        "returns 400 when the collection name is %s",
+        async function (caseName, invalidName) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
+
+            const response = await request(app)
+                .post("/collections")
+                .send({
+                    name: invalidName
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Nome della raccolta non valido"
+            });
+        }
+    );
+
+    test("creates and returns a new collection", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const newSavedCollection = {
+            id: 3,
+            name: "Dettati melodici",
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [newSavedCollection]
+        });
+
+        const response = await request(app)
+            .post("/collections")
+            .send({
+                name: "Dettati melodici"
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newSavedCollection);
+    });
+
+    test("returns 500 when creating a collection fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .post("/collections")
+            .send({
+                name: "Dettati melodici"
+            });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante il salvataggio della raccolta"
+        });
+    });
+});
