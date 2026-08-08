@@ -140,3 +140,116 @@ describe("GET /categories", function () {
         });
     });
 });
+
+describe("POST /categories", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({});
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test("returns 400 when the category type is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                type: "invalid-type",
+                name: "Tonalità"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Tipo di categoria non valido"
+        });
+    });
+
+    test.each([
+        ["empty", "   "],
+        ["not a string", 123],
+        ["too long", "a".repeat(51)]
+    ])(
+        "returns 400 when the category name is %s",
+        async function (caseName, invalidName) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
+
+            const response = await request(app)
+                .post("/categories")
+                .send({
+                    type: "melodic",
+                    name: invalidName
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Nome della categoria non valido"
+            });
+        }
+    );
+
+    test("creates and returns a new category", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const newSavedCategory = {
+            id: 11,
+            type: "melodic",
+            name: "Memoria melodica",
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [newSavedCategory]
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                type: "melodic",
+                name: "Memoria melodica"
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newSavedCategory);
+    });
+
+    test("returns 500 when creating a category fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                type: "melodic",
+                name: "Memoria melodica"
+            });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante il salvataggio della categoria"
+        });
+    });
+});
