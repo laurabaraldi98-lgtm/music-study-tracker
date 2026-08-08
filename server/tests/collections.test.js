@@ -165,3 +165,95 @@ describe("POST /collections", function () {
         });
     });
 });
+
+describe("DELETE /collections/:id", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .delete("/collections/1");
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test("returns 400 when the collection ID is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .delete("/collections/abc");
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "ID della raccolta non valido"
+        });
+    });
+
+    test("returns 404 when the collection is not found", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockResolvedValue({
+            rows: []
+        });
+
+        const response = await request(app)
+            .delete("/collections/1");
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Raccolta non trovata"
+        });
+    });
+
+    test("deletes and returns the collection", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const deletedCollection = {
+            id: 3,
+            name: "Dettati melodici",
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [deletedCollection]
+        });
+
+        const response = await request(app)
+            .delete("/collections/3");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(deletedCollection);
+    });
+
+    test("returns 500 when deleting a collection fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .delete("/collections/3");
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante la cancellazione della raccolta"
+        });
+    });
+});
