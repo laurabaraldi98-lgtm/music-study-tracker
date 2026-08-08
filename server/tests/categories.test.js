@@ -269,20 +269,28 @@ describe("DELETE /categories/:id", function () {
         });
     });
 
-    test("returns 400 when the category ID is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
+    test.each([
+        ["not a number", "abc"],
+        ["zero", "0"],
+        ["negative", "-1"],
+        ["not an integer", "1.5"]
+    ])(
+        "returns 400 when the category ID is %s",
+        async function (caseName, invalidId) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
 
-        const response = await request(app)
-            .delete("/categories/abc");
+            const response = await request(app)
+                .delete(`/categories/${invalidId}`);
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "ID della categoria non valido"
-        });
-    });
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "ID della categoria non valido"
+            });
+        }
+    );
 
     test("returns 404 when the category is not found", async function () {
         getAuth.mockReturnValue({

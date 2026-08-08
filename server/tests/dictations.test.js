@@ -192,27 +192,34 @@ describe("POST /dictations", function () {
         });
     });
 
-    test("returns 400 when the collection is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
-
-        const response = await request(app)
-            .post("/dictations")
-            .send({
-                date: "2026-08-08",
-                name: "Dettato test",
-                youtubeLink: "https://youtube.com/test",
-                type: "melodic",
-                collection: 123
+    test.each([
+        ["a number", 123],
+        ["an array", ["test"]],
+        ["a boolean", true]
+    ])(
+        "returns 400 when the collection is %s",
+        async function (caseName, invalidCollection) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
             });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Raccolta non valida"
-        });
-    });
+            const response = await request(app)
+                .post("/dictations")
+                .send({
+                    date: "2026-08-08",
+                    name: "Dettato test",
+                    youtubeLink: "https://youtube.com/test",
+                    type: "melodic",
+                    collection: invalidCollection
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Raccolta non valida"
+            });
+        }
+    );
 
     test("returns 400 when the collection name is too long", async function () {
         getAuth.mockReturnValue({

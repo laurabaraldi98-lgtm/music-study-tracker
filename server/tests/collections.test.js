@@ -181,20 +181,28 @@ describe("DELETE /collections/:id", function () {
         });
     });
 
-    test("returns 400 when the collection ID is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
+    test.each([
+        ["not a number", "abc"],
+        ["zero", "0"],
+        ["negative", "-1"],
+        ["not an integer", "1.5"]
+    ])(
+        "returns 400 when the collection ID is %s",
+        async function (caseName, invalidId) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
 
-        const response = await request(app)
-            .delete("/collections/abc");
+            const response = await request(app)
+                .delete(`/collections/${invalidId}`);
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "ID della raccolta non valido"
-        });
-    });
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "ID della raccolta non valido"
+            });
+        }
+    );
 
     test("returns 404 when the collection is not found", async function () {
         getAuth.mockReturnValue({
