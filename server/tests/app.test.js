@@ -260,4 +260,91 @@ describe("POST /dictations", function () {
             error: "Categorie corrette non valide"
         });
     });
+
+    test("creates and returns a new dictation", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const newSavedDictation = {
+            id: 1,
+            date: "2026-08-08",
+            name: "Dettato test",
+            youtube_link: "https://youtube.com/test",
+            type: "melodic",
+            collection: "Corali di Bach",
+            available_categories: [
+                "Tonalità",
+                "Ritmo",
+                "Intervalli"
+            ],
+            correct_categories: [
+                "Tonalità",
+                "Intervalli"
+            ],
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [newSavedDictation]
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: "Corali di Bach",
+                availableCategories: [
+                    "Tonalità",
+                    "Ritmo",
+                    "Intervalli"
+                ],
+                correctCategories: [
+                    "Tonalità",
+                    "Intervalli"
+                ]
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newSavedDictation);
+    });
+
+    test("returns 500 when creating a dictation fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: "Corali di Bach",
+                availableCategories: [
+                    "Tonalità",
+                    "Ritmo",
+                    "Intervalli"
+                ],
+                correctCategories: [
+                    "Tonalità",
+                    "Intervalli"
+                ]
+            });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante il salvataggio del dettato"
+        });
+    });
 });
