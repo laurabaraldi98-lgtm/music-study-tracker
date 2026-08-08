@@ -187,4 +187,77 @@ describe("POST /dictations", function () {
             error: "Tipo di dettato non valido"
         });
     });
+
+    test("returns 400 when the collection is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: 123
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Raccolta non valida"
+        });
+    });
+
+    test("returns 400 when available categories are invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: "Corali di Bach",
+                availableCategories: "Tonalità"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Categorie disponibili non valide"
+        });
+    });
+
+    test("returns 400 when correct categories are invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato test",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: "Corali di Bach",
+                availableCategories: [
+                    "Tonalità",
+                    "Ritmo",
+                    "Intervalli"
+                ],
+                correctCategories: "Tonalità"
+            });
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "Categorie corrette non valide"
+        });
+    });
 });
