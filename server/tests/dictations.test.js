@@ -119,44 +119,57 @@ describe("POST /dictations", function () {
         });
     });
 
-    test("returns 400 when the dictation name is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
-
-        const response = await request(app)
-            .post("/dictations")
-            .send({
-                date: "2026-08-08",
-                name: "   "
+    test.each([
+        ["empty", "   "],
+        ["not a string", 123],
+        ["too long", "a".repeat(101)]
+    ])(
+        "returns 400 when the dictation name is %s",
+        async function (caseName, invalidName) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
             });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Nome del dettato non valido"
-        });
-    });
+            const response = await request(app)
+                .post("/dictations")
+                .send({
+                    date: "2026-08-08",
+                    name: invalidName
+                });
 
-    test("returns 400 when the YouTube link is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Nome del dettato non valido"
+            });
+        }
+    );
 
-        const response = await request(app)
-            .post("/dictations")
-            .send({
-                date: "2026-08-08",
-                name: "Dettato test",
-                youtubeLink: "not-a-valid-url"
+    test.each([
+        ["malformed", "not-a-valid-url"],
+        ["not a string", 123]
+    ])(
+        "returns 400 when the YouTube link is %s",
+        async function (caseName, invalidLink) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
             });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Link non valido"
-        });
-    });
+            const response = await request(app)
+                .post("/dictations")
+                .send({
+                    date: "2026-08-08",
+                    name: "Dettato test",
+                    youtubeLink: invalidLink
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Link non valido"
+            });
+        }
+    );
 
     test("returns 400 when the dictation type is invalid", async function () {
         getAuth.mockReturnValue({
@@ -201,7 +214,7 @@ describe("POST /dictations", function () {
         });
     });
 
-    test("returns 400 when available categories are invalid", async function () {
+    test("returns 400 when the collection name is too long", async function () {
         getAuth.mockReturnValue({
             isAuthenticated: true,
             userId: "user_test"
@@ -214,43 +227,77 @@ describe("POST /dictations", function () {
                 name: "Dettato test",
                 youtubeLink: "https://youtube.com/test",
                 type: "melodic",
-                collection: "Corali di Bach",
-                availableCategories: "Tonalità"
+                collection: "a".repeat(101)
             });
 
         expect(response.status).toBe(400);
         expect(response.body).toEqual({
-            error: "Categorie disponibili non valide"
+            error: "Nome della raccolta troppo lungo"
         });
     });
 
-    test("returns 400 when correct categories are invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
-
-        const response = await request(app)
-            .post("/dictations")
-            .send({
-                date: "2026-08-08",
-                name: "Dettato test",
-                youtubeLink: "https://youtube.com/test",
-                type: "melodic",
-                collection: "Corali di Bach",
-                availableCategories: [
-                    "Tonalità",
-                    "Ritmo",
-                    "Intervalli"
-                ],
-                correctCategories: "Tonalità"
+    test.each([
+        ["not an array", "Tonalità"],
+        ["contains a non-string value", ["Tonalità", 123]]
+    ])(
+        "returns 400 when available categories are %s",
+        async function (caseName, invalidCategories) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
             });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Categorie corrette non valide"
-        });
-    });
+            const response = await request(app)
+                .post("/dictations")
+                .send({
+                    date: "2026-08-08",
+                    name: "Dettato test",
+                    youtubeLink: "https://youtube.com/test",
+                    type: "melodic",
+                    collection: "Corali di Bach",
+                    availableCategories: invalidCategories
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Categorie disponibili non valide"
+            });
+        }
+    );
+
+    test.each([
+        ["not an array", "Tonalità"],
+        ["contains a non-string value", ["Tonalità", 123]]
+    ])(
+        "returns 400 when correct categories are %s",
+        async function (caseName, invalidCategories) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
+
+            const response = await request(app)
+                .post("/dictations")
+                .send({
+                    date: "2026-08-08",
+                    name: "Dettato test",
+                    youtubeLink: "https://youtube.com/test",
+                    type: "melodic",
+                    collection: "Corali di Bach",
+                    availableCategories: [
+                        "Tonalità",
+                        "Ritmo",
+                        "Intervalli"
+                    ],
+                    correctCategories: invalidCategories
+                });
+
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "Categorie corrette non valide"
+            });
+        }
+    );
 
     test("creates and returns a new dictation", async function () {
         getAuth.mockReturnValue({
@@ -297,6 +344,54 @@ describe("POST /dictations", function () {
                 correctCategories: [
                     "Tonalità",
                     "Intervalli"
+                ]
+            });
+
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(newSavedDictation);
+    });
+
+    test("creates a dictation without a collection", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const newSavedDictation = {
+            id: 2,
+            date: "2026-08-08",
+            name: "Dettato senza raccolta",
+            youtube_link: "https://youtube.com/test",
+            type: "melodic",
+            collection: null,
+            available_categories: [
+                "Tonalità",
+                "Ritmo"
+            ],
+            correct_categories: [
+                "Tonalità"
+            ],
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [newSavedDictation]
+        });
+
+        const response = await request(app)
+            .post("/dictations")
+            .send({
+                date: "2026-08-08",
+                name: "Dettato senza raccolta",
+                youtubeLink: "https://youtube.com/test",
+                type: "melodic",
+                collection: "",
+                availableCategories: [
+                    "Tonalità",
+                    "Ritmo"
+                ],
+                correctCategories: [
+                    "Tonalità"
                 ]
             });
 
@@ -355,20 +450,28 @@ describe("DELETE /dictations/:id", function () {
         });
     });
 
-    test("returns 400 when the dictation ID is invalid", async function () {
-        getAuth.mockReturnValue({
-            isAuthenticated: true,
-            userId: "user_test"
-        });
+    test.each([
+        ["not a number", "abc"],
+        ["zero", "0"],
+        ["negative", "-1"],
+        ["not an integer", "1.5"]
+    ])(
+        "returns 400 when the dictation ID is %s",
+        async function (caseName, invalidId) {
+            getAuth.mockReturnValue({
+                isAuthenticated: true,
+                userId: "user_test"
+            });
 
-        const response = await request(app)
-            .delete("/dictations/abc");
+            const response = await request(app)
+                .delete(`/dictations/${invalidId}`);
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "ID del dettato non valido"
-        });
-    });
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual({
+                error: "ID del dettato non valido"
+            });
+        }
+    );
 
     test("returns 404 when the dictation is not found", async function () {
         getAuth.mockReturnValue({

@@ -19,4 +19,12 @@ describe("GET /", function () {
         expect(response.status).toBe(200);
         expect(response.text).toBe("Il server funziona!");
     });
+
+    test("rejects requests from an unauthorized origin", async function () {
+        const response = await request(app)
+            .get("/")
+            .set("Origin", "https://example.com");
+
+        expect(response.status).toBe(500);
+    });
 });
