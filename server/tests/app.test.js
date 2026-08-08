@@ -348,3 +348,108 @@ describe("POST /dictations", function () {
         });
     });
 });
+
+describe("DELETE /dictations/:id", function () {
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app)
+            .delete("/dictations/1");
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+    });
+
+    test("returns 400 when the dictation ID is invalid", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const response = await request(app)
+            .delete("/dictations/abc");
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({
+            error: "ID del dettato non valido"
+        });
+    });
+
+    test("returns 404 when the dictation is not found", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockResolvedValue({
+            rows: []
+        });
+
+        const response = await request(app)
+            .delete("/dictations/1");
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Dettato non trovato"
+        });
+    });
+
+    test("deletes and returns the dictation", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const deletedDictation = {
+            id: 1,
+            date: "2026-08-08",
+            name: "Dettato test",
+            youtube_link: "https://youtube.com/test",
+            type: "melodic",
+            collection: "Corali di Bach",
+            available_categories: [
+                "Tonalità",
+                "Ritmo",
+                "Intervalli"
+            ],
+            correct_categories: [
+                "Tonalità",
+                "Intervalli"
+            ],
+            user_id: "user_test"
+        };
+
+        pool.query.mockResolvedValue({
+            rows: [deletedDictation]
+        });
+
+        const response = await request(app)
+            .delete("/dictations/1");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(deletedDictation);
+    });
+
+    test("returns 500 when deleting a dictation fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        pool.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .delete("/dictations/1");
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante l'eliminazione del dettato"
+        });
+    });
+});
