@@ -67,6 +67,9 @@ The app allows users to record and organize music dictation practice sessions, t
 
 - Git
 - GitHub
+- GitHub Actions
+- Jest
+- Supertest
 - Visual Studio Code
 
 ## Architecture
@@ -86,8 +89,6 @@ Node.js and Express REST API on Vercel
         ↓
 PostgreSQL database on Neon
 ```
-
-Both the frontend and backend use continuous deployment: every push to the main branch automatically triggers a new build and deploy on Netlify and Vercel respectively, without any manual intervention.
 
 The backend verifies the authenticated user and uses the corresponding Clerk user ID when reading, creating, or deleting data.
 
@@ -109,6 +110,39 @@ The API supports operations such as:
 - deleting existing records
 - validating incoming data
 - returning appropriate HTTP error responses
+
+## Testing
+
+The backend API is covered by automated integration tests using Jest and Supertest.
+
+The test suite covers:
+
+- authentication failures
+- successful API requests
+- input validation
+- invalid resource IDs
+- missing resources
+- database failure scenarios
+- optional collection handling
+- category management
+- collection management
+
+External dependencies such as Clerk authentication and PostgreSQL queries are mocked during testing, allowing the Express API logic to be tested without relying on live external services.
+
+The current backend test suite contains 68 automated tests and achieves 100% statement, branch, function, and line coverage for the Express application logic in `app.js`.
+
+## CI/CD
+
+The project uses a CI/CD workflow.
+
+GitHub Actions provides continuous integration by automatically installing backend dependencies and running the complete Jest test suite on every push and pull request.
+
+Continuous deployment is handled by Netlify and Vercel:
+
+- Netlify automatically deploys the frontend from the main branch
+- Vercel automatically deploys the backend from the main branch
+
+This provides automated testing during development and automatic deployment when changes reach the main branch.
 
 ## Security
 
@@ -158,13 +192,17 @@ Recent improvements include:
 - prevention of protected data loading after logout
 - responsive authentication interface
 - custom application favicon
+- automated backend API integration tests with Jest and Supertest
+- GitHub Actions continuous integration
+- automatic test execution on pushes and pull requests
+- 100% statement, branch, function, and line coverage for the Express application logic
 
 ## Planned Improvements
 
 - Further improve the user interface
 - Add loading indicators and more detailed user-facing error messages
 - Add editing of existing dictation sessions
-- Add automated tests
 - Refactor JavaScript files into ES modules
 - Improve accessibility
 - Add additional statistical visualizations
+- Add API rate limiting
