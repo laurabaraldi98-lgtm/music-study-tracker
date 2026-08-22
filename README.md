@@ -4,11 +4,9 @@ Music Study Tracker is a responsive full-stack web application built for a music
 
 The app allows users to record and organize music dictation practice sessions, track correctly identified musical categories, and review progress through saved sessions, graphical statistics, and an interactive monthly calendar.
 
-## Live Demo
+## Live App
 
 [Open Music Study Tracker](https://music-study-tracker.netlify.app)
-
-> The public demo currently uses a Clerk development instance for authentication.
 
 ## Features
 
@@ -101,7 +99,6 @@ The backend provides endpoints for managing:
 - dictation sessions
 - custom categories
 - custom collections
-- user-specific settings
 
 The API supports operations such as:
 
@@ -181,6 +178,8 @@ The main application features are implemented and the app is available online.
 Recent improvements include:
 
 - Clerk user authentication
+- polished responsive authentication interface
+- music-themed authentication screen
 - Node.js and Express backend
 - PostgreSQL database integration
 - user-specific data isolation
@@ -190,7 +189,6 @@ Recent improvements include:
 - improved API error handling
 - CORS configuration for the deployed frontend
 - prevention of protected data loading after logout
-- responsive authentication interface
 - custom application favicon
 - automated backend API integration tests with Jest and Supertest
 - GitHub Actions continuous integration
@@ -199,9 +197,11 @@ Recent improvements include:
 
 ## Planned Improvements
 
+- Add a pre-populated demo mode
 - Further improve the user interface
 - Add loading indicators and more detailed user-facing error messages
 - Add editing of existing dictation sessions
+- Add frontend automated tests
 - Refactor JavaScript files into ES modules
 - Improve accessibility
 - Add additional statistical visualizations

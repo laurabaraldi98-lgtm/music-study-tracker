@@ -11,6 +11,9 @@ window.addEventListener("load", async function () {
                 colorInputBackground: "#ffffff",
                 colorInputText: "#222222",
                 borderRadius: "8px"
+            },
+            options: {
+                unsafe_disableDevelopmentModeWarnings: true
             }
         }
     });
