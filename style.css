@@ -37,7 +37,7 @@ select {
     border-radius: 8px;
 }
 
-button {
+#app-container button {
     width: 100%;
     padding: 12px;
     font-size: 16px;
@@ -47,7 +47,7 @@ button {
     transition: transform 0.1s ease, opacity 0.1s ease;
 }
 
-button:active {
+#app-container button:active {
     transform: scale(0.97);
     opacity: 0.9;
 }
@@ -398,10 +398,152 @@ details p {
 }
 
 #sign-in-container {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
     display: flex;
     justify-content: center;
+    align-items: center;
+
     width: 100%;
-    margin: 40px auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    padding: clamp(16px, 4vw, 40px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    background:
+        radial-gradient(circle at 15% 20%,
+            rgba(111, 134, 166, 0.22),
+            transparent 32%),
+        radial-gradient(circle at 85% 80%,
+            rgba(143, 166, 197, 0.18),
+            transparent 35%),
+        linear-gradient(135deg,
+            #f4f4f7 0%,
+            #e8edf4 50%,
+            #f6f8fb 100%);
+}
+
+#sign-in-container::before,
+#sign-in-container::after {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    color: transparent;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+}
+
+#sign-in-container::before {
+    content: "♪";
+    font-size: clamp(28px, 3.5vw, 52px);
+
+    text-shadow:
+        5vw 8vh 0 rgba(111, 134, 166, 0.22),
+        18vw 22vh 0 rgba(111, 134, 166, 0.18),
+        31vw 10vh 0 rgba(111, 134, 166, 0.21),
+        44vw 31vh 0 rgba(111, 134, 166, 0.17),
+        58vw 13vh 0 rgba(111, 134, 166, 0.20),
+        72vw 26vh 0 rgba(111, 134, 166, 0.18),
+        87vw 9vh 0 rgba(111, 134, 166, 0.21),
+
+        9vw 48vh 0 rgba(111, 134, 166, 0.19),
+        23vw 60vh 0 rgba(111, 134, 166, 0.17),
+        39vw 50vh 0 rgba(111, 134, 166, 0.20),
+        64vw 54vh 0 rgba(111, 134, 166, 0.18),
+        81vw 45vh 0 rgba(111, 134, 166, 0.20),
+        93vw 61vh 0 rgba(111, 134, 166, 0.17),
+
+        4vw 82vh 0 rgba(111, 134, 166, 0.20),
+        19vw 91vh 0 rgba(111, 134, 166, 0.17),
+        34vw 76vh 0 rgba(111, 134, 166, 0.19),
+        52vw 89vh 0 rgba(111, 134, 166, 0.18),
+        69vw 73vh 0 rgba(111, 134, 166, 0.21),
+        84vw 88vh 0 rgba(111, 134, 166, 0.18),
+        95vw 78vh 0 rgba(111, 134, 166, 0.20);
+}
+
+#sign-in-container::after {
+    content: "♫";
+    font-size: clamp(22px, 2.8vw, 42px);
+
+    text-shadow:
+        11vw 15vh 0 rgba(111, 134, 166, 0.17),
+        25vw 35vh 0 rgba(111, 134, 166, 0.19),
+        37vw 21vh 0 rgba(111, 134, 166, 0.16),
+        50vw 8vh 0 rgba(111, 134, 166, 0.18),
+        66vw 35vh 0 rgba(111, 134, 166, 0.17),
+        79vw 17vh 0 rgba(111, 134, 166, 0.19),
+        91vw 33vh 0 rgba(111, 134, 166, 0.16),
+
+        15vw 70vh 0 rgba(111, 134, 166, 0.18),
+        29vw 54vh 0 rgba(111, 134, 166, 0.16),
+        46vw 67vh 0 rgba(111, 134, 166, 0.19),
+        59vw 43vh 0 rgba(111, 134, 166, 0.17),
+        75vw 63vh 0 rgba(111, 134, 166, 0.18),
+        88vw 55vh 0 rgba(111, 134, 166, 0.16),
+
+        8vw 94vh 0 rgba(111, 134, 166, 0.17),
+        42vw 94vh 0 rgba(111, 134, 166, 0.18),
+        61vw 82vh 0 rgba(111, 134, 166, 0.16),
+        78vw 96vh 0 rgba(111, 134, 166, 0.19);
+}
+
+#sign-in-container::after {
+    content: "♫";
+    font-size: clamp(22px, 2.8vw, 42px);
+
+    text-shadow:
+        11vw 15vh 0 rgba(111, 134, 166, 0.07),
+        25vw 35vh 0 rgba(111, 134, 166, 0.09),
+        37vw 21vh 0 rgba(111, 134, 166, 0.06),
+        50vw 8vh 0 rgba(111, 134, 166, 0.08),
+        66vw 35vh 0 rgba(111, 134, 166, 0.07),
+        79vw 17vh 0 rgba(111, 134, 166, 0.09),
+        91vw 33vh 0 rgba(111, 134, 166, 0.06),
+
+        15vw 70vh 0 rgba(111, 134, 166, 0.08),
+        29vw 54vh 0 rgba(111, 134, 166, 0.06),
+        46vw 67vh 0 rgba(111, 134, 166, 0.09),
+        59vw 43vh 0 rgba(111, 134, 166, 0.07),
+        75vw 63vh 0 rgba(111, 134, 166, 0.08),
+        88vw 55vh 0 rgba(111, 134, 166, 0.06),
+
+        8vw 94vh 0 rgba(111, 134, 166, 0.07),
+        42vw 94vh 0 rgba(111, 134, 166, 0.08),
+        61vw 82vh 0 rgba(111, 134, 166, 0.06),
+        78vw 96vh 0 rgba(111, 134, 166, 0.09);
+}
+
+#sign-in-container>* {
+    position: relative;
+    z-index: 1;
+}
+
+@media (max-width: 500px) {
+    #sign-in-container {
+        padding: 16px;
+    }
+
+    #sign-in-container::before {
+        font-size: 28px;
+    }
+
+    #sign-in-container::after {
+        font-size: 22px;
+    }
+}
+
+@media (max-height: 620px) {
+    #sign-in-container {
+        align-items: flex-start;
+    }
 }
 
 #user-button-container {
