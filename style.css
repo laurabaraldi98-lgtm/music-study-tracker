@@ -37,7 +37,7 @@ select {
     border-radius: 8px;
 }
 
-button {
+#app-container button {
     width: 100%;
     padding: 12px;
     font-size: 16px;
@@ -47,7 +47,7 @@ button {
     transition: transform 0.1s ease, opacity 0.1s ease;
 }
 
-button:active {
+#app-container button:active {
     transform: scale(0.97);
     opacity: 0.9;
 }
