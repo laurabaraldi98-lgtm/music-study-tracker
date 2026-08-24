@@ -173,6 +173,13 @@ addCategoryButton.addEventListener("click", async function () {
     newCategoryInput.value = "";
 });
 
+newCategoryInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addCategoryButton.click();
+    }
+});
+
 function formatCategoriesFromDatabase(categoryRows) {
     const formattedCategories = {
         rhythmic: [],

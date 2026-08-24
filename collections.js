@@ -210,6 +210,13 @@ addCollectionButton.addEventListener(
     }
 );
 
+newCollectionInput.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        addCollectionButton.click();
+    }
+});
+
 window.addEventListener(
     "clerk-ready",
     function () {
