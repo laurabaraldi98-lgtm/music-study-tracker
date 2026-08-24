@@ -143,7 +143,7 @@ const defaultCategoryRows = [
 ];
 
 
-async function flushPromises() {
+async function waitForAsyncCode() {
     await Promise.resolve();
     await Promise.resolve();
 }
@@ -163,7 +163,7 @@ async function loadCategories(
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 }
 
 
@@ -319,7 +319,7 @@ test("does not save an empty category", async () => {
 
     addCategoryButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(saveCategoryToServerMock)
         .not.toHaveBeenCalled();
@@ -339,7 +339,7 @@ test("saves a new category and updates the interface", async () => {
 
     addCategoryButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(saveCategoryToServerMock)
         .toHaveBeenCalledWith({
@@ -367,7 +367,7 @@ test("shows an error when a category cannot be saved", async () => {
 
     addCategoryButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
@@ -392,7 +392,7 @@ test("does not delete a category when confirmation is cancelled", async () => {
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(confirmMock)
         .toHaveBeenCalledWith(
@@ -420,7 +420,7 @@ test("deletes a category after confirmation", async () => {
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(deleteCategoryFromServerMock)
         .toHaveBeenCalledWith(1);
@@ -445,7 +445,7 @@ test("keeps the category when deletion fails", async () => {
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
@@ -489,7 +489,7 @@ test("uses default categories when loading fails", async () => {
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
@@ -518,7 +518,7 @@ test("does not load categories when there is no logged user", async () => {
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(getCategoriesFromServerMock)
         .not.toHaveBeenCalled();

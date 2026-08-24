@@ -99,7 +99,7 @@ const consoleErrorSpy = jest
 require("../collections.js");
 
 
-async function flushPromises() {
+async function waitForAsyncCode() {
     await Promise.resolve();
     await Promise.resolve();
 }
@@ -131,7 +131,7 @@ async function loadCollections(collections = []) {
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 }
 
 
@@ -223,7 +223,7 @@ test("shows an error when collections cannot be loaded", async () => {
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
@@ -242,7 +242,7 @@ test("does not load collections when there is no logged user", async () => {
         new Event("clerk-ready")
     );
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(getCollectionsFromServerMock)
         .not.toHaveBeenCalled();
@@ -276,7 +276,7 @@ test("does not save an empty collection", async () => {
 
     addCollectionButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(saveCollectionToServerMock)
         .not.toHaveBeenCalled();
@@ -295,7 +295,7 @@ test("does not save a duplicate collection", async () => {
 
     addCollectionButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(saveCollectionToServerMock)
         .not.toHaveBeenCalled();
@@ -317,7 +317,7 @@ test("saves a new collection and updates the interface", async () => {
 
     addCollectionButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(saveCollectionToServerMock)
         .toHaveBeenCalledWith({
@@ -360,7 +360,7 @@ test("shows an error when a collection cannot be saved", async () => {
 
     addCollectionButton.click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
@@ -387,7 +387,7 @@ test("does not delete a collection when confirmation is cancelled", async () => 
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(confirmMock)
         .toHaveBeenCalledWith(
@@ -417,7 +417,7 @@ test("deletes a collection after confirmation", async () => {
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(deleteCollectionFromServerMock)
         .toHaveBeenCalledWith(1);
@@ -450,7 +450,7 @@ test("keeps the collection when deletion fails", async () => {
 
     getRemoveButton().click();
 
-    await flushPromises();
+    await waitForAsyncCode();
 
     expect(consoleErrorSpy)
         .toHaveBeenCalled();
