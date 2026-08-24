@@ -180,6 +180,7 @@ Recent improvements include:
 - Clerk user authentication
 - polished responsive authentication interface
 - music-themed authentication screen
+- improved keyboard navigation
 - Node.js and Express backend
 - PostgreSQL database integration
 - user-specific data isolation
@@ -203,6 +204,6 @@ Recent improvements include:
 - Add editing of existing dictation sessions
 - Add frontend automated tests
 - Refactor JavaScript files into ES modules
-- Improve accessibility
+- Further improve accessibility
 - Add additional statistical visualizations
 - Add API rate limiting
