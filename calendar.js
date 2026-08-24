@@ -26,8 +26,57 @@ const calendarModalDictations = document.getElementById(
     "calendar-modal-dictations"
 );
 
-closeCalendarModalButton.addEventListener("click", function () {
+let elementBeforeModal = null;
+
+function closeCalendarModal() {
     calendarModal.hidden = true;
+
+    if (elementBeforeModal) {
+        elementBeforeModal.focus();
+        elementBeforeModal = null;
+    }
+}
+
+closeCalendarModalButton.addEventListener(
+    "click",
+    closeCalendarModal
+);
+
+document.addEventListener("keydown", function (event) {
+    if (calendarModal.hidden) {
+        return;
+    }
+
+    if (event.key === "Escape") {
+        closeCalendarModal();
+        return;
+    }
+
+    if (event.key !== "Tab") {
+        return;
+    }
+
+    const focusableElements = calendarModal.querySelectorAll(
+        'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    const firstElement = focusableElements[0];
+    const lastElement =
+        focusableElements[focusableElements.length - 1];
+
+    if (
+        event.shiftKey &&
+        document.activeElement === firstElement
+    ) {
+        event.preventDefault();
+        lastElement.focus();
+    } else if (
+        !event.shiftKey &&
+        document.activeElement === lastElement
+    ) {
+        event.preventDefault();
+        firstElement.focus();
+    }
 });
 
 const calendarCollectionFilter =
@@ -169,8 +218,9 @@ async function displayCalendar() {
 
         if (hasDictation) {
             dayElement.classList.add("has-dictation");
+            dayElement.tabIndex = 0;
 
-            dayElement.addEventListener("click", function () {
+            function openDayModal() {
                 const dictationsForDay = savedDictations.filter(
                     dictation => dictation.date === fullDate
                 );
@@ -224,10 +274,23 @@ async function displayCalendar() {
                         correctCategoriesParagraph
                     );
                     dictationBlock.appendChild(videoLink);
+
                     calendarModalDictations.appendChild(dictationBlock);
                 }
 
+                elementBeforeModal = document.activeElement;
+
                 calendarModal.hidden = false;
+                closeCalendarModalButton.focus();
+            }
+
+            dayElement.addEventListener("click", openDayModal);
+
+            dayElement.addEventListener("keydown", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openDayModal();
+                }
             });
         }
 
