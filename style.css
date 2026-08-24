@@ -38,7 +38,6 @@ select {
 }
 
 #app-container button {
-    width: 100%;
     padding: 12px;
     font-size: 16px;
     border: none;
@@ -50,6 +49,16 @@ select {
 #app-container button:active {
     transform: scale(0.97);
     opacity: 0.9;
+}
+
+#manage-collections-button,
+#manage-categories-button,
+#save-button,
+#show-saved-button,
+#show-calendar-button,
+#show-statistics-button {
+    display: block;
+    width: 100%;
 }
 
 #show-saved-button,
