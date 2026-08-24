@@ -3,3 +3,5 @@ server/.env
 .vercel
 .env*
 server/coverage/
+node_modules/
+coverage/
