@@ -170,3 +170,21 @@ async function deleteCollectionFromServer(collectionId) {
 
     return response.json();
 }
+
+
+// Expose API functions for Jest tests
+/* istanbul ignore next */
+if (typeof module !== "undefined") {
+    module.exports = {
+        authenticatedFetch,
+        getDictationsFromServer,
+        saveDictationToServer,
+        deleteDictationFromServer,
+        getCategoriesFromServer,
+        saveCategoryToServer,
+        deleteCategoryFromServer,
+        getCollectionsFromServer,
+        saveCollectionToServer,
+        deleteCollectionFromServer
+    };
+}
