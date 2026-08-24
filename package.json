@@ -1,0 +1,32 @@
+{
+  "name": "music-study-tracker",
+  "version": "1.0.0",
+  "description": "Music Study Tracker is a responsive full-stack web application built for a music student based on her specific study needs.",
+  "main": "api.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laurabaraldi98-lgtm/music-study-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/laurabaraldi98-lgtm/music-study-tracker/issues"
+  },
+  "homepage": "https://github.com/laurabaraldi98-lgtm/music-study-tracker#readme",
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "roots": [
+      "<rootDir>/tests"
+    ]
+  }
+}

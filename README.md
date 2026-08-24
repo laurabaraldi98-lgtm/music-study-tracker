@@ -110,9 +110,35 @@ The API supports operations such as:
 
 ## Testing
 
+The project includes automated test suites for both the frontend and backend.
+
+### Frontend
+
+Frontend behavior is tested using Jest and jsdom.
+
+The frontend test suite covers:
+
+- authentication interface behavior
+- authenticated API requests
+- API success and failure responses
+- dictation creation and validation
+- collection management
+- category management
+- saved dictation rendering and filtering
+- statistics calculations
+- calendar rendering and navigation
+- modal behavior
+- keyboard interactions and focus management
+
+External dependencies and browser APIs are mocked where appropriate so that frontend behavior can be tested without relying on live services.
+
+The frontend test suite achieves 100% statement, branch, function, and line coverage for the tested JavaScript application logic.
+
+### Backend
+
 The backend API is covered by automated integration tests using Jest and Supertest.
 
-The test suite covers:
+The backend test suite covers:
 
 - authentication failures
 - successful API requests
@@ -126,7 +152,7 @@ The test suite covers:
 
 External dependencies such as Clerk authentication and PostgreSQL queries are mocked during testing, allowing the Express API logic to be tested without relying on live external services.
 
-The current backend test suite contains 68 automated tests and achieves 100% statement, branch, function, and line coverage for the Express application logic in `app.js`.
+The backend test suite contains 68 automated tests and achieves 100% statement, branch, function, and line coverage for the Express application logic in `app.js`.
 
 ## CI/CD
 
