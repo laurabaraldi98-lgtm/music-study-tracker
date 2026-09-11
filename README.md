@@ -92,6 +92,22 @@ The backend verifies the authenticated user and uses the corresponding Clerk use
 
 This prevents users from accessing records belonging to another account.
 
+## Database Schema
+
+The PostgreSQL database is hosted on Neon, and its schema is versioned in `database/migrations/`.
+
+The initial migration contains the application tables, sequences, primary keys, and constraints. It contains no user data or database credentials.
+
+Migrations are intended to be applied in filename order to an empty PostgreSQL database:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
+```
+
+Docker can be used to apply and validate migrations locally without installing PostgreSQL directly.
+
+Future database changes should be added as new numbered migration files instead of modifying the initial migration.
+
 ## API
 
 The backend provides endpoints for managing:
