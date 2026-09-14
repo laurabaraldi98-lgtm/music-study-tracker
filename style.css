@@ -5,6 +5,10 @@ body {
     padding: 20px;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 main {
     max-width: 600px;
     margin: 40px auto;
@@ -43,7 +47,10 @@ select {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.1s ease, opacity 0.1s ease;
+    transition:
+        transform 0.1s ease,
+        opacity 0.1s ease,
+        background-color 0.1s ease;
 }
 
 #app-container button:active {
@@ -51,7 +58,10 @@ select {
     opacity: 0.9;
 }
 
+/* Main full-width buttons */
+
 #manage-collections-button,
+#manage-dictation-types-button,
 #manage-categories-button,
 #save-button,
 #show-saved-button,
@@ -59,6 +69,15 @@ select {
 #show-statistics-button {
     display: block;
     width: 100%;
+}
+
+#manage-collections-button,
+#manage-dictation-types-button {
+    margin-bottom: 18px;
+}
+
+#manage-categories-button {
+    margin-bottom: 12px;
 }
 
 #show-saved-button,
@@ -75,6 +94,95 @@ select {
 #save-button:hover {
     background-color: #5f7491;
 }
+
+/* Shared manager panels */
+
+#collection-manager,
+#dictation-type-manager,
+#category-manager {
+    margin-top: 18px;
+    margin-bottom: 18px;
+}
+
+#collection-manager>label,
+#dictation-type-manager>label,
+#category-manager>label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Shared manager input rows */
+
+.new-collection-row,
+.new-dictation-type-row,
+.new-category-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.new-collection-row input,
+.new-dictation-type-row input,
+.new-category-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Shared Add buttons */
+
+#add-collection-button,
+#add-dictation-type-button,
+#add-category-button {
+    width: auto;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+#add-collection-button:hover,
+#add-dictation-type-button:hover,
+#add-category-button:hover {
+    background-color: #5f7491;
+}
+
+/* Shared manager lists */
+
+#collections-list>div,
+#dictation-types-list>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+#collections-list>div:last-child,
+#dictation-types-list>div:last-child {
+    margin-bottom: 0;
+}
+
+/* Shared Remove buttons */
+
+.remove-collection-button,
+.remove-dictation-type-button,
+.remove-category-button {
+    width: auto;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    margin: 0;
+    font-size: 14px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.remove-collection-button:hover,
+.remove-dictation-type-button:hover,
+.remove-category-button:hover {
+    background-color: #c9302c;
+}
+
+/* Categories */
 
 #categories-question {
     margin: 14px 0 10px;
@@ -108,102 +216,7 @@ select {
     min-width: 0;
 }
 
-#manage-categories-button {
-    margin-bottom: 12px;
-}
-
-.new-category-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.new-category-row input {
-    flex: 1;
-    min-width: 0;
-}
-
-#add-category-button {
-    width: auto;
-    padding: 8px 12px;
-    background-color: #6f86a6;
-    color: white;
-}
-
-#add-category-button:hover {
-    background-color: #5f7491;
-}
-
-.remove-category-button {
-    width: auto;
-    padding: 4px 8px;
-    margin: 0;
-    font-size: 14px;
-    background-color: #d9534f;
-    color: white;
-}
-
-.remove-category-button:hover {
-    background-color: #c9302c;
-}
-
-#manage-collections-button {
-    margin-bottom: 18px;
-}
-
-#collection-manager {
-    margin-top: 18px;
-    margin-bottom: 18px;
-}
-
-#collection-manager>label {
-    display: block;
-    margin-top: 18px;
-    margin-bottom: 6px;
-}
-
-.new-collection-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-.new-collection-row input {
-    flex: 1;
-    min-width: 0;
-}
-
-#add-collection-button {
-    width: auto;
-    padding: 8px 12px;
-    background-color: #6f86a6;
-    color: white;
-}
-
-#add-collection-button:hover {
-    background-color: #5f7491;
-}
-
-#collections-list>div {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-}
-
-.remove-collection-button {
-    width: auto;
-    padding: 4px 8px;
-    margin: 0;
-    font-size: 14px;
-    background-color: #d9534f;
-    color: white;
-}
-
-.remove-collection-button:hover {
-    background-color: #c9302c;
-}
+/* Saved dictations */
 
 details {
     margin-bottom: 16px;
@@ -225,6 +238,8 @@ details p {
 .delete-button:hover {
     background-color: #c9302c;
 }
+
+/* Statistics */
 
 .category-stat {
     margin-bottom: 16px;
@@ -252,6 +267,8 @@ details p {
     text-align: center;
     line-height: 14px;
 }
+
+/* Calendar */
 
 .calendar-header {
     display: grid;
@@ -313,6 +330,8 @@ details p {
     cursor: pointer;
 }
 
+/* Modal */
+
 .modal {
     position: fixed;
     inset: 0;
@@ -371,36 +390,7 @@ details p {
     border-bottom: none;
 }
 
-@media (max-width: 500px) {
-    body {
-        padding: 10px;
-    }
-
-    main {
-        margin: 20px auto;
-        padding: 20px;
-    }
-
-    .calendar-grid {
-        gap: 3px;
-    }
-
-    .calendar-weekday {
-        padding: 6px 1px;
-        font-size: 12px;
-    }
-
-    .calendar-day {
-        min-height: 36px;
-        font-size: 13px;
-        border-radius: 6px;
-    }
-}
-
-#category-manager label {
-    display: block;
-    margin-bottom: 8px;
-}
+/* Authentication */
 
 #app-container {
     display: none;
@@ -442,7 +432,6 @@ details p {
     position: absolute;
     top: 0;
     left: 0;
-
     color: transparent;
     pointer-events: none;
     user-select: none;
@@ -483,32 +472,6 @@ details p {
     font-size: clamp(22px, 2.8vw, 42px);
 
     text-shadow:
-        11vw 15vh 0 rgba(111, 134, 166, 0.17),
-        25vw 35vh 0 rgba(111, 134, 166, 0.19),
-        37vw 21vh 0 rgba(111, 134, 166, 0.16),
-        50vw 8vh 0 rgba(111, 134, 166, 0.18),
-        66vw 35vh 0 rgba(111, 134, 166, 0.17),
-        79vw 17vh 0 rgba(111, 134, 166, 0.19),
-        91vw 33vh 0 rgba(111, 134, 166, 0.16),
-
-        15vw 70vh 0 rgba(111, 134, 166, 0.18),
-        29vw 54vh 0 rgba(111, 134, 166, 0.16),
-        46vw 67vh 0 rgba(111, 134, 166, 0.19),
-        59vw 43vh 0 rgba(111, 134, 166, 0.17),
-        75vw 63vh 0 rgba(111, 134, 166, 0.18),
-        88vw 55vh 0 rgba(111, 134, 166, 0.16),
-
-        8vw 94vh 0 rgba(111, 134, 166, 0.17),
-        42vw 94vh 0 rgba(111, 134, 166, 0.18),
-        61vw 82vh 0 rgba(111, 134, 166, 0.16),
-        78vw 96vh 0 rgba(111, 134, 166, 0.19);
-}
-
-#sign-in-container::after {
-    content: "♫";
-    font-size: clamp(22px, 2.8vw, 42px);
-
-    text-shadow:
         11vw 15vh 0 rgba(111, 134, 166, 0.07),
         25vw 35vh 0 rgba(111, 134, 166, 0.09),
         37vw 21vh 0 rgba(111, 134, 166, 0.06),
@@ -535,7 +498,45 @@ details p {
     z-index: 1;
 }
 
+#user-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+/* Responsive */
+
 @media (max-width: 500px) {
+    body {
+        padding: 10px;
+    }
+
+    main {
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .new-collection-row,
+    .new-dictation-type-row,
+    .new-category-row {
+        align-items: stretch;
+    }
+
+    .calendar-grid {
+        gap: 3px;
+    }
+
+    .calendar-weekday {
+        padding: 6px 1px;
+        font-size: 12px;
+    }
+
+    .calendar-day {
+        min-height: 36px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
     #sign-in-container {
         padding: 16px;
     }
@@ -553,10 +554,4 @@ details p {
     #sign-in-container {
         align-items: flex-start;
     }
-}
-
-#user-button-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
 }
