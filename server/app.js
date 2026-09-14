@@ -7,6 +7,7 @@ const {
 
 const cors = require("cors");
 const pool = require("./db");
+const dictationTypesRouter = require("./routes/dictation-types");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+app.use("/dictation-types", dictationTypesRouter);
 
 const defaultCategories = [
     ["rhythmic", "Metrica"],
