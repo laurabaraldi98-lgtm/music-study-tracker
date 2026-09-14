@@ -20,12 +20,15 @@ const {
     deleteCategoryFromServer,
     getCollectionsFromServer,
     saveCollectionToServer,
-    deleteCollectionFromServer
+    deleteCollectionFromServer,
+    getDictationTypesFromServer,
+    saveDictationTypeToServer,
+    deleteDictationTypeFromServer
 } = require("../api.js");
 
 
 const API_BASE_URL =
-    "https://music-study-tracker-backend.vercel.app";
+    "http://localhost:3000";
 
 
 function makeResponse(
@@ -490,3 +493,167 @@ test.each([
         );
     }
 );
+
+describe("dictation type API requests", () => {
+    test("gets dictation types from the server", async () => {
+        const types = [
+            {
+                id: 1,
+                name: "Ritmico"
+            }
+        ];
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, types)
+        );
+
+        await expect(
+            getDictationTypesFromServer()
+        ).resolves.toEqual(types);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/dictation-types`,
+            {
+                headers: {
+                    Authorization:
+                        "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("uses the server error when dictation types cannot be loaded", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Errore specifico"
+            })
+        );
+
+        await expect(
+            getDictationTypesFromServer()
+        ).rejects.toThrow("Errore specifico");
+    });
+
+    test("uses the fallback error when dictation types cannot be loaded", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            getDictationTypesFromServer()
+        ).rejects.toThrow(
+            "Errore durante il recupero dei tipi di dettato"
+        );
+    });
+
+    test("saves a dictation type", async () => {
+        const newType = {
+            name: "Contrappunto"
+        };
+
+        const savedType = {
+            id: 4,
+            name: "Contrappunto"
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, savedType)
+        );
+
+        await expect(
+            saveDictationTypeToServer(newType)
+        ).resolves.toEqual(savedType);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/dictation-types`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json",
+                    Authorization:
+                        "Bearer test-token"
+                },
+                body: JSON.stringify(newType)
+            }
+        );
+    });
+
+    test("uses the server error when a dictation type cannot be saved", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Errore specifico"
+            })
+        );
+
+        await expect(
+            saveDictationTypeToServer({
+                name: "Contrappunto"
+            })
+        ).rejects.toThrow("Errore specifico");
+    });
+
+    test("uses the fallback error when a dictation type cannot be saved", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            saveDictationTypeToServer({
+                name: "Contrappunto"
+            })
+        ).rejects.toThrow(
+            "Errore durante il salvataggio del tipo di dettato"
+        );
+    });
+
+    test("deletes a dictation type", async () => {
+        const deletedType = {
+            id: 4,
+            name: "Contrappunto"
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, deletedType)
+        );
+
+        await expect(
+            deleteDictationTypeFromServer(4)
+        ).resolves.toEqual(deletedType);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/dictation-types/4`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization:
+                        "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("uses the server error when a dictation type cannot be deleted", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Errore specifico"
+            })
+        );
+
+        await expect(
+            deleteDictationTypeFromServer(4)
+        ).rejects.toThrow("Errore specifico");
+    });
+
+    test("uses the fallback error when a dictation type cannot be deleted", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            deleteDictationTypeFromServer(4)
+        ).rejects.toThrow(
+            "Errore durante la cancellazione del tipo di dettato"
+        );
+    });
+});
