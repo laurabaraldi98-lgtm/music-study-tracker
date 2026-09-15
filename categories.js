@@ -1,5 +1,3 @@
-const dictationType = document.getElementById("dictation-type");
-
 const categoriesContainer = document.getElementById(
     "categories-container"
 );
@@ -24,48 +22,45 @@ const categoriesQuestion = document.getElementById(
     "categories-question"
 );
 
-const defaultCategories = {
-    rhythmic: [
-        { id: null, name: "Metrica" },
-        { id: null, name: "Pause" },
-        { id: null, name: "Gruppi irregolari" }
-    ],
-    melodic: [
-        { id: null, name: "Tonalità" },
-        { id: null, name: "Ritmo" },
-        { id: null, name: "Intervalli" },
-        { id: null, name: "Modulazioni" }
-    ],
-    harmonic: [
-        { id: null, name: "Basso" },
-        { id: null, name: "Soprano" },
-        { id: null, name: "Accordi" }
-    ]
-};
+let categories = {};
 
-let categories = defaultCategories;
+function renderCategories() {
+    const selectedTypeId =
+        dictationTypeSelect.value;
 
-dictationType.addEventListener("change", function () {
-    const selectedType = dictationType.value;
-    categoriesQuestion.hidden = selectedType === "";
-    manageCategoriesButton.hidden = selectedType === "";
+    categoriesQuestion.hidden =
+        selectedTypeId === "";
+
+    manageCategoriesButton.hidden =
+        selectedTypeId === "";
 
     categoriesContainer.innerHTML = "";
 
-    if (selectedType === "") {
+    if (selectedTypeId === "") {
+        categoryManager.hidden = true;
+
+        manageCategoriesButton.textContent =
+            "Gestisci categorie";
+
         return;
     }
 
-    const selectedCategories = categories[selectedType];
+    const selectedCategories =
+        categories[selectedTypeId] || [];
 
     for (const category of selectedCategories) {
-        const categoryRow = document.createElement("div");
+        const categoryRow =
+            document.createElement("div");
 
-        const checkbox = document.createElement("input");
+        const checkbox =
+            document.createElement("input");
+
         checkbox.type = "checkbox";
         checkbox.value = category.name;
 
-        const label = document.createElement("label");
+        const label =
+            document.createElement("label");
+
         label.textContent = category.name;
 
         categoryRow.appendChild(checkbox);
@@ -75,7 +70,10 @@ dictationType.addEventListener("change", function () {
             const removeCategoryButton =
                 document.createElement("button");
 
-            removeCategoryButton.textContent = "Rimuovi";
+            removeCategoryButton.type = "button";
+            removeCategoryButton.textContent =
+                "Rimuovi";
+
             removeCategoryButton.classList.add(
                 "remove-category-button"
             );
@@ -92,7 +90,9 @@ dictationType.addEventListener("change", function () {
                     }
 
                     try {
-                        await deleteCategoryFromServer(category.id);
+                        await deleteCategoryFromServer(
+                            category.id
+                        );
                     } catch (error) {
                         console.error(error);
 
@@ -103,94 +103,141 @@ dictationType.addEventListener("change", function () {
                         return;
                     }
 
-                    const categoryIndex =
-                        categories[selectedType].findIndex(
+                    categories[selectedTypeId] =
+                        categories[
+                            selectedTypeId
+                        ].filter(
                             function (savedCategory) {
-                                return savedCategory.id === category.id;
+                                return (
+                                    savedCategory.id !==
+                                    category.id
+                                );
                             }
                         );
 
-                    categories[selectedType].splice(categoryIndex, 1);
-
-                    dictationType.dispatchEvent(new Event("change"));
+                    renderCategories();
                 }
             );
 
-            categoryRow.appendChild(removeCategoryButton);
+            categoryRow.appendChild(
+                removeCategoryButton
+            );
         }
 
-        categoriesContainer.appendChild(categoryRow);
+        categoriesContainer.appendChild(
+            categoryRow
+        );
     }
-});
+}
 
-manageCategoriesButton.addEventListener("click", function () {
-    categoryManager.hidden = !categoryManager.hidden;
+dictationTypeSelect.addEventListener(
+    "change",
+    renderCategories
+);
 
-    if (categoryManager.hidden) {
-        manageCategoriesButton.textContent =
-            "Gestisci categorie";
-    } else {
-        manageCategoriesButton.textContent =
-            "Nascondi gestione categorie";
+manageCategoriesButton.addEventListener(
+    "click",
+    function () {
+        categoryManager.hidden =
+            !categoryManager.hidden;
+
+        if (categoryManager.hidden) {
+            manageCategoriesButton.textContent =
+                "Gestisci categorie";
+        } else {
+            manageCategoriesButton.textContent =
+                "Nascondi gestione categorie";
+        }
+
+        renderCategories();
     }
+);
 
-    dictationType.dispatchEvent(new Event("change"));
-});
+addCategoryButton.addEventListener(
+    "click",
+    async function () {
+        const selectedTypeId =
+            dictationTypeSelect.value;
 
-addCategoryButton.addEventListener("click", async function () {
-    const typedCategory = newCategoryInput.value.trim();
+        const typedCategory =
+            newCategoryInput.value.trim();
 
-    const newCategory =
-        typedCategory.charAt(0).toUpperCase() +
-        typedCategory.slice(1);
+        if (
+            selectedTypeId === "" ||
+            typedCategory === ""
+        ) {
+            return;
+        }
 
-    if (newCategory === "") {
-        return;
+        const formattedName =
+            typedCategory.charAt(0).toUpperCase() +
+            typedCategory.slice(1);
+
+        let savedCategory;
+
+        try {
+            savedCategory =
+                await saveCategoryToServer({
+                    dictationTypeId:
+                        Number(selectedTypeId),
+                    name: formattedName
+                });
+        } catch (error) {
+            console.error(error);
+
+            alert(
+                "Non è stato possibile salvare la categoria."
+            );
+
+            return;
+        }
+
+        if (!categories[selectedTypeId]) {
+            categories[selectedTypeId] = [];
+        }
+
+        categories[selectedTypeId].push(
+            savedCategory
+        );
+
+        newCategoryInput.value = "";
+
+        renderCategories();
     }
+);
 
-    const selectedType = dictationType.value;
-
-    const category = {
-        type: selectedType,
-        name: newCategory
-    };
-
-    let savedCategory;
-
-    try {
-        savedCategory =
-            await saveCategoryToServer(category);
-    } catch (error) {
-        console.error(error);
-        alert("Non è stato possibile salvare la categoria.");
-        return;
+newCategoryInput.addEventListener(
+    "keydown",
+    function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            addCategoryButton.click();
+        }
     }
+);
 
-    categories[selectedType].push(savedCategory);
+function formatCategoriesFromDatabase(
+    categoryRows
+) {
+    const formattedCategories = {};
 
-    dictationType.dispatchEvent(new Event("change"));
-
-    newCategoryInput.value = "";
-});
-
-newCategoryInput.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        addCategoryButton.click();
+    for (const type of dictationTypes) {
+        formattedCategories[String(type.id)] = [];
     }
-});
-
-function formatCategoriesFromDatabase(categoryRows) {
-    const formattedCategories = {
-        rhythmic: [],
-        melodic: [],
-        harmonic: []
-    };
 
     for (const category of categoryRows) {
-        formattedCategories[category.type].push({
+        const typeId =
+            String(category.dictation_type_id);
+
+        if (!formattedCategories[typeId]) {
+            formattedCategories[typeId] = [];
+        }
+
+        formattedCategories[typeId].push({
             id: category.id,
-            name: category.name
+            name: category.name,
+            dictationTypeId:
+                category.dictation_type_id
         });
     }
 
@@ -206,10 +253,10 @@ async function loadCategories() {
             formatCategoriesFromDatabase(
                 categoryRows
             );
+
+        renderCategories();
     } catch (error) {
         console.error(error);
-
-        categories = defaultCategories;
 
         alert(
             "Non è stato possibile caricare le categorie dal database."
@@ -218,7 +265,7 @@ async function loadCategories() {
 }
 
 window.addEventListener(
-    "clerk-ready",
+    "dictation-types-loaded",
     function () {
         if (Clerk.user) {
             loadCategories();

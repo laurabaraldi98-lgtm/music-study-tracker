@@ -1,32 +1,50 @@
-const showCalendarButton = document.getElementById(
-    "show-calendar-button"
-);
+const showCalendarButton =
+    document.getElementById(
+        "show-calendar-button"
+    );
 
-const calendarSection = document.getElementById(
-    "calendar-section"
-);
+const calendarSection =
+    document.getElementById(
+        "calendar-section"
+    );
 
-const calendarContainer = document.getElementById(
-    "calendar-container"
-);
+const calendarContainer =
+    document.getElementById(
+        "calendar-container"
+    );
 
-const calendarModal = document.getElementById(
-    "calendar-modal"
-);
+const calendarModal =
+    document.getElementById(
+        "calendar-modal"
+    );
 
-const closeCalendarModalButton = document.getElementById(
-    "close-calendar-modal"
-);
+const closeCalendarModalButton =
+    document.getElementById(
+        "close-calendar-modal"
+    );
 
-const calendarModalTitle = document.getElementById(
-    "calendar-modal-title"
-);
+const calendarModalTitle =
+    document.getElementById(
+        "calendar-modal-title"
+    );
 
-const calendarModalDictations = document.getElementById(
-    "calendar-modal-dictations"
-);
+const calendarModalDictations =
+    document.getElementById(
+        "calendar-modal-dictations"
+    );
+
+const calendarCollectionFilter =
+    document.getElementById(
+        "calendar-collection-filter"
+    );
 
 let elementBeforeModal = null;
+
+let displayedMonth =
+    new Date().getMonth();
+
+let displayedYear =
+    new Date().getFullYear();
 
 function closeCalendarModal() {
     calendarModal.hidden = true;
@@ -42,48 +60,52 @@ closeCalendarModalButton.addEventListener(
     closeCalendarModal
 );
 
-document.addEventListener("keydown", function (event) {
-    if (calendarModal.hidden) {
-        return;
+document.addEventListener(
+    "keydown",
+    function (event) {
+        if (calendarModal.hidden) {
+            return;
+        }
+
+        if (event.key === "Escape") {
+            closeCalendarModal();
+            return;
+        }
+
+        if (event.key !== "Tab") {
+            return;
+        }
+
+        const focusableElements =
+            calendarModal.querySelectorAll(
+                'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+
+        const firstElement =
+            focusableElements[0];
+
+        const lastElement =
+            focusableElements[
+            focusableElements.length - 1
+            ];
+
+        if (
+            event.shiftKey &&
+            document.activeElement ===
+            firstElement
+        ) {
+            event.preventDefault();
+            lastElement.focus();
+        } else if (
+            !event.shiftKey &&
+            document.activeElement ===
+            lastElement
+        ) {
+            event.preventDefault();
+            firstElement.focus();
+        }
     }
-
-    if (event.key === "Escape") {
-        closeCalendarModal();
-        return;
-    }
-
-    if (event.key !== "Tab") {
-        return;
-    }
-
-    const focusableElements = calendarModal.querySelectorAll(
-        'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-
-    const firstElement = focusableElements[0];
-    const lastElement =
-        focusableElements[focusableElements.length - 1];
-
-    if (
-        event.shiftKey &&
-        document.activeElement === firstElement
-    ) {
-        event.preventDefault();
-        lastElement.focus();
-    } else if (
-        !event.shiftKey &&
-        document.activeElement === lastElement
-    ) {
-        event.preventDefault();
-        firstElement.focus();
-    }
-});
-
-const calendarCollectionFilter =
-    document.getElementById("calendar-collection-filter");
-
-let displayedMonth = new Date().getMonth();
-let displayedYear = new Date().getFullYear();
+);
 
 async function displayCalendar() {
     const year = displayedYear;
@@ -92,26 +114,36 @@ async function displayCalendar() {
     let savedDictations;
 
     try {
-        savedDictations = await getDictationsFromServer();
+        savedDictations =
+            await getDictationsFromServer();
     } catch (error) {
         console.error(error);
-        alert("Non è stato possibile caricare il calendario.");
+
+        alert(
+            "Non è stato possibile caricare il calendario."
+        );
+
         return;
     }
 
-    savedDictations = savedDictations.map(
-        formatDictationFromDatabase
-    );
+    savedDictations =
+        savedDictations.map(
+            formatDictationFromDatabase
+        );
 
     const selectedCollection =
         calendarCollectionFilter.value;
 
     if (selectedCollection !== "") {
-        savedDictations = savedDictations.filter(
-            function (dictation) {
-                return dictation.collection === selectedCollection;
-            }
-        );
+        savedDictations =
+            savedDictations.filter(
+                function (dictation) {
+                    return (
+                        dictation.collection ===
+                        selectedCollection
+                    );
+                }
+            );
     }
 
     const monthNames = [
@@ -129,15 +161,22 @@ async function displayCalendar() {
         "Dicembre"
     ];
 
-    const firstDayOfMonth = new Date(year, month, 1);
+    const firstDayOfMonth =
+        new Date(
+            year,
+            month,
+            1
+        );
 
-    const daysInMonth = new Date(
-        year,
-        month + 1,
-        0
-    ).getDate();
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
 
-    let startingDay = firstDayOfMonth.getDay();
+    let startingDay =
+        firstDayOfMonth.getDay();
 
     if (startingDay === 0) {
         startingDay = 6;
@@ -147,30 +186,61 @@ async function displayCalendar() {
 
     calendarContainer.innerHTML = "";
 
-    const calendarHeader = document.createElement("div");
-    calendarHeader.classList.add("calendar-header");
+    const calendarHeader =
+        document.createElement("div");
 
-    const previousMonthButton = document.createElement("button");
-    previousMonthButton.textContent = "←";
-    previousMonthButton.classList.add("calendar-navigation-button");
+    calendarHeader.classList.add(
+        "calendar-header"
+    );
 
-    const monthTitle = document.createElement("h3");
+    const previousMonthButton =
+        document.createElement("button");
+
+    previousMonthButton.textContent =
+        "←";
+
+    previousMonthButton.classList.add(
+        "calendar-navigation-button"
+    );
+
+    const monthTitle =
+        document.createElement("h3");
 
     monthTitle.textContent =
         `${monthNames[month]} ${year}`;
 
-    const nextMonthButton = document.createElement("button");
-    nextMonthButton.textContent = "→";
-    nextMonthButton.classList.add("calendar-navigation-button");
+    const nextMonthButton =
+        document.createElement("button");
 
-    calendarHeader.appendChild(previousMonthButton);
-    calendarHeader.appendChild(monthTitle);
-    calendarHeader.appendChild(nextMonthButton);
+    nextMonthButton.textContent =
+        "→";
 
-    calendarContainer.appendChild(calendarHeader);
+    nextMonthButton.classList.add(
+        "calendar-navigation-button"
+    );
 
-    const calendarGrid = document.createElement("div");
-    calendarGrid.classList.add("calendar-grid");
+    calendarHeader.appendChild(
+        previousMonthButton
+    );
+
+    calendarHeader.appendChild(
+        monthTitle
+    );
+
+    calendarHeader.appendChild(
+        nextMonthButton
+    );
+
+    calendarContainer.appendChild(
+        calendarHeader
+    );
+
+    const calendarGrid =
+        document.createElement("div");
+
+    calendarGrid.classList.add(
+        "calendar-grid"
+    );
 
     const weekdays = [
         "Lun",
@@ -184,142 +254,272 @@ async function displayCalendar() {
 
     for (const weekday of weekdays) {
         const weekdayElement =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
-        weekdayElement.textContent = weekday;
-        weekdayElement.classList.add("calendar-weekday");
+        weekdayElement.textContent =
+            weekday;
 
-        calendarGrid.appendChild(weekdayElement);
+        weekdayElement.classList.add(
+            "calendar-weekday"
+        );
+
+        calendarGrid.appendChild(
+            weekdayElement
+        );
     }
 
-    for (let i = 0; i < startingDay; i++) {
-        const emptyDay = document.createElement("div");
+    for (
+        let index = 0;
+        index < startingDay;
+        index++
+    ) {
+        const emptyDay =
+            document.createElement(
+                "div"
+            );
 
-        emptyDay.classList.add("calendar-day", "empty");
+        emptyDay.classList.add(
+            "calendar-day",
+            "empty"
+        );
 
-        calendarGrid.appendChild(emptyDay);
+        calendarGrid.appendChild(
+            emptyDay
+        );
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayElement = document.createElement("div");
+    for (
+        let day = 1;
+        day <= daysInMonth;
+        day++
+    ) {
+        const dayElement =
+            document.createElement(
+                "div"
+            );
 
         dayElement.textContent = day;
-        dayElement.classList.add("calendar-day");
 
-        const monthNumber = String(month + 1).padStart(2, "0");
-        const dayNumber = String(day).padStart(2, "0");
+        dayElement.classList.add(
+            "calendar-day"
+        );
+
+        const monthNumber =
+            String(month + 1)
+                .padStart(2, "0");
+
+        const dayNumber =
+            String(day)
+                .padStart(2, "0");
 
         const fullDate =
             `${year}-${monthNumber}-${dayNumber}`;
 
-        const hasDictation = savedDictations.some(
-            dictation => dictation.date === fullDate
-        );
+        const hasDictation =
+            savedDictations.some(
+                function (dictation) {
+                    return (
+                        dictation.date ===
+                        fullDate
+                    );
+                }
+            );
 
         if (hasDictation) {
-            dayElement.classList.add("has-dictation");
+            dayElement.classList.add(
+                "has-dictation"
+            );
+
             dayElement.tabIndex = 0;
 
             function openDayModal() {
-                const dictationsForDay = savedDictations.filter(
-                    dictation => dictation.date === fullDate
-                );
+                const dictationsForDay =
+                    savedDictations.filter(
+                        function (dictation) {
+                            return (
+                                dictation.date ===
+                                fullDate
+                            );
+                        }
+                    );
 
                 calendarModalTitle.textContent =
                     `Dettati del ${dayNumber}/${monthNumber}/${year}`;
 
-                calendarModalDictations.innerHTML = "";
+                calendarModalDictations
+                    .innerHTML = "";
 
-                for (const dictation of dictationsForDay) {
-                    const dictationBlock = document.createElement("div");
+                for (
+                    const dictation
+                    of dictationsForDay
+                ) {
+                    const dictationBlock =
+                        document.createElement(
+                            "div"
+                        );
 
-                    dictationBlock.classList.add("calendar-modal-dictation");
+                    dictationBlock.classList.add(
+                        "calendar-modal-dictation"
+                    );
 
-                    const typeNames = {
-                        rhythmic: "Ritmico",
-                        melodic: "Melodico",
-                        harmonic: "Armonico"
-                    };
+                    const dictationTitle =
+                        document.createElement(
+                            "h4"
+                        );
 
-                    const dictationTitle = document.createElement("h4");
-                    dictationTitle.textContent = dictation.name;
+                    dictationTitle.textContent =
+                        dictation.name;
 
-                    const typeParagraph = document.createElement("p");
+                    const typeParagraph =
+                        document.createElement(
+                            "p"
+                        );
+
                     typeParagraph.textContent =
-                        `Tipo: ${typeNames[dictation.type]}`;
+                        `Tipo: ${dictation.dictationTypeName}`;
 
-                    const collectionParagraph = document.createElement("p");
+                    const collectionParagraph =
+                        document.createElement(
+                            "p"
+                        );
+
                     collectionParagraph.textContent =
-                        `Raccolta: ${dictation.collection || "Nessuna"}`;
+                        "Raccolta: " +
+                        (
+                            dictation.collection ||
+                            "Nessuna"
+                        );
 
                     const correctCategoriesParagraph =
-                        document.createElement("p");
+                        document.createElement(
+                            "p"
+                        );
 
-                    correctCategoriesParagraph.textContent =
-                        `Sentito correttamente: ${dictation.correctCategories.length > 0
-                            ? dictation.correctCategories.join(", ")
-                            : "Nessuna categoria"
-                        }`;
+                    const correctCategoriesText =
+                        dictation
+                            .correctCategories
+                            .length > 0
+                            ? dictation
+                                .correctCategories
+                                .join(", ")
+                            : "Nessuna categoria";
 
-                    const videoLink = document.createElement("a");
-                    videoLink.href = dictation.youtubeLink;
-                    videoLink.target = "_blank";
-                    videoLink.rel = "noopener noreferrer";
-                    videoLink.textContent = "Apri video";
+                    correctCategoriesParagraph
+                        .textContent =
+                        "Sentito correttamente: " +
+                        correctCategoriesText;
 
-                    dictationBlock.appendChild(dictationTitle);
-                    dictationBlock.appendChild(typeParagraph);
-                    dictationBlock.appendChild(collectionParagraph);
+                    const videoLink =
+                        document.createElement(
+                            "a"
+                        );
+
+                    videoLink.href =
+                        dictation.youtubeLink;
+
+                    videoLink.target =
+                        "_blank";
+
+                    videoLink.rel =
+                        "noopener noreferrer";
+
+                    videoLink.textContent =
+                        "Apri video";
+
+                    dictationBlock.appendChild(
+                        dictationTitle
+                    );
+
+                    dictationBlock.appendChild(
+                        typeParagraph
+                    );
+
+                    dictationBlock.appendChild(
+                        collectionParagraph
+                    );
+
                     dictationBlock.appendChild(
                         correctCategoriesParagraph
                     );
-                    dictationBlock.appendChild(videoLink);
 
-                    calendarModalDictations.appendChild(dictationBlock);
+                    dictationBlock.appendChild(
+                        videoLink
+                    );
+
+                    calendarModalDictations
+                        .appendChild(
+                            dictationBlock
+                        );
                 }
 
-                elementBeforeModal = document.activeElement;
+                elementBeforeModal =
+                    document.activeElement;
 
-                calendarModal.hidden = false;
-                closeCalendarModalButton.focus();
+                calendarModal.hidden =
+                    false;
+
+                closeCalendarModalButton
+                    .focus();
             }
 
-            dayElement.addEventListener("click", openDayModal);
+            dayElement.addEventListener(
+                "click",
+                openDayModal
+            );
 
-            dayElement.addEventListener("keydown", function (event) {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    openDayModal();
+            dayElement.addEventListener(
+                "keydown",
+                function (event) {
+                    if (
+                        event.key ===
+                        "Enter" ||
+                        event.key === " "
+                    ) {
+                        event.preventDefault();
+                        openDayModal();
+                    }
                 }
-            });
+            );
         }
 
-        calendarGrid.appendChild(dayElement);
+        calendarGrid.appendChild(
+            dayElement
+        );
     }
 
-    calendarContainer.appendChild(calendarGrid);
+    calendarContainer.appendChild(
+        calendarGrid
+    );
 
-    previousMonthButton.addEventListener("click", function () {
-        displayedMonth--;
+    previousMonthButton.addEventListener(
+        "click",
+        function () {
+            displayedMonth--;
 
-        if (displayedMonth < 0) {
-            displayedMonth = 11;
-            displayedYear--;
+            if (displayedMonth < 0) {
+                displayedMonth = 11;
+                displayedYear--;
+            }
+
+            displayCalendar();
         }
+    );
 
-        displayCalendar();
-    });
+    nextMonthButton.addEventListener(
+        "click",
+        function () {
+            displayedMonth++;
 
-    nextMonthButton.addEventListener("click", function () {
-        displayedMonth++;
+            if (displayedMonth > 11) {
+                displayedMonth = 0;
+                displayedYear++;
+            }
 
-        if (displayedMonth > 11) {
-            displayedMonth = 0;
-            displayedYear++;
+            displayCalendar();
         }
-
-        displayCalendar();
-    });
+    );
 }
 
 calendarCollectionFilter.addEventListener(
@@ -327,16 +527,29 @@ calendarCollectionFilter.addEventListener(
     displayCalendar
 );
 
-showCalendarButton.addEventListener("click", function () {
-    calendarSection.hidden = !calendarSection.hidden;
+showCalendarButton.addEventListener(
+    "click",
+    function () {
+        calendarSection.hidden =
+            !calendarSection.hidden;
 
-    if (calendarSection.hidden) {
-        showCalendarButton.textContent =
-            "Vedi calendario";
-    } else {
-        showCalendarButton.textContent =
-            "Nascondi calendario";
+        if (calendarSection.hidden) {
+            showCalendarButton.textContent =
+                "Vedi calendario";
+        } else {
+            showCalendarButton.textContent =
+                "Nascondi calendario";
 
-        displayCalendar();
+            displayCalendar();
+        }
     }
-});
+);
+
+window.addEventListener(
+    "dictations-changed",
+    function () {
+        if (!calendarSection.hidden) {
+            displayCalendar();
+        }
+    }
+);

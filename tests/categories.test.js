@@ -1,9 +1,9 @@
 document.body.innerHTML = `
     <select id="dictation-type">
         <option value=""></option>
-        <option value="rhythmic">Ritmico</option>
-        <option value="melodic">Melodico</option>
-        <option value="harmonic">Armonico</option>
+        <option value="1">Ritmico</option>
+        <option value="2">Melodico</option>
+        <option value="3">Armonico</option>
     </select>
 
     <div id="categories-container"></div>
@@ -23,44 +23,68 @@ document.body.innerHTML = `
     <div id="categories-question" hidden></div>
 `;
 
-const dictationType =
+global.dictationTypeSelect =
     document.getElementById("dictation-type");
 
+global.dictationTypes = [
+    {
+        id: 1,
+        name: "Ritmico",
+        is_default: true
+    },
+    {
+        id: 2,
+        name: "Melodico",
+        is_default: true
+    },
+    {
+        id: 3,
+        name: "Armonico",
+        is_default: true
+    }
+];
+
 const categoriesContainer =
-    document.getElementById("categories-container");
+    document.getElementById(
+        "categories-container"
+    );
 
 const manageCategoriesButton =
-    document.getElementById("manage-categories-button");
+    document.getElementById(
+        "manage-categories-button"
+    );
 
 const categoryManager =
-    document.getElementById("category-manager");
+    document.getElementById(
+        "category-manager"
+    );
 
 const newCategoryInput =
-    document.getElementById("new-category");
+    document.getElementById(
+        "new-category"
+    );
 
 const addCategoryButton =
-    document.getElementById("add-category-button");
+    document.getElementById(
+        "add-category-button"
+    );
 
 const categoriesQuestion =
-    document.getElementById("categories-question");
+    document.getElementById(
+        "categories-question"
+    );
 
+const getCategoriesFromServerMock =
+    jest.fn();
 
-const getCategoriesFromServerMock = jest.fn();
-const saveCategoryToServerMock = jest.fn();
-const deleteCategoryFromServerMock = jest.fn();
+const saveCategoryToServerMock =
+    jest.fn();
+
+const deleteCategoryFromServerMock =
+    jest.fn();
 
 const alertMock = jest.fn();
 const confirmMock = jest.fn();
-
-
-const mocksToReset = [
-    getCategoriesFromServerMock,
-    saveCategoryToServerMock,
-    deleteCategoryFromServerMock,
-    alertMock,
-    confirmMock
-];
-
 
 global.getCategoriesFromServer =
     getCategoriesFromServerMock;
@@ -80,74 +104,80 @@ global.Clerk = {
     }
 };
 
-
 const consoleErrorSpy = jest
     .spyOn(console, "error")
     .mockImplementation(() => { });
 
-
 require("../categories.js");
-
 
 const defaultCategoryRows = [
     {
         id: 1,
-        type: "rhythmic",
-        name: "Metrica"
+        name: "Metrica",
+        user_id: "user_test",
+        dictation_type_id: 1
     },
     {
         id: 2,
-        type: "rhythmic",
-        name: "Pause"
+        name: "Pause",
+        user_id: "user_test",
+        dictation_type_id: 1
     },
     {
         id: 3,
-        type: "rhythmic",
-        name: "Gruppi irregolari"
+        name: "Gruppi irregolari",
+        user_id: "user_test",
+        dictation_type_id: 1
     },
     {
         id: 4,
-        type: "melodic",
-        name: "Tonalità"
+        name: "Tonalità",
+        user_id: "user_test",
+        dictation_type_id: 2
     },
     {
         id: 5,
-        type: "melodic",
-        name: "Ritmo"
+        name: "Ritmo",
+        user_id: "user_test",
+        dictation_type_id: 2
     },
     {
         id: 6,
-        type: "melodic",
-        name: "Intervalli"
+        name: "Intervalli",
+        user_id: "user_test",
+        dictation_type_id: 2
     },
     {
         id: 7,
-        type: "melodic",
-        name: "Modulazioni"
+        name: "Modulazioni",
+        user_id: "user_test",
+        dictation_type_id: 2
     },
     {
         id: 8,
-        type: "harmonic",
-        name: "Basso"
+        name: "Basso",
+        user_id: "user_test",
+        dictation_type_id: 3
     },
     {
         id: 9,
-        type: "harmonic",
-        name: "Soprano"
+        name: "Soprano",
+        user_id: "user_test",
+        dictation_type_id: 3
     },
     {
         id: 10,
-        type: "harmonic",
-        name: "Accordi"
+        name: "Accordi",
+        user_id: "user_test",
+        dictation_type_id: 3
     }
 ];
-
 
 async function waitForAsyncCode() {
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
 }
-
 
 async function loadCategories(
     categoryRows = defaultCategoryRows
@@ -160,28 +190,32 @@ async function loadCategories(
     };
 
     window.dispatchEvent(
-        new Event("clerk-ready")
+        new Event("dictation-types-loaded")
     );
 
     await waitForAsyncCode();
 }
 
+function selectType(typeId) {
+    dictationTypeSelect.value =
+        String(typeId);
 
-function selectType(type) {
-    dictationType.value = type;
-
-    dictationType.dispatchEvent(
+    dictationTypeSelect.dispatchEvent(
         new Event("change")
     );
 }
 
-
 function getCategoryNames() {
     return Array.from(
-        categoriesContainer.querySelectorAll("label")
-    ).map(label => label.textContent);
+        categoriesContainer.querySelectorAll(
+            "label"
+        )
+    ).map(
+        function (label) {
+            return label.textContent;
+        }
+    );
 }
-
 
 function getRemoveButton() {
     return categoriesContainer.querySelector(
@@ -189,22 +223,28 @@ function getRemoveButton() {
     );
 }
 
-
-beforeEach(async () => {
-    mocksToReset.forEach(
-        mock => mock.mockReset()
+beforeEach(async function () {
+    [
+        getCategoriesFromServerMock,
+        saveCategoryToServerMock,
+        deleteCategoryFromServerMock,
+        alertMock,
+        confirmMock
+    ].forEach(
+        function (mock) {
+            mock.mockReset();
+        }
     );
 
     consoleErrorSpy.mockClear();
 
-    dictationType.value = "";
+    dictationTypeSelect.value = "";
     newCategoryInput.value = "";
 
     categoriesContainer.innerHTML = "";
 
     categoriesQuestion.hidden = true;
     manageCategoriesButton.hidden = true;
-
     categoryManager.hidden = true;
 
     manageCategoriesButton.textContent =
@@ -212,351 +252,445 @@ beforeEach(async () => {
 
     await loadCategories();
 
-    [
-        getCategoriesFromServerMock,
-        alertMock
-    ].forEach(
-        mock => mock.mockClear()
-    );
-
+    getCategoriesFromServerMock.mockClear();
+    alertMock.mockClear();
     consoleErrorSpy.mockClear();
 });
 
-
-afterAll(() => {
+afterAll(function () {
     consoleErrorSpy.mockRestore();
 });
 
+test(
+    "hides categories when no dictation type is selected",
+    function () {
+        selectType("");
 
-test("hides categories when no dictation type is selected", () => {
-    selectType("");
+        expect(categoriesQuestion.hidden)
+            .toBe(true);
 
-    expect(categoriesQuestion.hidden)
-        .toBe(true);
+        expect(manageCategoriesButton.hidden)
+            .toBe(true);
 
-    expect(manageCategoriesButton.hidden)
-        .toBe(true);
+        expect(categoriesContainer.innerHTML)
+            .toBe("");
+    }
+);
 
-    expect(categoriesContainer.innerHTML)
-        .toBe("");
-});
+test(
+    "displays categories linked to the selected type",
+    function () {
+        selectType(1);
 
+        expect(categoriesQuestion.hidden)
+            .toBe(false);
 
-test("displays the categories for the selected type", () => {
-    selectType("rhythmic");
+        expect(manageCategoriesButton.hidden)
+            .toBe(false);
 
-    expect(categoriesQuestion.hidden)
-        .toBe(false);
+        expect(getCategoryNames()).toEqual([
+            "Metrica",
+            "Pause",
+            "Gruppi irregolari"
+        ]);
 
-    expect(manageCategoriesButton.hidden)
-        .toBe(false);
+        expect(
+            categoriesContainer.querySelectorAll(
+                'input[type="checkbox"]'
+            )
+        ).toHaveLength(3);
 
-    expect(
-        getCategoryNames()
-    ).toEqual([
-        "Metrica",
-        "Pause",
-        "Gruppi irregolari"
-    ]);
+        expect(
+            categoriesContainer.querySelectorAll(
+                ".remove-category-button"
+            )
+        ).toHaveLength(0);
+    }
+);
 
-    expect(
-        categoriesContainer.querySelectorAll(
-            'input[type="checkbox"]'
-        )
-    ).toHaveLength(3);
+test(
+    "shows remove buttons when management is open",
+    function () {
+        selectType(1);
 
-    expect(
-        categoriesContainer.querySelectorAll(
-            ".remove-category-button"
-        )
-    ).toHaveLength(0);
-});
+        manageCategoriesButton.click();
 
+        expect(categoryManager.hidden)
+            .toBe(false);
 
-test("shows remove buttons when category management is open", () => {
-    selectType("rhythmic");
-
-    manageCategoriesButton.click();
-
-    expect(categoryManager.hidden)
-        .toBe(false);
-
-    expect(manageCategoriesButton.textContent)
-        .toBe("Nascondi gestione categorie");
-
-    expect(
-        categoriesContainer.querySelectorAll(
-            ".remove-category-button"
-        )
-    ).toHaveLength(3);
-});
-
-
-test("hides category management when the button is clicked again", () => {
-    selectType("rhythmic");
-
-    manageCategoriesButton.click();
-    manageCategoriesButton.click();
-
-    expect(categoryManager.hidden)
-        .toBe(true);
-
-    expect(manageCategoriesButton.textContent)
-        .toBe("Gestisci categorie");
-
-    expect(
-        categoriesContainer.querySelectorAll(
-            ".remove-category-button"
-        )
-    ).toHaveLength(0);
-});
-
-
-test("does not save an empty category", async () => {
-    selectType("rhythmic");
-
-    newCategoryInput.value = "   ";
-
-    addCategoryButton.click();
-
-    await waitForAsyncCode();
-
-    expect(saveCategoryToServerMock)
-        .not.toHaveBeenCalled();
-});
-
-
-test("saves a new category and updates the interface", async () => {
-    selectType("rhythmic");
-
-    saveCategoryToServerMock.mockResolvedValueOnce({
-        id: 11,
-        type: "rhythmic",
-        name: "Accenti"
-    });
-
-    newCategoryInput.value = "  accenti  ";
-
-    addCategoryButton.click();
-
-    await waitForAsyncCode();
-
-    expect(saveCategoryToServerMock)
-        .toHaveBeenCalledWith({
-            type: "rhythmic",
-            name: "Accenti"
-        });
-
-    expect(
-        getCategoryNames()
-    ).toContain("Accenti");
-
-    expect(newCategoryInput.value)
-        .toBe("");
-});
-
-
-test("shows an error when a category cannot be saved", async () => {
-    selectType("rhythmic");
-
-    saveCategoryToServerMock.mockRejectedValueOnce(
-        new Error("Save error")
-    );
-
-    newCategoryInput.value = "Accenti";
-
-    addCategoryButton.click();
-
-    await waitForAsyncCode();
-
-    expect(consoleErrorSpy)
-        .toHaveBeenCalled();
-
-    expect(alertMock)
-        .toHaveBeenCalledWith(
-            "Non è stato possibile salvare la categoria."
+        expect(
+            manageCategoriesButton.textContent
+        ).toBe(
+            "Nascondi gestione categorie"
         );
 
-    expect(
-        getCategoryNames()
-    ).not.toContain("Accenti");
-});
+        expect(
+            categoriesContainer.querySelectorAll(
+                ".remove-category-button"
+            )
+        ).toHaveLength(3);
+    }
+);
 
+test(
+    "hides category management when clicked again",
+    function () {
+        selectType(1);
 
-test("does not delete a category when confirmation is cancelled", async () => {
-    selectType("rhythmic");
+        manageCategoriesButton.click();
+        manageCategoriesButton.click();
 
-    manageCategoriesButton.click();
+        expect(categoryManager.hidden)
+            .toBe(true);
 
-    confirmMock.mockReturnValueOnce(false);
+        expect(
+            manageCategoriesButton.textContent
+        ).toBe("Gestisci categorie");
 
-    getRemoveButton().click();
+        expect(
+            categoriesContainer.querySelectorAll(
+                ".remove-category-button"
+            )
+        ).toHaveLength(0);
+    }
+);
 
-    await waitForAsyncCode();
+test(
+    "does not save an empty category",
+    async function () {
+        selectType(1);
 
-    expect(confirmMock)
-        .toHaveBeenCalledWith(
-            'Vuoi davvero rimuovere la categoria "Metrica"?'
+        newCategoryInput.value = "   ";
+
+        addCategoryButton.click();
+
+        await waitForAsyncCode();
+
+        expect(saveCategoryToServerMock)
+            .not.toHaveBeenCalled();
+    }
+);
+
+test(
+    "saves a category linked to the selected type",
+    async function () {
+        selectType(1);
+
+        saveCategoryToServerMock
+            .mockResolvedValueOnce({
+                id: 11,
+                name: "Accenti",
+                user_id: "user_test",
+                dictation_type_id: 1
+            });
+
+        newCategoryInput.value =
+            "  accenti  ";
+
+        addCategoryButton.click();
+
+        await waitForAsyncCode();
+
+        expect(saveCategoryToServerMock)
+            .toHaveBeenCalledWith({
+                dictationTypeId: 1,
+                name: "Accenti"
+            });
+
+        expect(getCategoryNames())
+            .toContain("Accenti");
+
+        expect(newCategoryInput.value)
+            .toBe("");
+    }
+);
+
+test(
+    "shows an error when saving fails",
+    async function () {
+        selectType(1);
+
+        saveCategoryToServerMock
+            .mockRejectedValueOnce(
+                new Error("Save error")
+            );
+
+        newCategoryInput.value =
+            "Accenti";
+
+        addCategoryButton.click();
+
+        await waitForAsyncCode();
+
+        expect(consoleErrorSpy)
+            .toHaveBeenCalled();
+
+        expect(alertMock)
+            .toHaveBeenCalledWith(
+                "Non è stato possibile salvare la categoria."
+            );
+
+        expect(getCategoryNames())
+            .not.toContain("Accenti");
+    }
+);
+
+test(
+    "does not delete when confirmation is cancelled",
+    async function () {
+        selectType(1);
+
+        manageCategoriesButton.click();
+
+        confirmMock.mockReturnValueOnce(false);
+
+        getRemoveButton().click();
+
+        await waitForAsyncCode();
+
+        expect(confirmMock)
+            .toHaveBeenCalledWith(
+                'Vuoi davvero rimuovere la categoria "Metrica"?'
+            );
+
+        expect(deleteCategoryFromServerMock)
+            .not.toHaveBeenCalled();
+
+        expect(getCategoryNames())
+            .toContain("Metrica");
+    }
+);
+
+test(
+    "deletes a category after confirmation",
+    async function () {
+        selectType(1);
+
+        manageCategoriesButton.click();
+
+        confirmMock.mockReturnValueOnce(true);
+
+        deleteCategoryFromServerMock
+            .mockResolvedValueOnce({});
+
+        getRemoveButton().click();
+
+        await waitForAsyncCode();
+
+        expect(deleteCategoryFromServerMock)
+            .toHaveBeenCalledWith(1);
+
+        expect(getCategoryNames())
+            .not.toContain("Metrica");
+    }
+);
+
+test(
+    "keeps the category when deletion fails",
+    async function () {
+        selectType(1);
+
+        manageCategoriesButton.click();
+
+        confirmMock.mockReturnValueOnce(true);
+
+        deleteCategoryFromServerMock
+            .mockRejectedValueOnce(
+                new Error("Delete error")
+            );
+
+        getRemoveButton().click();
+
+        await waitForAsyncCode();
+
+        expect(consoleErrorSpy)
+            .toHaveBeenCalled();
+
+        expect(alertMock)
+            .toHaveBeenCalledWith(
+                "Non è stato possibile eliminare la categoria."
+            );
+
+        expect(getCategoryNames())
+            .toContain("Metrica");
+    }
+);
+
+test(
+    "groups loaded categories by dictation type ID",
+    async function () {
+        await loadCategories([
+            {
+                id: 20,
+                name: "Nuova melodica",
+                user_id: "user_test",
+                dictation_type_id: 2
+            }
+        ]);
+
+        selectType(2);
+
+        expect(getCategoryNames()).toEqual([
+            "Nuova melodica"
+        ]);
+    }
+);
+
+test(
+    "shows an error when loading categories fails",
+    async function () {
+        getCategoriesFromServerMock
+            .mockRejectedValueOnce(
+                new Error("Database error")
+            );
+
+        window.dispatchEvent(
+            new Event(
+                "dictation-types-loaded"
+            )
         );
 
-    expect(deleteCategoryFromServerMock)
-        .not.toHaveBeenCalled();
+        await waitForAsyncCode();
 
-    expect(
-        getCategoryNames()
-    ).toContain("Metrica");
-});
+        expect(consoleErrorSpy)
+            .toHaveBeenCalled();
 
+        expect(alertMock)
+            .toHaveBeenCalledWith(
+                "Non è stato possibile caricare le categorie dal database."
+            );
+    }
+);
 
-test("deletes a category after confirmation", async () => {
-    selectType("rhythmic");
+test(
+    "does not load categories without a logged user",
+    async function () {
+        Clerk.user = null;
 
-    manageCategoriesButton.click();
-
-    confirmMock.mockReturnValueOnce(true);
-
-    deleteCategoryFromServerMock
-        .mockResolvedValueOnce({});
-
-    getRemoveButton().click();
-
-    await waitForAsyncCode();
-
-    expect(deleteCategoryFromServerMock)
-        .toHaveBeenCalledWith(1);
-
-    expect(
-        getCategoryNames()
-    ).not.toContain("Metrica");
-});
-
-
-test("keeps the category when deletion fails", async () => {
-    selectType("rhythmic");
-
-    manageCategoriesButton.click();
-
-    confirmMock.mockReturnValueOnce(true);
-
-    deleteCategoryFromServerMock
-        .mockRejectedValueOnce(
-            new Error("Delete error")
+        window.dispatchEvent(
+            new Event(
+                "dictation-types-loaded"
+            )
         );
 
-    getRemoveButton().click();
+        await waitForAsyncCode();
 
-    await waitForAsyncCode();
+        expect(getCategoriesFromServerMock)
+            .not.toHaveBeenCalled();
+    }
+);
 
-    expect(consoleErrorSpy)
-        .toHaveBeenCalled();
+test(
+    "pressing Enter triggers Add exactly once",
+    function () {
+        const clickSpy = jest
+            .spyOn(
+                addCategoryButton,
+                "click"
+            )
+            .mockImplementation(() => { });
 
-    expect(alertMock)
-        .toHaveBeenCalledWith(
-            "Non è stato possibile eliminare la categoria."
+        newCategoryInput.dispatchEvent(
+            new KeyboardEvent(
+                "keydown",
+                {
+                    key: "A",
+                    bubbles: true,
+                    cancelable: true
+                }
+            )
         );
 
-    expect(
-        getCategoryNames()
-    ).toContain("Metrica");
-});
+        expect(clickSpy)
+            .not.toHaveBeenCalled();
 
+        const enterEvent =
+            new KeyboardEvent(
+                "keydown",
+                {
+                    key: "Enter",
+                    bubbles: true,
+                    cancelable: true
+                }
+            );
 
-test("loads categories from the database", async () => {
-    await loadCategories([
-        {
-            id: 20,
-            type: "melodic",
-            name: "Nuova melodica"
-        }
-    ]);
-
-    selectType("melodic");
-
-    expect(
-        getCategoryNames()
-    ).toEqual([
-        "Nuova melodica"
-    ]);
-});
-
-
-test("uses default categories when loading fails", async () => {
-    getCategoriesFromServerMock.mockRejectedValueOnce(
-        new Error("Database error")
-    );
-
-    window.dispatchEvent(
-        new Event("clerk-ready")
-    );
-
-    await waitForAsyncCode();
-
-    expect(consoleErrorSpy)
-        .toHaveBeenCalled();
-
-    expect(alertMock)
-        .toHaveBeenCalledWith(
-            "Non è stato possibile caricare le categorie dal database."
+        newCategoryInput.dispatchEvent(
+            enterEvent
         );
 
-    selectType("harmonic");
+        expect(clickSpy)
+            .toHaveBeenCalledTimes(1);
 
-    expect(
-        getCategoryNames()
-    ).toEqual([
-        "Basso",
-        "Soprano",
-        "Accordi"
-    ]);
-});
+        expect(enterEvent.defaultPrevented)
+            .toBe(true);
 
+        clickSpy.mockRestore();
+    }
+);
 
-test("does not load categories when there is no logged user", async () => {
-    Clerk.user = null;
+test(
+    "creates a category for a newly available type",
+    async function () {
+        const option =
+            document.createElement("option");
 
-    window.dispatchEvent(
-        new Event("clerk-ready")
-    );
+        option.value = "99";
+        option.textContent = "Personalizzato";
 
-    await waitForAsyncCode();
+        dictationTypeSelect.appendChild(option);
 
-    expect(getCategoriesFromServerMock)
-        .not.toHaveBeenCalled();
-});
+        selectType(99);
 
+        saveCategoryToServerMock
+            .mockResolvedValueOnce({
+                id: 50,
+                name: "Nuova categoria",
+                user_id: "user_test",
+                dictation_type_id: 99
+            });
 
-test("pressing Enter triggers Add exactly once", () => {
-    const clickSpy = jest
-        .spyOn(addCategoryButton, "click")
-        .mockImplementation(() => { });
+        newCategoryInput.value =
+            "nuova categoria";
 
-    newCategoryInput.dispatchEvent(
-        new KeyboardEvent("keydown", {
-            key: "A",
-            bubbles: true,
-            cancelable: true
-        })
-    );
+        addCategoryButton.click();
 
-    expect(clickSpy)
-        .not.toHaveBeenCalled();
+        await waitForAsyncCode();
 
-    const enterEvent =
-        new KeyboardEvent("keydown", {
-            key: "Enter",
-            bubbles: true,
-            cancelable: true
-        });
+        expect(saveCategoryToServerMock)
+            .toHaveBeenCalledWith({
+                dictationTypeId: 99,
+                name: "Nuova categoria"
+            });
 
-    newCategoryInput.dispatchEvent(
-        enterEvent
-    );
+        expect(getCategoryNames())
+            .toContain("Nuova categoria");
+    }
+);
 
-    expect(clickSpy)
-        .toHaveBeenCalledTimes(1);
+test(
+    "groups a category whose type was not preloaded",
+    async function () {
+        const option =
+            document.createElement("option");
 
-    expect(enterEvent.defaultPrevented)
-        .toBe(true);
+        option.value = "99";
+        option.textContent = "Personalizzato";
 
-    clickSpy.mockRestore();
-});
+        dictationTypeSelect.appendChild(option);
+
+        await loadCategories([
+            {
+                id: 50,
+                name: "Categoria personalizzata",
+                user_id: "user_test",
+                dictation_type_id: 99
+            }
+        ]);
+
+        selectType(99);
+
+        expect(getCategoryNames()).toEqual([
+            "Categoria personalizzata"
+        ]);
+    }
+);
