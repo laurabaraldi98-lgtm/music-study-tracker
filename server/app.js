@@ -6,6 +6,7 @@ const dictationsRouter = require("./routes/dictations");
 const categoriesRouter = require("./routes/categories");
 const collectionsRouter = require("./routes/collections");
 const dictationTypesRouter = require("./routes/dictation-types");
+const statisticsRouter = require("./routes/statistics");
 
 const app = express();
 
@@ -36,5 +37,6 @@ app.use("/dictations", dictationsRouter);
 app.use("/categories", categoriesRouter);
 app.use("/collections", collectionsRouter);
 app.use("/dictation-types", dictationTypesRouter);
+app.use("/statistics", statisticsRouter);
 
 module.exports = app;
