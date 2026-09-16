@@ -241,6 +241,45 @@ async function deleteDictationTypeFromServer(dictationTypeId) {
 }
 
 
+
+async function getStatisticsReportFromServer(filters = {}) {
+    const parameters = new URLSearchParams();
+    const allowedParameters = [
+        "period",
+        "from",
+        "to",
+        "collection",
+        "dictationTypeId"
+    ];
+
+    for (const key of allowedParameters) {
+        const value = filters[key];
+
+        if (value == null) {
+            continue;
+        }
+
+        parameters.set(key, String(value));
+    }
+
+    const queryString = parameters.toString();
+    const url = `${API_BASE_URL}/statistics/report${queryString ? `?${queryString}` : ""
+        }`;
+
+    const response = await authenticatedFetch(url);
+
+    if (!response.ok) {
+        const errorData = await response.json();
+
+        throw new Error(
+            errorData.error ||
+            "Errore durante il recupero del report"
+        );
+    }
+
+    return response.json();
+}
+
 // Expose API functions for Jest tests
 /* istanbul ignore next */
 if (typeof module !== "undefined") {
@@ -257,6 +296,7 @@ if (typeof module !== "undefined") {
         deleteCollectionFromServer,
         getDictationTypesFromServer,
         saveDictationTypeToServer,
-        deleteDictationTypeFromServer
+        deleteDictationTypeFromServer,
+        getStatisticsReportFromServer
     };
 }

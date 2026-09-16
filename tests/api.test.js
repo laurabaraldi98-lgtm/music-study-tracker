@@ -23,7 +23,8 @@ const {
     deleteCollectionFromServer,
     getDictationTypesFromServer,
     saveDictationTypeToServer,
-    deleteDictationTypeFromServer
+    deleteDictationTypeFromServer,
+    getStatisticsReportFromServer
 } = require("../api.js");
 
 
@@ -654,6 +655,109 @@ describe("dictation type API requests", () => {
             deleteDictationTypeFromServer(4)
         ).rejects.toThrow(
             "Errore durante la cancellazione del tipo di dettato"
+        );
+    });
+});
+
+describe("statistics report API requests", () => {
+    test("gets the report using the backend default period", async () => {
+        const report = {
+            summary: {
+                totalDictations: 5,
+                accuracy: 75
+            }
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, report)
+        );
+
+        await expect(
+            getStatisticsReportFromServer()
+        ).resolves.toEqual(report);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report`,
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("adds report filters to the URL", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, {})
+        );
+
+        await getStatisticsReportFromServer({
+            period: "custom",
+            from: "2026-04-15",
+            to: "2026-09-10",
+            collection: "Esame & prova",
+            dictationTypeId: 4
+        });
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report` +
+            "?period=custom" +
+            "&from=2026-04-15" +
+            "&to=2026-09-10" +
+            "&collection=Esame+%26+prova" +
+            "&dictationTypeId=4",
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("ignores null report filters", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, {})
+        );
+
+        await getStatisticsReportFromServer({
+            period: "6-months",
+            collection: null,
+            dictationTypeId: null
+        });
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report?period=6-months`,
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("uses the server error when the report cannot be loaded", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Periodo non valido"
+            })
+        );
+
+        await expect(
+            getStatisticsReportFromServer({
+                period: "invalid"
+            })
+        ).rejects.toThrow("Periodo non valido");
+    });
+
+    test("uses the fallback error when the report has no error message", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            getStatisticsReportFromServer()
+        ).rejects.toThrow(
+            "Errore durante il recupero del report"
         );
     });
 });
