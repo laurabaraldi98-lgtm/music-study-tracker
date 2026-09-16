@@ -209,6 +209,90 @@
             <div id="statistics-container"></div>
         </section>
 
+        <button id="show-practice-report-button" type="button">
+            Vedi report progressi
+        </button>
+
+        <section id="practice-report-section" hidden>
+            <h2>Report progressi</h2>
+
+            <div class="form-group">
+                <label for="practice-report-period">
+                    Periodo
+                </label>
+
+                <select id="practice-report-period">
+                    <option value="current-month">
+                        Mese corrente
+                    </option>
+
+                    <option value="previous-month">
+                        Mese precedente
+                    </option>
+
+                    <option value="3-months">
+                        Ultimi 3 mesi
+                    </option>
+
+                    <option value="6-months" selected>
+                        Ultimi 6 mesi
+                    </option>
+
+                    <option value="all">
+                        Tutto il periodo
+                    </option>
+
+                    <option value="custom">
+                        Periodo personalizzato
+                    </option>
+                </select>
+            </div>
+
+            <div id="practice-report-custom-period" hidden>
+                <div class="form-group">
+                    <label for="practice-report-from">
+                        Dal
+                    </label>
+
+                    <input type="date" id="practice-report-from">
+                </div>
+
+                <div class="form-group">
+                    <label for="practice-report-to">
+                        Al
+                    </label>
+
+                    <input type="date" id="practice-report-to">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="practice-report-collection">
+                    Raccolta
+                </label>
+
+                <select id="practice-report-collection">
+                    <option value="">
+                        Tutte le raccolte
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="practice-report-type">
+                    Tipo di dettato
+                </label>
+
+                <select id="practice-report-type">
+                    <option value="">
+                        Tutti i tipi
+                    </option>
+                </select>
+            </div>
+
+            <div id="practice-report-summary"></div>
+        </section>
+
         <div id="calendar-modal" class="modal" hidden>
             <div class="modal-content">
                 <button id="close-calendar-modal" class="modal-close-button" type="button" aria-label="Chiudi">
@@ -240,6 +324,7 @@
     <script src="dictations.js"></script>
     <script src="calendar.js"></script>
     <script src="statistics.js"></script>
+    <script src="practice-report.js"></script>
 </body>
 
 </html>
