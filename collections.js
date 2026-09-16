@@ -33,6 +33,9 @@ async function loadCollections() {
             await getCollectionsFromServer();
 
         displayCollections();
+        window.dispatchEvent(
+            new Event("collections-loaded")
+        );
     } catch (error) {
         console.error(error);
 

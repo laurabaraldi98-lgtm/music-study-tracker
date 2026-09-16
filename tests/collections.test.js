@@ -213,6 +213,25 @@ test("loads and displays collections", async () => {
     ).toHaveLength(2);
 });
 
+test("dispatches collections-loaded after loading collections", async () => {
+    const listener = jest.fn();
+
+    window.addEventListener(
+        "collections-loaded",
+        listener,
+        { once: true }
+    );
+
+    await loadCollections([
+        {
+            id: 1,
+            name: "Esame"
+        }
+    ]);
+
+    expect(listener)
+        .toHaveBeenCalledTimes(1);
+});
 
 test("shows an error when collections cannot be loaded", async () => {
     getCollectionsFromServerMock.mockRejectedValueOnce(
