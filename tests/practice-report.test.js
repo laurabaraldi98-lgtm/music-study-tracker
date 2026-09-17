@@ -1,79 +1,23 @@
-document.body.innerHTML = `
-    <button id="show-practice-report-button">Vedi report progressi</button>
-
-    <section id="practice-report-section" hidden>
-        <select id="practice-report-period">
-            <option value="6-months" selected>Ultimi 6 mesi</option>
-            <option value="custom">Periodo personalizzato</option>
-        </select>
-
-        <div id="practice-report-custom-period" hidden>
-            <input id="practice-report-from" type="date">
-            <input id="practice-report-to" type="date">
-        </div>
-
-        <select id="practice-report-collection">
-            <option value="">Tutte le raccolte</option>
-        </select>
-
-        <select id="practice-report-type">
-            <option value="">Tutti i tipi</option>
-        </select>
-
-        <div id="practice-report-summary"></div>
-        <div id="practice-report-months"></div>
-        <div id="practice-report-types"></div>
-    </section>
-`;
-
-const showPracticeReportButton = document.getElementById("show-practice-report-button");
-const practiceReportSection = document.getElementById("practice-report-section");
-const practiceReportPeriod = document.getElementById("practice-report-period");
-const practiceReportCustomPeriod = document.getElementById("practice-report-custom-period");
-const practiceReportFrom = document.getElementById("practice-report-from");
-const practiceReportTo = document.getElementById("practice-report-to");
-const practiceReportCollection = document.getElementById("practice-report-collection");
-const practiceReportType = document.getElementById("practice-report-type");
-const practiceReportSummary = document.getElementById("practice-report-summary");
-const practiceReportMonths = document.getElementById("practice-report-months");
-const practiceReportTypes = document.getElementById("practice-report-types");
+const {
+    setupPracticeReportDom,
+    makeReport,
+    waitForAsyncCode,
+    setupGlobals
+} = require("./helpers/practice-report-test-utils");
 
 const getStatisticsReportFromServerMock = jest.fn();
 
-global.getStatisticsReportFromServer = getStatisticsReportFromServerMock;
+let elements;
+let consoleErrorSpy;
 
-global.collections = [
-    { id: 1, name: "Esame" },
-    { id: 2, name: "Lezione" }
-];
+beforeAll(() => {
+    elements = setupPracticeReportDom();
+    setupGlobals(getStatisticsReportFromServerMock);
 
-global.dictationTypes = [
-    { id: 1, name: "Ritmico" },
-    { id: 2, name: "Melodico" }
-];
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => { });
 
-const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => { });
-
-require("../practice-report.js");
-
-async function waitForAsyncCode() {
-    await Promise.resolve();
-    await Promise.resolve();
-}
-
-function makeReport(overrides = {}) {
-    return {
-        summary: {
-            totalDictations: 8,
-            evaluatedCategories: 20,
-            correctCategories: 15,
-            accuracy: 75,
-            ...overrides
-        },
-        months: [],
-        types: []
-    };
-}
+    require("../practice-report.js");
+});
 
 beforeEach(() => {
     getStatisticsReportFromServerMock.mockReset();
@@ -81,25 +25,25 @@ beforeEach(() => {
 
     consoleErrorSpy.mockClear();
 
-    practiceReportSection.hidden = true;
-    showPracticeReportButton.textContent = "Vedi report progressi";
+    elements.practiceReportSection.hidden = true;
+    elements.showPracticeReportButton.textContent = "Vedi report progressi";
 
-    practiceReportPeriod.value = "6-months";
-    practiceReportFrom.value = "";
-    practiceReportTo.value = "";
+    elements.practiceReportPeriod.value = "6-months";
+    elements.practiceReportFrom.value = "";
+    elements.practiceReportTo.value = "";
 
-    practiceReportCollection.innerHTML = `
+    elements.practiceReportCollection.innerHTML = `
         <option value="">Tutte le raccolte</option>
     `;
 
-    practiceReportType.innerHTML = `
+    elements.practiceReportType.innerHTML = `
         <option value="">Tutti i tipi</option>
     `;
 
-    practiceReportSummary.innerHTML = "";
-    practiceReportMonths.innerHTML = "";
-    practiceReportTypes.innerHTML = "";
-    practiceReportCustomPeriod.hidden = true;
+    elements.practiceReportSummary.innerHTML = "";
+    elements.practiceReportMonths.innerHTML = "";
+    elements.practiceReportTypes.innerHTML = "";
+    elements.practiceReportCustomPeriod.hidden = true;
 });
 
 afterAll(() => {
@@ -107,58 +51,53 @@ afterAll(() => {
 });
 
 test("shows and hides the practice report", async () => {
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
-    expect(practiceReportSection.hidden).toBe(false);
-    expect(showPracticeReportButton.textContent).toBe("Nascondi report progressi");
+    expect(elements.practiceReportSection.hidden).toBe(false);
+    expect(elements.showPracticeReportButton.textContent).toBe("Nascondi report progressi");
     expect(getStatisticsReportFromServerMock).toHaveBeenCalledTimes(1);
 
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
 
-    expect(practiceReportSection.hidden).toBe(true);
-    expect(showPracticeReportButton.textContent).toBe("Vedi report progressi");
+    expect(elements.practiceReportSection.hidden).toBe(true);
+    expect(elements.showPracticeReportButton.textContent).toBe("Vedi report progressi");
 });
 
 test("shows custom dates only for custom period", async () => {
-    practiceReportPeriod.value = "custom";
-    practiceReportPeriod.dispatchEvent(new Event("change"));
+    elements.practiceReportPeriod.value = "custom";
+    elements.practiceReportPeriod.dispatchEvent(new Event("change"));
     await waitForAsyncCode();
 
-    expect(practiceReportCustomPeriod.hidden).toBe(false);
+    expect(elements.practiceReportCustomPeriod.hidden).toBe(false);
 
-    practiceReportPeriod.value = "6-months";
-    practiceReportPeriod.dispatchEvent(new Event("change"));
+    elements.practiceReportPeriod.value = "6-months";
+    elements.practiceReportPeriod.dispatchEvent(new Event("change"));
     await waitForAsyncCode();
 
-    expect(practiceReportCustomPeriod.hidden).toBe(true);
+    expect(elements.practiceReportCustomPeriod.hidden).toBe(true);
 });
 
 test("populates collection filter", () => {
     window.dispatchEvent(new Event("collections-loaded"));
 
-    const values = Array.from(practiceReportCollection.options).map(option => option.value);
+    const values = Array.from(elements.practiceReportCollection.options)
+        .map(option => option.value);
 
-    expect(values).toEqual([
-        "",
-        "Esame",
-        "Lezione"
-    ]);
+    expect(values).toEqual(["", "Esame", "Lezione"]);
 });
 
 test("populates dictation type filter", () => {
     window.dispatchEvent(new Event("dictation-types-loaded"));
 
-    const values = Array.from(practiceReportType.options).map(option => option.value);
+    const values = Array.from(elements.practiceReportType.options)
+        .map(option => option.value);
 
-    expect(values).toEqual([
-        "",
-        "1",
-        "2"
-    ]);
+    expect(values).toEqual(["", "1", "2"]);
 
     expect(
-        Array.from(practiceReportType.options).map(option => option.textContent.trim())
+        Array.from(elements.practiceReportType.options)
+            .map(option => option.textContent.trim())
     ).toEqual([
         "Tutti i tipi",
         "Ritmico",
@@ -170,10 +109,10 @@ test("loads report with selected filters", async () => {
     window.dispatchEvent(new Event("collections-loaded"));
     window.dispatchEvent(new Event("dictation-types-loaded"));
 
-    practiceReportCollection.value = "Esame";
-    practiceReportType.value = "2";
+    elements.practiceReportCollection.value = "Esame";
+    elements.practiceReportType.value = "2";
 
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
     expect(getStatisticsReportFromServerMock).toHaveBeenCalledWith({
@@ -184,11 +123,11 @@ test("loads report with selected filters", async () => {
 });
 
 test("adds custom dates to filters", async () => {
-    practiceReportPeriod.value = "custom";
-    practiceReportFrom.value = "2026-01-01";
-    practiceReportTo.value = "2026-06-30";
+    elements.practiceReportPeriod.value = "custom";
+    elements.practiceReportFrom.value = "2026-01-01";
+    elements.practiceReportTo.value = "2026-06-30";
 
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
     expect(getStatisticsReportFromServerMock).toHaveBeenCalledWith({
@@ -201,770 +140,32 @@ test("adds custom dates to filters", async () => {
 });
 
 test("displays report summary", async () => {
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
-    expect(practiceReportSummary.textContent).toContain("Dettati completati: 8");
-    expect(practiceReportSummary.textContent).toContain("Categorie valutate: 20");
-    expect(practiceReportSummary.textContent).toContain("Categorie corrette: 15");
-    expect(practiceReportSummary.textContent).toContain("Accuratezza: 75%");
+    expect(elements.practiceReportSummary.textContent).toContain("Dettati completati: 8");
+    expect(elements.practiceReportSummary.textContent).toContain("Categorie valutate: 20");
+    expect(elements.practiceReportSummary.textContent).toContain("Categorie corrette: 15");
+    expect(elements.practiceReportSummary.textContent).toContain("Accuratezza: 75%");
 });
 
 test("shows no data when summary accuracy is null", async () => {
     getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({ accuracy: null })
-    );
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(practiceReportSummary.textContent).toContain("Accuratezza: Nessun dato");
-});
-
-test("renders monthly chart with one data point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 5,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        practiceReportMonths.querySelector(".practice-report-chart")
-    ).not.toBeNull();
-
-    expect(
-        practiceReportMonths.querySelectorAll(".practice-report-chart-point")
-    ).toHaveLength(1);
-
-    expect(practiceReportMonths.textContent).toContain("ago");
-});
-
-test("does not create a point when monthly accuracy is null", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 2,
-            evaluatedCategories: 0,
-            correctCategories: 0,
-            accuracy: null
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 2,
-                evaluatedCategories: 0,
-                correctCategories: 0,
-                accuracy: null,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        practiceReportMonths.querySelectorAll(".practice-report-chart-point")
-    ).toHaveLength(0);
-});
-
-test("renders five horizontal grid lines", async () => {
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        practiceReportMonths.querySelectorAll(".practice-report-chart-grid")
-    ).toHaveLength(5);
-});
-
-test("connects consecutive months with a line", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [
-            {
-                month: "2026-07",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            },
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: 20,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        practiceReportMonths.querySelectorAll(".practice-report-chart-line")
-    ).toHaveLength(1);
-});
-
-test("does not connect points separated by a month without data", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [
-            {
-                month: "2026-06",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            },
-            {
-                month: "2026-07",
-                totalDictations: 0,
-                evaluatedCategories: 0,
-                correctCategories: 0,
-                accuracy: null,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            },
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        practiceReportMonths.querySelectorAll(".practice-report-chart-line")
-    ).toHaveLength(0);
-});
-
-test("shows popup on mouse enter", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 5,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const point = practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    point.dispatchEvent(new Event("mouseenter"));
-
-    expect(popup.style.display).toBe("");
-    expect(popup.textContent).toContain("Agosto 2026");
-    expect(popup.textContent).toContain("Accuratezza: 70%");
-    expect(popup.textContent).toContain("Dettati: 5");
-    expect(popup.textContent).toContain("Categorie valutate: 10");
-});
-
-test("hides popup on mouse leave when it is not pinned", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 5,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const point = practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    point.dispatchEvent(new Event("mouseenter"));
-    point.dispatchEvent(new Event("mouseleave"));
-
-    expect(popup.style.display).toBe("none");
-});
-
-test("keeps popup open after clicking a point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 5,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const point = practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    point.dispatchEvent(new Event("click"));
-    point.dispatchEvent(new Event("mouseleave"));
-
-    expect(popup.style.display).toBe("");
-});
-
-test("closes pinned popup when clicking the same point again", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 5,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const point = practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    point.dispatchEvent(new Event("click"));
-
-    expect(popup.style.display).toBe("");
-
-    point.dispatchEvent(new Event("click"));
-
-    expect(popup.style.display).toBe("none");
-});
-
-test("moves pinned popup when clicking another point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [
-            {
-                month: "2026-07",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            },
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: 20,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const points = practiceReportMonths.querySelectorAll(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    points[0].dispatchEvent(new Event("click"));
-
-    expect(popup.textContent).toContain("Luglio 2026");
-
-    points[1].dispatchEvent(new Event("click"));
-
-    expect(popup.textContent).toContain("Agosto 2026");
-});
-
-test("does not change pinned popup when hovering another point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [
-            {
-                month: "2026-07",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50,
-                differenceFromPreviousMonth: null,
-                isPartial: false
-            },
-            {
-                month: "2026-08",
-                totalDictations: 5,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70,
-                differenceFromPreviousMonth: 20,
-                isPartial: false
-            }
-        ],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const points = practiceReportMonths.querySelectorAll(
-        ".practice-report-chart-point"
-    );
-
-    const popup = practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
-
-    points[0].dispatchEvent(new Event("click"));
-
-    expect(popup.textContent).toContain("Luglio 2026");
-
-    points[1].dispatchEvent(new Event("mouseenter"));
-
-    expect(popup.textContent).toContain("Luglio 2026");
-});
-
-test("renders practice report type bars", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            },
-            {
-                id: 2,
-                name: "Melodico",
-                totalDictations: 4,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const rows = practiceReportTypes.querySelectorAll(
-        ".practice-report-type-row"
-    );
-
-    const fills = practiceReportTypes.querySelectorAll(
-        ".practice-report-type-bar-fill"
-    );
-
-    expect(rows).toHaveLength(2);
-    expect(fills).toHaveLength(2);
-
-    expect(practiceReportTypes.textContent).toContain("Ritmico");
-    expect(practiceReportTypes.textContent).toContain("Melodico");
-
-    expect(fills[0].style.width).toBe("70%");
-    expect(fills[1].style.width).toBe("50%");
-});
-
-test("shows no data when there are no practice report types", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 0,
-            evaluatedCategories: 0,
-            correctCategories: 0,
-            accuracy: null
-        },
-        months: [],
-        types: []
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(practiceReportTypes.textContent).toContain("Nessun dato");
-
-    expect(
-        practiceReportTypes.querySelectorAll(".practice-report-type-row")
-    ).toHaveLength(0);
-});
-
-test("renders zero width type bar when accuracy is null", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 2,
-            evaluatedCategories: 0,
-            correctCategories: 0,
-            accuracy: null
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 2,
-                evaluatedCategories: 0,
-                correctCategories: 0,
+        makeReport({
+            summary: {
+                totalDictations: 8,
+                evaluatedCategories: 20,
+                correctCategories: 15,
                 accuracy: null
             }
-        ]
-    });
+        })
+    );
 
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
-    const fill = practiceReportTypes.querySelector(
-        ".practice-report-type-bar-fill"
-    );
-
-    expect(fill.style.width).toBe("0%");
-    expect(practiceReportTypes.textContent).toContain("Nessun dato");
-});
-
-test("shows type popup on mouse enter", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 6,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const fill = practiceReportTypes.querySelector(
-        ".practice-report-type-bar-fill"
-    );
-
-    const popup = practiceReportTypes.querySelector(
-        ".practice-report-type-popup"
-    );
-
-    fill.dispatchEvent(new Event("mouseenter"));
-
-    expect(popup.hidden).toBe(false);
-    expect(popup.textContent).toContain("Ritmico");
-    expect(popup.textContent).toContain("Accuratezza: 70%");
-    expect(popup.textContent).toContain("Dettati: 6");
-    expect(popup.textContent).toContain("Categorie valutate: 10");
-    expect(popup.textContent).toContain("Categorie corrette: 7");
-});
-
-test("hides type popup on mouse leave when not pinned", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 6,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const fill = practiceReportTypes.querySelector(
-        ".practice-report-type-bar-fill"
-    );
-
-    const popup = practiceReportTypes.querySelector(
-        ".practice-report-type-popup"
-    );
-
-    fill.dispatchEvent(new Event("mouseenter"));
-    fill.dispatchEvent(new Event("mouseleave"));
-
-    expect(popup.hidden).toBe(true);
-});
-
-test("keeps type popup open after clicking bar", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 6,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const fill = practiceReportTypes.querySelector(
-        ".practice-report-type-bar-fill"
-    );
-
-    const popup = practiceReportTypes.querySelector(
-        ".practice-report-type-popup"
-    );
-
-    fill.dispatchEvent(new Event("click"));
-    fill.dispatchEvent(new Event("mouseleave"));
-
-    expect(fill.classList.contains("pinned")).toBe(true);
-    expect(popup.hidden).toBe(false);
-});
-
-test("closes pinned type popup when clicking same bar again", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 6,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const fill = practiceReportTypes.querySelector(
-        ".practice-report-type-bar-fill"
-    );
-
-    const popup = practiceReportTypes.querySelector(
-        ".practice-report-type-popup"
-    );
-
-    fill.dispatchEvent(new Event("click"));
-
-    expect(fill.classList.contains("pinned")).toBe(true);
-    expect(popup.hidden).toBe(false);
-
-    fill.dispatchEvent(new Event("click"));
-
-    expect(fill.classList.contains("pinned")).toBe(false);
-    expect(popup.hidden).toBe(true);
-});
-
-test("moves pinned type popup when clicking another bar", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce({
-        summary: {
-            totalDictations: 10,
-            evaluatedCategories: 20,
-            correctCategories: 12,
-            accuracy: 60
-        },
-        months: [],
-        types: [
-            {
-                id: 1,
-                name: "Ritmico",
-                totalDictations: 6,
-                evaluatedCategories: 10,
-                correctCategories: 7,
-                accuracy: 70
-            },
-            {
-                id: 2,
-                name: "Melodico",
-                totalDictations: 4,
-                evaluatedCategories: 10,
-                correctCategories: 5,
-                accuracy: 50
-            }
-        ]
-    });
-
-    showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    const fills = practiceReportTypes.querySelectorAll(
-        ".practice-report-type-bar-fill"
-    );
-
-    const popups = practiceReportTypes.querySelectorAll(
-        ".practice-report-type-popup"
-    );
-
-    fills[0].dispatchEvent(new Event("click"));
-
-    expect(fills[0].classList.contains("pinned")).toBe(true);
-    expect(popups[0].hidden).toBe(false);
-
-    fills[1].dispatchEvent(new Event("click"));
-
-    expect(fills[0].classList.contains("pinned")).toBe(false);
-    expect(popups[0].hidden).toBe(true);
-
-    expect(fills[1].classList.contains("pinned")).toBe(true);
-    expect(popups[1].hidden).toBe(false);
+    expect(elements.practiceReportSummary.textContent)
+        .toContain("Accuratezza: Nessun dato");
 });
 
 test("shows an error when report cannot be loaded", async () => {
@@ -972,11 +173,10 @@ test("shows an error when report cannot be loaded", async () => {
         new Error("Backend error")
     );
 
-    showPracticeReportButton.click();
+    elements.showPracticeReportButton.click();
     await waitForAsyncCode();
 
     expect(consoleErrorSpy).toHaveBeenCalled();
-
-    expect(practiceReportSummary.textContent)
+    expect(elements.practiceReportSummary.textContent)
         .toBe("Non è stato possibile caricare il report.");
 });
