@@ -27,11 +27,7 @@ function displayPracticeReportCategories(categories) {
         name.textContent = category.name;
 
         const value = document.createElement("span");
-
-        value.textContent =
-            category.hasEnoughData
-                ? `${category.accuracy}%`
-                : "Dati insufficienti";
+        value.textContent = `${category.accuracy}%`;
 
         header.appendChild(name);
         header.appendChild(value);
@@ -41,10 +37,7 @@ function displayPracticeReportCategories(categories) {
 
         const fill = document.createElement("div");
         fill.className = "practice-report-category-bar-fill";
-        fill.style.width =
-            category.hasEnoughData
-                ? `${category.accuracy}%`
-                : "0%";
+        fill.style.width = `${category.accuracy}%`;
 
         const popup = document.createElement("div");
         popup.className = "practice-report-category-popup";
@@ -71,11 +64,6 @@ function displayPracticeReportCategories(categories) {
         popup.append(
             `Accuratezza: ${category.accuracy}%`
         );
-
-        if (!category.hasEnoughData) {
-            popup.appendChild(document.createElement("br"));
-            popup.append("Dati insufficienti");
-        }
 
         bar.addEventListener(
             "mouseenter",

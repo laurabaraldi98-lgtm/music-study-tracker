@@ -436,7 +436,6 @@ router.get("/report", async function (request, response) {
                 attempts,
                 correct,
                 accuracy: Number((correct / attempts * 100).toFixed(1)),
-                hasEnoughData: attempts >= 3
             };
         });
 

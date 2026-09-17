@@ -37,6 +37,7 @@ const practiceReportSummary = document.getElementById(
 let renderPracticeReportMonths;
 let renderPracticeReportTypes;
 let renderPracticeReportCategories;
+let renderPracticeReportInsights;
 
 /* istanbul ignore else */
 if (
@@ -54,6 +55,10 @@ if (
     renderPracticeReportCategories =
         require("./practice-report-categories.js")
             .displayPracticeReportCategories;
+
+    renderPracticeReportInsights =
+        require("./practice-report-insights.js")
+            .displayPracticeReportInsights;
 } else {
     renderPracticeReportMonths =
         displayPracticeReportMonths;
@@ -63,6 +68,9 @@ if (
 
     renderPracticeReportCategories =
         displayPracticeReportCategories;
+
+    renderPracticeReportInsights =
+        displayPracticeReportInsights;
 }
 
 function updateCustomPeriodVisibility() {
@@ -189,6 +197,10 @@ async function displayPracticeReport() {
 
     renderPracticeReportCategories(
         report.categories
+    );
+
+    renderPracticeReportInsights(
+        report
     );
 }
 

@@ -25,15 +25,13 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             },
             {
                 name: "Accordi",
                 attempts: 5,
                 correct: 2,
-                accuracy: 40,
-                hasEnoughData: true
+                accuracy: 40
             }
         ]);
 
@@ -91,22 +89,27 @@ test(
 );
 
 test(
-    "shows insufficient data for category with fewer than three attempts",
+    "renders category even with one attempt",
     () => {
         displayPracticeReportCategories([
             {
                 name: "Ritmo",
-                attempts: 2,
-                correct: 2,
-                accuracy: 100,
-                hasEnoughData: false
+                attempts: 1,
+                correct: 1,
+                accuracy: 100
             }
         ]);
 
         expect(
             elements.practiceReportCategories.textContent
         ).toContain(
-            "Dati insufficienti"
+            "Ritmo"
+        );
+
+        expect(
+            elements.practiceReportCategories.textContent
+        ).toContain(
+            "100%"
         );
 
         const fill =
@@ -117,7 +120,7 @@ test(
 
         expect(
             fill.style.width
-        ).toBe("0%");
+        ).toBe("100%");
     }
 );
 
@@ -129,8 +132,7 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             }
         ]);
 
@@ -188,8 +190,7 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             }
         ]);
 
@@ -227,8 +228,7 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             }
         ]);
 
@@ -270,8 +270,7 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             }
         ]);
 
@@ -317,15 +316,13 @@ test(
                 name: "Intervalli",
                 attempts: 10,
                 correct: 8,
-                accuracy: 80,
-                hasEnoughData: true
+                accuracy: 80
             },
             {
                 name: "Accordi",
                 attempts: 5,
                 correct: 2,
-                accuracy: 40,
-                hasEnoughData: true
+                accuracy: 40
             }
         ]);
 

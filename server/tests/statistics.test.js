@@ -335,14 +335,12 @@ test("calculates summaries, monthly differences, types and categories", async ()
             attempts: 5,
             correct: 4,
             accuracy: 80,
-            hasEnoughData: true
         },
         {
             name: "Intervalli",
             attempts: 2,
             correct: 1,
             accuracy: 50,
-            hasEnoughData: false
         }
     ]);
 });
