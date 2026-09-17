@@ -24,6 +24,7 @@ function setupPracticeReportDom() {
             <div id="practice-report-summary"></div>
             <div id="practice-report-months"></div>
             <div id="practice-report-types"></div>
+            <div id="practice-report-categories"></div>
         </section>
     `;
 
@@ -38,7 +39,8 @@ function setupPracticeReportDom() {
         practiceReportType: document.getElementById("practice-report-type"),
         practiceReportSummary: document.getElementById("practice-report-summary"),
         practiceReportMonths: document.getElementById("practice-report-months"),
-        practiceReportTypes: document.getElementById("practice-report-types")
+        practiceReportTypes: document.getElementById("practice-report-types"),
+        practiceReportCategories: document.getElementById("practice-report-categories")
     };
 }
 
@@ -52,6 +54,7 @@ function makeReport(overrides = {}) {
         },
         months: [],
         types: [],
+        categories: [],
         ...overrides
     };
 }

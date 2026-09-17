@@ -1,428 +1,462 @@
 const {
-    setupPracticeReportDom,
-    makeReport,
-    waitForAsyncCode,
-    setupGlobals
-} = require("./helpers/practice-report-test-utils");
+    setupPracticeReportDom
+} = require(
+    "./helpers/practice-report-test-utils"
+);
 
-const getStatisticsReportFromServerMock = jest.fn();
+const {
+    displayPracticeReportMonths
+} = require(
+    "../practice-report-months.js"
+);
 
 let elements;
 
-beforeAll(() => {
-    elements = setupPracticeReportDom();
-    setupGlobals(getStatisticsReportFromServerMock);
-
-    require("../practice-report.js");
-});
-
 beforeEach(() => {
-    getStatisticsReportFromServerMock.mockReset();
-    getStatisticsReportFromServerMock.mockResolvedValue(makeReport());
-
-    elements.practiceReportSection.hidden = true;
-    elements.showPracticeReportButton.textContent = "Vedi report progressi";
-    elements.practiceReportSummary.innerHTML = "";
-    elements.practiceReportMonths.innerHTML = "";
-    elements.practiceReportTypes.innerHTML = "";
+    elements =
+        setupPracticeReportDom();
 });
 
-test("renders monthly chart with one data point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            summary: {
+test(
+    "renders monthly chart with one data point",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
                 totalDictations: 5,
                 evaluatedCategories: 10,
                 correctCategories: 7,
-                accuracy: 70
-            },
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart"
+                )
+        ).not.toBeNull();
 
-    expect(
-        elements.practiceReportMonths.querySelector(".practice-report-chart")
-    ).not.toBeNull();
+        expect(
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-point"
+                )
+        ).toHaveLength(1);
 
-    expect(
-        elements.practiceReportMonths.querySelectorAll(".practice-report-chart-point")
-    ).toHaveLength(1);
+        expect(
+            elements.practiceReportMonths.textContent
+        ).toContain("ago");
+    }
+);
 
-    expect(elements.practiceReportMonths.textContent).toContain("ago");
-});
-
-test("does not create a point when monthly accuracy is null", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            summary: {
+test(
+    "does not create a point when monthly accuracy is null",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
                 totalDictations: 2,
                 evaluatedCategories: 0,
                 correctCategories: 0,
-                accuracy: null
+                accuracy: null,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
+
+        expect(
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-point"
+                )
+        ).toHaveLength(0);
+    }
+);
+
+test(
+    "renders five horizontal grid lines",
+    () => {
+        displayPracticeReportMonths([]);
+
+        expect(
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-grid"
+                )
+        ).toHaveLength(5);
+    }
+);
+
+test(
+    "connects consecutive months with a line",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-07",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 5,
+                accuracy: 50,
+                differenceFromPreviousMonth: null,
+                isPartial: false
             },
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 2,
-                    evaluatedCategories: 0,
-                    correctCategories: 0,
-                    accuracy: null,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: 20,
+                isPartial: false
+            }
+        ]);
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-line"
+                )
+        ).toHaveLength(1);
+    }
+);
 
-    expect(
-        elements.practiceReportMonths.querySelectorAll(".practice-report-chart-point")
-    ).toHaveLength(0);
-});
-
-test("renders five horizontal grid lines", async () => {
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        elements.practiceReportMonths.querySelectorAll(".practice-report-chart-grid")
-    ).toHaveLength(5);
-});
-
-test("connects consecutive months with a line", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            summary: {
-                totalDictations: 10,
-                evaluatedCategories: 20,
-                correctCategories: 12,
-                accuracy: 60
+test(
+    "does not connect points separated by a month without data",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-06",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 5,
+                accuracy: 50,
+                differenceFromPreviousMonth: null,
+                isPartial: false
             },
-            months: [
-                {
-                    month: "2026-07",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 5,
-                    accuracy: 50,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                },
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: 20,
-                    isPartial: false
-                }
-            ]
-        })
-    );
-
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
-
-    expect(
-        elements.practiceReportMonths.querySelectorAll(".practice-report-chart-line")
-    ).toHaveLength(1);
-});
-
-test("does not connect points separated by a month without data", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            summary: {
-                totalDictations: 10,
-                evaluatedCategories: 20,
-                correctCategories: 12,
-                accuracy: 60
+            {
+                month: "2026-07",
+                totalDictations: 0,
+                evaluatedCategories: 0,
+                correctCategories: 0,
+                accuracy: null,
+                differenceFromPreviousMonth: null,
+                isPartial: false
             },
-            months: [
-                {
-                    month: "2026-06",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 5,
-                    accuracy: 50,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                },
-                {
-                    month: "2026-07",
-                    totalDictations: 0,
-                    evaluatedCategories: 0,
-                    correctCategories: 0,
-                    accuracy: null,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                },
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-line"
+                )
+        ).toHaveLength(0);
+    }
+);
 
-    expect(
-        elements.practiceReportMonths.querySelectorAll(".practice-report-chart-line")
-    ).toHaveLength(0);
-});
+test(
+    "shows popup on mouse enter",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-test("shows popup on mouse enter", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+        const point =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-point"
+                );
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    const point = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
+        point.dispatchEvent(
+            new Event("mouseenter")
+        );
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        expect(
+            popup.style.display
+        ).toBe("");
 
-    point.dispatchEvent(new Event("mouseenter"));
+        expect(
+            popup.textContent
+        ).toContain("Agosto 2026");
 
-    expect(popup.style.display).toBe("");
-    expect(popup.textContent).toContain("Agosto 2026");
-    expect(popup.textContent).toContain("Accuratezza: 70%");
-    expect(popup.textContent).toContain("Dettati: 5");
-    expect(popup.textContent).toContain("Categorie valutate: 10");
-});
+        expect(
+            popup.textContent
+        ).toContain(
+            "Accuratezza: 70%"
+        );
 
-test("hides popup on mouse leave when it is not pinned", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+        expect(
+            popup.textContent
+        ).toContain(
+            "Dettati: 5"
+        );
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            popup.textContent
+        ).toContain(
+            "Categorie valutate: 10"
+        );
+    }
+);
 
-    const point = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
+test(
+    "hides popup on mouse leave when it is not pinned",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        const point =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-point"
+                );
 
-    point.dispatchEvent(new Event("mouseenter"));
-    point.dispatchEvent(new Event("mouseleave"));
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    expect(popup.style.display).toBe("none");
-});
+        point.dispatchEvent(
+            new Event("mouseenter")
+        );
 
-test("keeps popup open after clicking a point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+        point.dispatchEvent(
+            new Event("mouseleave")
+        );
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            popup.style.display
+        ).toBe("none");
+    }
+);
 
-    const point = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
+test(
+    "keeps popup open after clicking a point",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        const point =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-point"
+                );
 
-    point.dispatchEvent(new Event("click"));
-    point.dispatchEvent(new Event("mouseleave"));
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    expect(popup.style.display).toBe("");
-});
+        point.dispatchEvent(
+            new Event("click")
+        );
 
-test("closes pinned popup when clicking the same point again", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+        point.dispatchEvent(
+            new Event("mouseleave")
+        );
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        expect(
+            popup.style.display
+        ).toBe("");
+    }
+);
 
-    const point = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-point"
-    );
+test(
+    "closes pinned popup when clicking the same point again",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            }
+        ]);
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        const point =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-point"
+                );
 
-    point.dispatchEvent(new Event("click"));
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    expect(popup.style.display).toBe("");
+        point.dispatchEvent(
+            new Event("click")
+        );
 
-    point.dispatchEvent(new Event("click"));
+        expect(
+            popup.style.display
+        ).toBe("");
 
-    expect(popup.style.display).toBe("none");
-});
+        point.dispatchEvent(
+            new Event("click")
+        );
 
-test("moves pinned popup when clicking another point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-07",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 5,
-                    accuracy: 50,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                },
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: 20,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+        expect(
+            popup.style.display
+        ).toBe("none");
+    }
+);
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+test(
+    "moves pinned popup when clicking another point",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-07",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 5,
+                accuracy: 50,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            },
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: 20,
+                isPartial: false
+            }
+        ]);
 
-    const points = elements.practiceReportMonths.querySelectorAll(
-        ".practice-report-chart-point"
-    );
+        const points =
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-point"
+                );
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    points[0].dispatchEvent(new Event("click"));
+        points[0].dispatchEvent(
+            new Event("click")
+        );
 
-    expect(popup.textContent).toContain("Luglio 2026");
+        expect(
+            popup.textContent
+        ).toContain(
+            "Luglio 2026"
+        );
 
-    points[1].dispatchEvent(new Event("click"));
+        points[1].dispatchEvent(
+            new Event("click")
+        );
 
-    expect(popup.textContent).toContain("Agosto 2026");
-});
+        expect(
+            popup.textContent
+        ).toContain(
+            "Agosto 2026"
+        );
+    }
+);
 
-test("does not change pinned popup when hovering another point", async () => {
-    getStatisticsReportFromServerMock.mockResolvedValueOnce(
-        makeReport({
-            months: [
-                {
-                    month: "2026-07",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 5,
-                    accuracy: 50,
-                    differenceFromPreviousMonth: null,
-                    isPartial: false
-                },
-                {
-                    month: "2026-08",
-                    totalDictations: 5,
-                    evaluatedCategories: 10,
-                    correctCategories: 7,
-                    accuracy: 70,
-                    differenceFromPreviousMonth: 20,
-                    isPartial: false
-                }
-            ]
-        })
-    );
+test(
+    "does not change pinned popup when hovering another point",
+    () => {
+        displayPracticeReportMonths([
+            {
+                month: "2026-07",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 5,
+                accuracy: 50,
+                differenceFromPreviousMonth: null,
+                isPartial: false
+            },
+            {
+                month: "2026-08",
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70,
+                differenceFromPreviousMonth: 20,
+                isPartial: false
+            }
+        ]);
 
-    elements.showPracticeReportButton.click();
-    await waitForAsyncCode();
+        const points =
+            elements.practiceReportMonths
+                .querySelectorAll(
+                    ".practice-report-chart-point"
+                );
 
-    const points = elements.practiceReportMonths.querySelectorAll(
-        ".practice-report-chart-point"
-    );
+        const popup =
+            elements.practiceReportMonths
+                .querySelector(
+                    ".practice-report-chart-popup"
+                );
 
-    const popup = elements.practiceReportMonths.querySelector(
-        ".practice-report-chart-popup"
-    );
+        points[0].dispatchEvent(
+            new Event("click")
+        );
 
-    points[0].dispatchEvent(new Event("click"));
+        points[1].dispatchEvent(
+            new Event("mouseenter")
+        );
 
-    expect(popup.textContent).toContain("Luglio 2026");
-
-    points[1].dispatchEvent(new Event("mouseenter"));
-
-    expect(popup.textContent).toContain("Luglio 2026");
-});
+        expect(
+            popup.textContent
+        ).toContain(
+            "Luglio 2026"
+        );
+    }
+);
