@@ -402,20 +402,16 @@ details p {
     position: fixed;
     inset: 0;
     z-index: 1000;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-
     padding: clamp(16px, 4vw, 40px);
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
-
     background:
         radial-gradient(circle at 15% 20%,
             rgba(111, 134, 166, 0.22),
@@ -443,7 +439,6 @@ details p {
 #sign-in-container::before {
     content: "♪";
     font-size: clamp(28px, 3.5vw, 52px);
-
     text-shadow:
         5vw 8vh 0 rgba(111, 134, 166, 0.22),
         18vw 22vh 0 rgba(111, 134, 166, 0.18),
@@ -452,14 +447,12 @@ details p {
         58vw 13vh 0 rgba(111, 134, 166, 0.20),
         72vw 26vh 0 rgba(111, 134, 166, 0.18),
         87vw 9vh 0 rgba(111, 134, 166, 0.21),
-
         9vw 48vh 0 rgba(111, 134, 166, 0.19),
         23vw 60vh 0 rgba(111, 134, 166, 0.17),
         39vw 50vh 0 rgba(111, 134, 166, 0.20),
         64vw 54vh 0 rgba(111, 134, 166, 0.18),
         81vw 45vh 0 rgba(111, 134, 166, 0.20),
         93vw 61vh 0 rgba(111, 134, 166, 0.17),
-
         4vw 82vh 0 rgba(111, 134, 166, 0.20),
         19vw 91vh 0 rgba(111, 134, 166, 0.17),
         34vw 76vh 0 rgba(111, 134, 166, 0.19),
@@ -472,7 +465,6 @@ details p {
 #sign-in-container::after {
     content: "♫";
     font-size: clamp(22px, 2.8vw, 42px);
-
     text-shadow:
         11vw 15vh 0 rgba(111, 134, 166, 0.07),
         25vw 35vh 0 rgba(111, 134, 166, 0.09),
@@ -481,14 +473,12 @@ details p {
         66vw 35vh 0 rgba(111, 134, 166, 0.07),
         79vw 17vh 0 rgba(111, 134, 166, 0.09),
         91vw 33vh 0 rgba(111, 134, 166, 0.06),
-
         15vw 70vh 0 rgba(111, 134, 166, 0.08),
         29vw 54vh 0 rgba(111, 134, 166, 0.06),
         46vw 67vh 0 rgba(111, 134, 166, 0.09),
         59vw 43vh 0 rgba(111, 134, 166, 0.07),
         75vw 63vh 0 rgba(111, 134, 166, 0.08),
         88vw 55vh 0 rgba(111, 134, 166, 0.06),
-
         8vw 94vh 0 rgba(111, 134, 166, 0.07),
         42vw 94vh 0 rgba(111, 134, 166, 0.08),
         61vw 82vh 0 rgba(111, 134, 166, 0.06),
@@ -504,6 +494,130 @@ details p {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 20px;
+}
+
+/* Practice report */
+
+#practice-report-months,
+#practice-report-types {
+    margin-top: 24px;
+}
+
+.practice-report-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-top: 1rem;
+}
+
+.practice-report-chart text {
+    fill: #333333;
+    font-size: 12px;
+}
+
+.practice-report-chart-line {
+    stroke: #6f86a6;
+    stroke-width: 2;
+}
+
+.practice-report-chart-grid {
+    stroke: #6f86a6;
+    stroke-width: 1;
+    opacity: 0.15;
+}
+
+.practice-report-chart-point {
+    fill: #6f86a6;
+    cursor: pointer;
+    transition: opacity 0.1s ease;
+}
+
+.practice-report-chart-point:hover {
+    opacity: 0.7;
+}
+
+.practice-report-chart>line:not(.practice-report-chart-grid):not(.practice-report-chart-line) {
+    stroke: #6f86a6;
+}
+
+.practice-report-chart-popup {
+    pointer-events: none;
+}
+
+.practice-report-chart-popup-background {
+    fill: white;
+    stroke: #6f86a6;
+    stroke-width: 1;
+    opacity: 0.97;
+}
+
+.practice-report-chart-popup-text {
+    fill: #333333;
+    font-size: 12px;
+}
+
+.practice-report-chart-popup-title {
+    font-weight: bold;
+}
+
+/* Practice report types */
+
+.practice-report-type-row {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.practice-report-type-row:last-child {
+    margin-bottom: 0;
+}
+
+.practice-report-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.practice-report-type-header span:first-child {
+    font-weight: bold;
+}
+
+.practice-report-type-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #e4e4e4;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.practice-report-type-bar-fill {
+    height: 100%;
+    background-color: #6f86a6;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+        opacity 0.1s ease,
+        background-color 0.1s ease;
+}
+
+.practice-report-type-bar-fill:hover,
+.practice-report-type-bar-fill.pinned {
+    background-color: #5f7491;
+}
+
+.practice-report-type-popup {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid #6f86a6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    line-height: 1.5;
 }
 
 /* Responsive */
@@ -550,68 +664,18 @@ details p {
     #sign-in-container::after {
         font-size: 22px;
     }
+
+    .practice-report-type-header {
+        gap: 8px;
+    }
+
+    .practice-report-type-popup {
+        max-width: calc(100vw - 60px);
+    }
 }
 
 @media (max-height: 620px) {
     #sign-in-container {
         align-items: flex-start;
     }
-}
-
-.practice-report-chart {
-    width: 100%;
-    max-width: 700px;
-    height: auto;
-    display: block;
-    margin-top: 1rem;
-}
-
-.practice-report-chart text {
-    font-size: 12px;
-    fill: currentColor;
-}
-
-.practice-report-chart-line {
-    stroke: currentColor;
-    stroke-width: 2;
-}
-
-.practice-report-chart-point {
-    fill: currentColor;
-    cursor: pointer;
-}
-
-.practice-report-chart-grid {
-    stroke: currentColor;
-    stroke-width: 1;
-    opacity: 0.12;
-}
-
-.practice-report-chart-point {
-    fill: currentColor;
-    cursor: pointer;
-}
-
-.practice-report-chart-point:hover {
-    opacity: 0.65;
-}
-
-.practice-report-chart-popup {
-    pointer-events: none;
-}
-
-.practice-report-chart-popup-background {
-    fill: white;
-    stroke: currentColor;
-    stroke-width: 1;
-    opacity: 0.96;
-}
-
-.practice-report-chart-popup-text {
-    fill: currentColor;
-    font-size: 12px;
-}
-
-.practice-report-chart-popup-title {
-    font-weight: bold;
 }
