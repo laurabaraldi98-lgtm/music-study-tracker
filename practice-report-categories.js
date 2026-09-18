@@ -27,7 +27,8 @@ function displayPracticeReportCategories(categories) {
         name.textContent = category.name;
 
         const value = document.createElement("span");
-        value.textContent = `${category.accuracy}%`;
+        value.textContent =
+            `${category.correct}/${category.attempts} corretti · ${category.accuracy}%`;
 
         header.appendChild(name);
         header.appendChild(value);
@@ -48,69 +49,44 @@ function displayPracticeReportCategories(categories) {
 
         popup.appendChild(popupTitle);
         popup.appendChild(document.createElement("br"));
-
-        popup.append(
-            `Tentativi: ${category.attempts}`
-        );
-
+        popup.append(`Tentativi: ${category.attempts}`);
         popup.appendChild(document.createElement("br"));
-
-        popup.append(
-            `Corrette: ${category.correct}`
-        );
-
+        popup.append(`Corrette: ${category.correct}`);
         popup.appendChild(document.createElement("br"));
+        popup.append(`Accuratezza: ${category.accuracy}%`);
 
-        popup.append(
-            `Accuratezza: ${category.accuracy}%`
-        );
+        bar.addEventListener("mouseenter", function () {
+            popup.hidden = false;
+        });
 
-        bar.addEventListener(
-            "mouseenter",
-            function () {
-                popup.hidden = false;
+        bar.addEventListener("mouseleave", function () {
+            if (!bar.classList.contains("pinned")) {
+                popup.hidden = true;
             }
-        );
+        });
 
-        bar.addEventListener(
-            "mouseleave",
-            function () {
-                if (!bar.classList.contains("pinned")) {
-                    popup.hidden = true;
-                }
+        bar.addEventListener("click", function () {
+            const isPinned = bar.classList.contains("pinned");
+
+            document
+                .querySelectorAll(".practice-report-category-bar.pinned")
+                .forEach(element => {
+                    element.classList.remove("pinned");
+                });
+
+            document
+                .querySelectorAll(".practice-report-category-popup")
+                .forEach(element => {
+                    element.hidden = true;
+                });
+
+            if (isPinned) {
+                return;
             }
-        );
 
-        bar.addEventListener(
-            "click",
-            function () {
-                const isPinned =
-                    bar.classList.contains("pinned");
-
-                document
-                    .querySelectorAll(
-                        ".practice-report-category-bar.pinned"
-                    )
-                    .forEach(element => {
-                        element.classList.remove("pinned");
-                    });
-
-                document
-                    .querySelectorAll(
-                        ".practice-report-category-popup"
-                    )
-                    .forEach(element => {
-                        element.hidden = true;
-                    });
-
-                if (isPinned) {
-                    return;
-                }
-
-                bar.classList.add("pinned");
-                popup.hidden = false;
-            }
-        );
+            bar.classList.add("pinned");
+            popup.hidden = false;
+        });
 
         bar.appendChild(fill);
 

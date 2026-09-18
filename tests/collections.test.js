@@ -17,7 +17,7 @@ document.body.innerHTML = `
 
     <select id="saved-collection-filter"></select>
     <select id="calendar-collection-filter"></select>
-    <select id="statistics-collection-filter"></select>
+    <select id="practice-report-collection"></select>
 `;
 
 const dictationCollection =
@@ -44,16 +44,14 @@ const savedCollectionFilter =
 const calendarCollectionFilter =
     document.getElementById("calendar-collection-filter");
 
-const statisticsCollectionFilter =
-    document.getElementById("statistics-collection-filter");
-
+const practiceReportCollectionFilter =
+    document.getElementById("practice-report-collection");
 
 const collectionFilters = [
     savedCollectionFilter,
     calendarCollectionFilter,
-    statisticsCollectionFilter
+    practiceReportCollectionFilter
 ];
-
 
 const getCollectionsFromServerMock = jest.fn();
 const saveCollectionToServerMock = jest.fn();
@@ -62,7 +60,6 @@ const deleteCollectionFromServerMock = jest.fn();
 const alertMock = jest.fn();
 const confirmMock = jest.fn();
 
-
 const mocksToReset = [
     getCollectionsFromServerMock,
     saveCollectionToServerMock,
@@ -70,7 +67,6 @@ const mocksToReset = [
     alertMock,
     confirmMock
 ];
-
 
 global.getCollectionsFromServer =
     getCollectionsFromServerMock;
@@ -90,33 +86,27 @@ global.Clerk = {
     }
 };
 
-
 const consoleErrorSpy = jest
     .spyOn(console, "error")
     .mockImplementation(() => { });
 
-
 require("../collections.js");
-
 
 async function waitForAsyncCode() {
     await Promise.resolve();
     await Promise.resolve();
 }
 
-
 function getOptionValues(select) {
     return Array.from(select.options)
         .map(option => option.value);
 }
-
 
 function getRemoveButton() {
     return collectionsList.querySelector(
         ".remove-collection-button"
     );
 }
-
 
 async function loadCollections(collections = []) {
     getCollectionsFromServerMock.mockResolvedValueOnce(
@@ -133,7 +123,6 @@ async function loadCollections(collections = []) {
 
     await waitForAsyncCode();
 }
-
 
 beforeEach(async () => {
     mocksToReset.forEach(
@@ -161,11 +150,9 @@ beforeEach(async () => {
     consoleErrorSpy.mockClear();
 });
 
-
 afterAll(() => {
     consoleErrorSpy.mockRestore();
 });
-
 
 test("loads and displays collections", async () => {
     await loadCollections([
@@ -253,7 +240,6 @@ test("shows an error when collections cannot be loaded", async () => {
         );
 });
 
-
 test("does not load collections when there is no logged user", async () => {
     Clerk.user = null;
 
@@ -266,7 +252,6 @@ test("does not load collections when there is no logged user", async () => {
     expect(getCollectionsFromServerMock)
         .not.toHaveBeenCalled();
 });
-
 
 test("shows and hides the collection manager", () => {
     expect(collectionManager.hidden)
@@ -289,7 +274,6 @@ test("shows and hides the collection manager", () => {
         .toBe("Gestisci raccolte");
 });
 
-
 test("does not save an empty collection", async () => {
     newCollectionInput.value = "   ";
 
@@ -300,7 +284,6 @@ test("does not save an empty collection", async () => {
     expect(saveCollectionToServerMock)
         .not.toHaveBeenCalled();
 });
-
 
 test("does not save a duplicate collection", async () => {
     await loadCollections([
@@ -324,7 +307,6 @@ test("does not save a duplicate collection", async () => {
             "Questa raccolta esiste già."
         );
 });
-
 
 test("saves a new collection and updates the interface", async () => {
     saveCollectionToServerMock.mockResolvedValueOnce({
@@ -369,7 +351,6 @@ test("saves a new collection and updates the interface", async () => {
     });
 });
 
-
 test("shows an error when a collection cannot be saved", async () => {
     saveCollectionToServerMock.mockRejectedValueOnce(
         new Error("Save error")
@@ -392,7 +373,6 @@ test("shows an error when a collection cannot be saved", async () => {
     expect(collectionsList.textContent)
         .not.toContain("Studio");
 });
-
 
 test("does not delete a collection when confirmation is cancelled", async () => {
     await loadCollections([
@@ -419,7 +399,6 @@ test("does not delete a collection when confirmation is cancelled", async () => 
     expect(collectionsList.textContent)
         .toContain("Esame");
 });
-
 
 test("deletes a collection after confirmation", async () => {
     await loadCollections([
@@ -451,7 +430,6 @@ test("deletes a collection after confirmation", async () => {
     ]);
 });
 
-
 test("keeps the collection when deletion fails", async () => {
     await loadCollections([
         {
@@ -482,7 +460,6 @@ test("keeps the collection when deletion fails", async () => {
     expect(collectionsList.textContent)
         .toContain("Esame");
 });
-
 
 test("pressing Enter triggers Add exactly once", () => {
     const clickSpy = jest
