@@ -2,7 +2,7 @@ const express = require("express");
 const request = require("supertest");
 const pool = require("../db");
 const { getAuth } = require("@clerk/express");
-const statisticsRouter = require("../routes/statistics");
+const { generatePracticeInsight } = require("../services/gemini");
 
 jest.mock("../db", () => ({
     query: jest.fn()
@@ -11,6 +11,12 @@ jest.mock("../db", () => ({
 jest.mock("@clerk/express", () => ({
     getAuth: jest.fn()
 }));
+
+jest.mock("../services/gemini", () => ({
+    generatePracticeInsight: jest.fn()
+}));
+
+const statisticsRouter = require("../routes/statistics");
 
 const app = express();
 
@@ -38,19 +44,20 @@ function mockReportQueries({
 
 beforeAll(() => {
     jest.useFakeTimers();
-    jest.setSystemTime(
-        new Date("2026-09-16T12:00:00.000Z")
-    );
+    jest.setSystemTime(new Date("2026-09-16T12:00:00.000Z"));
 });
 
 beforeEach(() => {
     pool.query.mockReset();
     getAuth.mockReset();
+    generatePracticeInsight.mockReset();
 
     getAuth.mockReturnValue({
         isAuthenticated: true,
         userId: "user_test"
     });
+
+    generatePracticeInsight.mockResolvedValue("Commento AI di prova");
 });
 
 afterAll(() => {
@@ -63,21 +70,20 @@ test("rejects unauthenticated users", async () => {
         userId: null
     });
 
-    const response = await request(app)
-        .get("/statistics/report");
+    const response = await request(app).get("/statistics/report");
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
         error: "Utente non autenticato"
     });
     expect(pool.query).not.toHaveBeenCalled();
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
 test("uses the last six months by default", async () => {
     mockReportQueries();
 
-    const response = await request(app)
-        .get("/statistics/report");
+    const response = await request(app).get("/statistics/report");
 
     expect(response.status).toBe(200);
     expect(response.body.period).toEqual({
@@ -85,6 +91,7 @@ test("uses the last six months by default", async () => {
         from: "2026-04-01",
         to: "2026-09-16"
     });
+    expect(response.body.aiInsight).toBe("Commento AI di prova");
 
     expect(pool.query).toHaveBeenCalledTimes(4);
 
@@ -100,43 +107,24 @@ test("uses the last six months by default", async () => {
 });
 
 test.each([
-    [
-        "current-month",
-        "2026-09-01",
-        "2026-09-16"
-    ],
-    [
-        "previous-month",
-        "2026-08-01",
-        "2026-08-31"
-    ],
-    [
-        "3-months",
-        "2026-07-01",
-        "2026-09-16"
-    ],
-    [
-        "6-months",
-        "2026-04-01",
-        "2026-09-16"
-    ]
-])(
-    "resolves the %s period",
-    async (period, expectedFrom, expectedTo) => {
-        mockReportQueries();
+    ["current-month", "2026-09-01", "2026-09-16"],
+    ["previous-month", "2026-08-01", "2026-08-31"],
+    ["3-months", "2026-07-01", "2026-09-16"],
+    ["6-months", "2026-04-01", "2026-09-16"]
+])("resolves the %s period", async (period, expectedFrom, expectedTo) => {
+    mockReportQueries();
 
-        const response = await request(app)
-            .get("/statistics/report")
-            .query({ period });
+    const response = await request(app)
+        .get("/statistics/report")
+        .query({ period });
 
-        expect(response.status).toBe(200);
-        expect(response.body.period).toEqual({
-            type: period,
-            from: expectedFrom,
-            to: expectedTo
-        });
-    }
-);
+    expect(response.status).toBe(200);
+    expect(response.body.period).toEqual({
+        type: period,
+        from: expectedFrom,
+        to: expectedTo
+    });
+});
 
 test("supports the complete history", async () => {
     mockReportQueries({
@@ -226,11 +214,8 @@ test("supports a custom period and marks partial months", async () => {
         to: "2026-05-10"
     });
 
-    expect(response.body.months[0].isPartial)
-        .toBe(true);
-
-    expect(response.body.months[1].isPartial)
-        .toBe(true);
+    expect(response.body.months[0].isPartial).toBe(true);
+    expect(response.body.months[1].isPartial).toBe(true);
 });
 
 test("calculates summaries, monthly differences, types and categories", async () => {
@@ -299,16 +284,9 @@ test("calculates summaries, monthly differences, types and categories", async ()
         accuracy: 70
     });
 
-    expect(response.body.months[0].accuracy)
-        .toBe(50);
-
-    expect(response.body.months[1].accuracy)
-        .toBe(83.3);
-
-    expect(
-        response.body.months[1]
-            .differenceFromPreviousMonth
-    ).toBe(33.3);
+    expect(response.body.months[0].accuracy).toBe(50);
+    expect(response.body.months[1].accuracy).toBe(83.3);
+    expect(response.body.months[1].differenceFromPreviousMonth).toBe(33.3);
 
     expect(response.body.types).toEqual([
         {
@@ -334,15 +312,35 @@ test("calculates summaries, monthly differences, types and categories", async ()
             name: "Metrica",
             attempts: 5,
             correct: 4,
-            accuracy: 80,
+            accuracy: 80
         },
         {
             name: "Intervalli",
             attempts: 2,
             correct: 1,
-            accuracy: 50,
+            accuracy: 50
         }
     ]);
+
+    expect(response.body.aiInsight).toBe("Commento AI di prova");
+    expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
+
+    expect(generatePracticeInsight).toHaveBeenCalledWith({
+        period: {
+            type: "all",
+            from: "2026-07-01",
+            to: "2026-08-31"
+        },
+        summary: {
+            totalDictations: 4,
+            evaluatedCategories: 10,
+            correctCategories: 7,
+            accuracy: 70
+        },
+        months: response.body.months,
+        types: response.body.types,
+        categories: response.body.categories
+    });
 });
 
 test("supports collection and dictation type filters", async () => {
@@ -376,13 +374,12 @@ test("rejects an invalid period", async () => {
         error: "Periodo non valido"
     });
     expect(pool.query).not.toHaveBeenCalled();
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
 test.each([
     {},
-    {
-        from: "2026-01-01"
-    },
+    { from: "2026-01-01" },
     {
         from: "2026/01/01",
         to: "2026-02-01"
@@ -391,23 +388,18 @@ test.each([
         from: "2026-02-30",
         to: "2026-03-01"
     }
-])(
-    "rejects invalid custom dates",
-    async customDates => {
-        const response = await request(app)
-            .get("/statistics/report")
-            .query({
-                period: "custom",
-                ...customDates
-            });
+])("rejects invalid custom dates", async customDates => {
+    const response = await request(app)
+        .get("/statistics/report")
+        .query({
+            period: "custom",
+            ...customDates
+        });
 
-        expect(response.status).toBe(400);
-        expect(response.body.error).toContain(
-            "formato YYYY-MM-DD"
-        );
-        expect(pool.query).not.toHaveBeenCalled();
-    }
-);
+    expect(response.status).toBe(400);
+    expect(response.body.error).toContain("formato YYYY-MM-DD");
+    expect(pool.query).not.toHaveBeenCalled();
+});
 
 test("rejects a reversed custom period", async () => {
     const response = await request(app)
@@ -420,48 +412,41 @@ test("rejects a reversed custom period", async () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
-        error:
-            "La data iniziale non può essere successiva alla data finale"
+        error: "La data iniziale non può essere successiva alla data finale"
     });
 });
 
 test.each([
     "",
     "a".repeat(256)
-])(
-    "rejects invalid collections",
-    async collection => {
-        const response = await request(app)
-            .get("/statistics/report")
-            .query({ collection });
+])("rejects invalid collections", async collection => {
+    const response = await request(app)
+        .get("/statistics/report")
+        .query({ collection });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Raccolta non valida"
-        });
-        expect(pool.query).not.toHaveBeenCalled();
-    }
-);
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+        error: "Raccolta non valida"
+    });
+    expect(pool.query).not.toHaveBeenCalled();
+});
 
 test.each([
     "0",
     "-1",
     "abc",
     "1.5"
-])(
-    "rejects invalid dictation type IDs",
-    async dictationTypeId => {
-        const response = await request(app)
-            .get("/statistics/report")
-            .query({ dictationTypeId });
+])("rejects invalid dictation type IDs", async dictationTypeId => {
+    const response = await request(app)
+        .get("/statistics/report")
+        .query({ dictationTypeId });
 
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual({
-            error: "Tipo di dettato non valido"
-        });
-        expect(pool.query).not.toHaveBeenCalled();
-    }
-);
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+        error: "Tipo di dettato non valido"
+    });
+    expect(pool.query).not.toHaveBeenCalled();
+});
 
 test("returns null accuracy when no categories were evaluated", async () => {
     mockReportQueries();
@@ -471,8 +456,7 @@ test("returns null accuracy when no categories were evaluated", async () => {
         .query({ period: "all" });
 
     expect(response.status).toBe(200);
-    expect(response.body.summary.accuracy)
-        .toBeNull();
+    expect(response.body.summary.accuracy).toBeNull();
     expect(response.body.months).toEqual([]);
 });
 
@@ -492,6 +476,31 @@ test("returns 500 when the database fails", async () => {
     expect(response.body).toEqual({
         error: "Errore durante il recupero del report"
     });
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+});
+
+test("returns 500 when Gemini fails", async () => {
+    const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => { });
+
+    mockReportQueries();
+
+    generatePracticeInsight.mockRejectedValueOnce(
+        new Error("Gemini error")
+    );
+
+    const response = await request(app)
+        .get("/statistics/report");
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({
+        error: "Errore durante il recupero del report"
+    });
+    expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     consoleErrorSpy.mockRestore();

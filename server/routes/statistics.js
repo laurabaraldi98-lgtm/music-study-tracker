@@ -1,6 +1,9 @@
 const express = require("express");
 const { getAuth } = require("@clerk/express");
 const pool = require("../db");
+const {
+    generatePracticeInsight
+} = require("../services/gemini");
 
 const router = express.Router();
 
@@ -439,7 +442,7 @@ router.get("/report", async function (request, response) {
             };
         });
 
-        response.json({
+        const report = {
             period: {
                 type: period,
                 from: effectiveFrom,
@@ -454,6 +457,14 @@ router.get("/report", async function (request, response) {
             months,
             types,
             categories
+        };
+
+        const aiInsight =
+            await generatePracticeInsight(report);
+
+        response.json({
+            ...report,
+            aiInsight
         });
     } catch (error) {
         console.error(error);
