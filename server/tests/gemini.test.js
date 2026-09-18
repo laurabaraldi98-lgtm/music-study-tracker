@@ -16,7 +16,7 @@ beforeEach(() => {
     mockGenerateContent.mockReset();
 });
 
-test("generates a practice insight from report data", async () => {
+test("generates a practice insight from deterministic insights", async () => {
     mockGenerateContent.mockResolvedValue({
         text: "Il rendimento è in miglioramento."
     });
@@ -37,18 +37,25 @@ test("generates a practice insight from report data", async () => {
         types: [],
         categories: [
             {
-                name: "Metrica",
-                attempts: 8,
-                correct: 7,
+                name: "QUESTA NON DEVE FINIRE NEL PROMPT",
+                accuracy: 100
+            }
+        ],
+        insights: {
+            best: {
+                categories: ["Metrica"],
                 accuracy: 87.5
             },
-            {
-                name: "Intervalli",
-                attempts: 4,
-                correct: 2,
-                accuracy: 50
+            improvement: {
+                categories: ["Intervalli"],
+                accuracy: 50,
+                allEqual: false
+            },
+            trend: {
+                direction: "up",
+                slope: 10
             }
-        ]
+        }
     };
 
     const result = await generatePracticeInsight(report);
@@ -65,8 +72,14 @@ test("generates a practice insight from report data", async () => {
     const request = mockGenerateContent.mock.calls[0][0];
 
     expect(request.contents).toContain('"accuracy": 75');
-    expect(request.contents).toContain('"name": "Metrica"');
-    expect(request.contents).toContain('"name": "Intervalli"');
-    expect(request.contents).toContain("Non inventare valori");
-    expect(request.contents).toContain("massimo 3 frasi");
+    expect(request.contents).toContain('"Metrica"');
+    expect(request.contents).toContain('"Intervalli"');
+    expect(request.contents).toContain('"direction": "up"');
+    expect(request.contents).toContain('"slope": 10');
+    expect(request.contents).toContain("fonte di verità");
+    expect(request.contents).toContain("Non ricalcolare i risultati");
+
+    expect(request.contents).not.toContain(
+        "QUESTA NON DEVE FINIRE NEL PROMPT"
+    );
 });

@@ -38,6 +38,7 @@ let renderPracticeReportMonths;
 let renderPracticeReportTypes;
 let renderPracticeReportCategories;
 let renderPracticeReportInsights;
+let renderPracticeReportAiInsight;
 
 /* istanbul ignore else */
 if (
@@ -59,18 +60,16 @@ if (
     renderPracticeReportInsights =
         require("./practice-report-insights.js")
             .displayPracticeReportInsights;
+
+    renderPracticeReportAiInsight =
+        require("./practice-report-ai.js")
+            .displayPracticeReportAiInsight;
 } else {
-    renderPracticeReportMonths =
-        displayPracticeReportMonths;
-
-    renderPracticeReportTypes =
-        displayPracticeReportTypes;
-
-    renderPracticeReportCategories =
-        displayPracticeReportCategories;
-
-    renderPracticeReportInsights =
-        displayPracticeReportInsights;
+    renderPracticeReportMonths = displayPracticeReportMonths;
+    renderPracticeReportTypes = displayPracticeReportTypes;
+    renderPracticeReportCategories = displayPracticeReportCategories;
+    renderPracticeReportInsights = displayPracticeReportInsights;
+    renderPracticeReportAiInsight = displayPracticeReportAiInsight;
 }
 
 function updateCustomPeriodVisibility() {
@@ -201,6 +200,10 @@ async function displayPracticeReport() {
 
     renderPracticeReportInsights(
         report
+    );
+
+    renderPracticeReportAiInsight(
+        report.aiInsight
     );
 }
 

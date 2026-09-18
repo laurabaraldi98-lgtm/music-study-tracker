@@ -26,49 +26,25 @@ function setupPracticeReportDom() {
             <div id="practice-report-types"></div>
             <div id="practice-report-categories"></div>
             <div id="practice-report-insights"></div>
+            <div id="practice-report-ai-insight"></div>
         </section>
     `;
 
     return {
-        showPracticeReportButton: document.getElementById(
-            "show-practice-report-button"
-        ),
-        practiceReportSection: document.getElementById(
-            "practice-report-section"
-        ),
-        practiceReportPeriod: document.getElementById(
-            "practice-report-period"
-        ),
-        practiceReportCustomPeriod: document.getElementById(
-            "practice-report-custom-period"
-        ),
-        practiceReportFrom: document.getElementById(
-            "practice-report-from"
-        ),
-        practiceReportTo: document.getElementById(
-            "practice-report-to"
-        ),
-        practiceReportCollection: document.getElementById(
-            "practice-report-collection"
-        ),
-        practiceReportType: document.getElementById(
-            "practice-report-type"
-        ),
-        practiceReportSummary: document.getElementById(
-            "practice-report-summary"
-        ),
-        practiceReportMonths: document.getElementById(
-            "practice-report-months"
-        ),
-        practiceReportTypes: document.getElementById(
-            "practice-report-types"
-        ),
-        practiceReportCategories: document.getElementById(
-            "practice-report-categories"
-        ),
-        practiceReportInsights: document.getElementById(
-            "practice-report-insights"
-        )
+        showPracticeReportButton: document.getElementById("show-practice-report-button"),
+        practiceReportSection: document.getElementById("practice-report-section"),
+        practiceReportPeriod: document.getElementById("practice-report-period"),
+        practiceReportCustomPeriod: document.getElementById("practice-report-custom-period"),
+        practiceReportFrom: document.getElementById("practice-report-from"),
+        practiceReportTo: document.getElementById("practice-report-to"),
+        practiceReportCollection: document.getElementById("practice-report-collection"),
+        practiceReportType: document.getElementById("practice-report-type"),
+        practiceReportSummary: document.getElementById("practice-report-summary"),
+        practiceReportMonths: document.getElementById("practice-report-months"),
+        practiceReportTypes: document.getElementById("practice-report-types"),
+        practiceReportCategories: document.getElementById("practice-report-categories"),
+        practiceReportInsights: document.getElementById("practice-report-insights"),
+        practiceReportAiInsight: document.getElementById("practice-report-ai-insight")
     };
 }
 
@@ -83,6 +59,22 @@ function makeReport(overrides = {}) {
         months: [],
         types: [],
         categories: [],
+        insights: {
+            best: {
+                categories: [],
+                accuracy: null
+            },
+            improvement: {
+                categories: [],
+                accuracy: null,
+                allEqual: false
+            },
+            trend: {
+                direction: "insufficient",
+                slope: null
+            }
+        },
+        aiInsight: "Commento AI di prova",
         ...overrides
     };
 }
@@ -93,8 +85,7 @@ async function waitForAsyncCode() {
 }
 
 function setupGlobals(getStatisticsReportFromServerMock) {
-    global.getStatisticsReportFromServer =
-        getStatisticsReportFromServerMock;
+    global.getStatisticsReportFromServer = getStatisticsReportFromServerMock;
 
     global.collections = [
         { id: 1, name: "Esame" },

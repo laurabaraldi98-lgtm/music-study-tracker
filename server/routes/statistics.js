@@ -1,9 +1,8 @@
 const express = require("express");
 const { getAuth } = require("@clerk/express");
 const pool = require("../db");
-const {
-    generatePracticeInsight
-} = require("../services/gemini");
+const { generatePracticeInsight } = require("../services/gemini");
+const { calculatePracticeInsights } = require("../services/practice-insights");
 
 const router = express.Router();
 
@@ -144,12 +143,8 @@ function buildMonthlyResults(rows, period, from, to, today) {
     ) {
         const month = formatDate(monthDate).slice(0, 7);
         const row = rowsByMonth.get(month);
-        const evaluatedCategories = row
-            ? Number(row.evaluated_categories)
-            : 0;
-        const correctCategories = row
-            ? Number(row.correct_categories)
-            : 0;
+        const evaluatedCategories = row ? Number(row.evaluated_categories) : 0;
+        const correctCategories = row ? Number(row.correct_categories) : 0;
 
         months.push({
             month,
@@ -379,9 +374,11 @@ router.get("/report", async function (request, response) {
         ]);
 
         const summaryRow = summaryResult.rows[0];
+
         const evaluatedCategories = Number(
             summaryRow.evaluated_categories
         );
+
         const correctCategories = Number(
             summaryRow.correct_categories
         );
@@ -438,8 +435,13 @@ router.get("/report", async function (request, response) {
                 name: row.name,
                 attempts,
                 correct,
-                accuracy: Number((correct / attempts * 100).toFixed(1)),
+                accuracy: Number((correct / attempts * 100).toFixed(1))
             };
+        });
+
+        const insights = calculatePracticeInsights({
+            months,
+            categories
         });
 
         const report = {
@@ -456,11 +458,11 @@ router.get("/report", async function (request, response) {
             },
             months,
             types,
-            categories
+            categories,
+            insights
         };
 
-        const aiInsight =
-            await generatePracticeInsight(report);
+        const aiInsight = await generatePracticeInsight(report);
 
         response.json({
             ...report,

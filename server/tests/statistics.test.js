@@ -91,6 +91,23 @@ test("uses the last six months by default", async () => {
         from: "2026-04-01",
         to: "2026-09-16"
     });
+
+    expect(response.body.insights).toEqual({
+        best: {
+            categories: [],
+            accuracy: null
+        },
+        improvement: {
+            categories: [],
+            accuracy: null,
+            allEqual: false
+        },
+        trend: {
+            direction: "insufficient",
+            slope: null
+        }
+    });
+
     expect(response.body.aiInsight).toBe("Commento AI di prova");
 
     expect(pool.query).toHaveBeenCalledTimes(4);
@@ -156,6 +173,7 @@ test("supports the complete history", async () => {
         .query({ period: "all" });
 
     expect(response.status).toBe(200);
+
     expect(response.body.period).toEqual({
         type: "all",
         from: "2026-01-12",
@@ -163,6 +181,7 @@ test("supports the complete history", async () => {
     });
 
     expect(response.body.months).toHaveLength(3);
+
     expect(response.body.months[1]).toEqual({
         month: "2026-02",
         totalDictations: 0,
@@ -171,6 +190,11 @@ test("supports the complete history", async () => {
         accuracy: null,
         differenceFromPreviousMonth: null,
         isPartial: false
+    });
+
+    expect(response.body.insights.trend).toEqual({
+        direction: "up",
+        slope: 50
     });
 });
 
@@ -208,6 +232,7 @@ test("supports a custom period and marks partial months", async () => {
         });
 
     expect(response.status).toBe(200);
+
     expect(response.body.period).toEqual({
         type: "custom",
         from: "2026-04-15",
@@ -216,9 +241,14 @@ test("supports a custom period and marks partial months", async () => {
 
     expect(response.body.months[0].isPartial).toBe(true);
     expect(response.body.months[1].isPartial).toBe(true);
+
+    expect(response.body.insights.trend).toEqual({
+        direction: "insufficient",
+        slope: null
+    });
 });
 
-test("calculates summaries, monthly differences, types and categories", async () => {
+test("calculates summaries, monthly differences, types, categories and insights", async () => {
     mockReportQueries({
         summary: {
             total_dictations: 4,
@@ -322,7 +352,24 @@ test("calculates summaries, monthly differences, types and categories", async ()
         }
     ]);
 
+    expect(response.body.insights).toEqual({
+        best: {
+            categories: ["Metrica"],
+            accuracy: 80
+        },
+        improvement: {
+            categories: ["Intervalli"],
+            accuracy: 50,
+            allEqual: false
+        },
+        trend: {
+            direction: "up",
+            slope: 33.3
+        }
+    });
+
     expect(response.body.aiInsight).toBe("Commento AI di prova");
+
     expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
 
     expect(generatePracticeInsight).toHaveBeenCalledWith({
@@ -339,7 +386,8 @@ test("calculates summaries, monthly differences, types and categories", async ()
         },
         months: response.body.months,
         types: response.body.types,
-        categories: response.body.categories
+        categories: response.body.categories,
+        insights: response.body.insights
     });
 });
 
@@ -370,16 +418,20 @@ test("rejects an invalid period", async () => {
         .query({ period: "banana" });
 
     expect(response.status).toBe(400);
+
     expect(response.body).toEqual({
         error: "Periodo non valido"
     });
+
     expect(pool.query).not.toHaveBeenCalled();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
 test.each([
     {},
-    { from: "2026-01-01" },
+    {
+        from: "2026-01-01"
+    },
     {
         from: "2026/01/01",
         to: "2026-02-01"
@@ -411,6 +463,7 @@ test("rejects a reversed custom period", async () => {
         });
 
     expect(response.status).toBe(400);
+
     expect(response.body).toEqual({
         error: "La data iniziale non può essere successiva alla data finale"
     });
@@ -425,9 +478,11 @@ test.each([
         .query({ collection });
 
     expect(response.status).toBe(400);
+
     expect(response.body).toEqual({
         error: "Raccolta non valida"
     });
+
     expect(pool.query).not.toHaveBeenCalled();
 });
 
@@ -442,9 +497,11 @@ test.each([
         .query({ dictationTypeId });
 
     expect(response.status).toBe(400);
+
     expect(response.body).toEqual({
         error: "Tipo di dettato non valido"
     });
+
     expect(pool.query).not.toHaveBeenCalled();
 });
 
@@ -458,6 +515,22 @@ test("returns null accuracy when no categories were evaluated", async () => {
     expect(response.status).toBe(200);
     expect(response.body.summary.accuracy).toBeNull();
     expect(response.body.months).toEqual([]);
+
+    expect(response.body.insights).toEqual({
+        best: {
+            categories: [],
+            accuracy: null
+        },
+        improvement: {
+            categories: [],
+            accuracy: null,
+            allEqual: false
+        },
+        trend: {
+            direction: "insufficient",
+            slope: null
+        }
+    });
 });
 
 test("returns 500 when the database fails", async () => {
@@ -473,9 +546,11 @@ test("returns 500 when the database fails", async () => {
         .get("/statistics/report");
 
     expect(response.status).toBe(500);
+
     expect(response.body).toEqual({
         error: "Errore durante il recupero del report"
     });
+
     expect(consoleErrorSpy).toHaveBeenCalled();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 
@@ -497,9 +572,11 @@ test("returns 500 when Gemini fails", async () => {
         .get("/statistics/report");
 
     expect(response.status).toBe(500);
+
     expect(response.body).toEqual({
         error: "Errore durante il recupero del report"
     });
+
     expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalled();
 
