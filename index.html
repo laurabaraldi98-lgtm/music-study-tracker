@@ -16,278 +16,312 @@
 <body>
     <div id="sign-in-container"></div>
 
-    <main id="app-container">
-        <div id="user-button-container"></div>
+    <div class="app-layout">
+        <main id="app-container">
 
-        <h1>Music Study Tracker</h1>
-
-        <p>
-            Traccia i progressi nei tuoi esercizi musicali.
-        </p>
-
-        <h2>Nuovo dettato</h2>
-
-        <div class="form-group">
-            <label for="dictation-collection">
-                Raccolta
-            </label>
-
-            <select id="dictation-collection">
-                <option value="">
-                    Nessuna raccolta
-                </option>
-            </select>
-        </div>
-
-        <button id="manage-collections-button" type="button">
-            Gestisci raccolte
-        </button>
-
-        <div id="collection-manager" hidden>
-            <label for="new-collection">
-                Nuova raccolta
-            </label>
-
-            <div class="new-collection-row">
-                <input type="text" id="new-collection" placeholder="Es. Corali di Bach">
-
-                <button id="add-collection-button" type="button">
-                    Aggiungi
+            <div class="app-topbar">
+                <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-label="Apri menu">
+                    ☰
                 </button>
             </div>
 
-            <div id="collections-list"></div>
-        </div>
+            <div id="sidebar-backdrop" class="sidebar-backdrop" hidden></div>
 
-        <div class="form-group">
-            <label for="dictation-date">
-                Data
-            </label>
+            <aside id="sidebar" class="sidebar">
+                <nav class="sidebar-nav">
+                    <button type="button" data-section="new-dictation">
+                        Nuovo dettato
+                    </button>
 
-            <input type="date" id="dictation-date">
-        </div>
+                    <button type="button" data-section="saved-dictations">
+                        Dettati salvati
+                    </button>
 
-        <div class="form-group">
-            <label for="dictation-name">
-                Nome del dettato
-            </label>
+                    <button type="button" data-section="calendar">
+                        Calendario
+                    </button>
 
-            <input type="text" id="dictation-name" placeholder="Es. Dettato melodico n. 1">
-        </div>
+                    <button type="button" data-section="practice-report">
+                        Report progressi
+                    </button>
+                </nav>
 
-        <div class="form-group">
-            <label for="youtube-link">
-                Link YouTube
-            </label>
-
-            <input type="url" id="youtube-link" placeholder="https://youtube.com/...">
-        </div>
-
-        <div class="form-group">
-            <label for="dictation-type">
-                Tipo di dettato
-            </label>
-
-            <select id="dictation-type">
-                <option value="">
-                    Seleziona un tipo
-                </option>
-            </select>
-        </div>
-
-        <button id="manage-dictation-types-button" type="button">
-            Gestisci tipi di dettato
-        </button>
-
-        <div id="dictation-type-manager" hidden>
-            <label for="new-dictation-type">
-                Nuovo tipo di dettato
-            </label>
-
-            <div class="new-dictation-type-row">
-                <input type="text" id="new-dictation-type" maxlength="50" placeholder="Es. Contrappunto">
-
-                <button id="add-dictation-type-button" type="button">
-                    Aggiungi
-                </button>
-            </div>
-
-            <div id="dictation-types-list"></div>
-        </div>
-
-        <p id="categories-question" hidden>
-            Cosa ho sentito correttamente?
-        </p>
-
-        <div id="category-manager" hidden>
-            <label for="new-category">
-                Nuova categoria
-            </label>
-
-            <div class="new-category-row">
-                <input type="text" id="new-category" placeholder="Es. Suddivisione">
-
-                <button id="add-category-button" type="button">
-                    Aggiungi
-                </button>
-            </div>
-        </div>
-
-        <div id="categories-container"></div>
-
-        <button id="manage-categories-button" type="button" hidden>
-            Gestisci categorie
-        </button>
-
-        <button id="save-button" type="button">
-            Salva dettato
-        </button>
-
-        <button id="show-saved-button" type="button">
-            Vedi dettati salvati
-        </button>
-
-        <section id="saved-dictations-section" hidden>
-            <h2>Dettati salvati</h2>
-
-            <div class="form-group">
-                <label for="saved-collection-filter">
-                    Filtra per raccolta
-                </label>
-
-                <select id="saved-collection-filter">
-                    <option value="">
-                        Tutte le raccolte
-                    </option>
-                </select>
-            </div>
-
-            <div id="saved-dictations-container"></div>
-        </section>
-
-        <button id="show-calendar-button" type="button">
-            Vedi calendario
-        </button>
-
-        <section id="calendar-section" hidden>
-            <h2>Calendario</h2>
-
-            <div class="form-group">
-                <label for="calendar-collection-filter">
-                    Filtra per raccolta
-                </label>
-
-                <select id="calendar-collection-filter">
-                    <option value="">
-                        Tutte le raccolte
-                    </option>
-                </select>
-            </div>
-
-            <div id="calendar-container"></div>
-        </section>
-
-        <button id="show-practice-report-button" type="button">
-            Vedi report progressi
-        </button>
-
-        <section id="practice-report-section" hidden>
-            <h2>Report progressi</h2>
-
-            <div class="form-group">
-                <label for="practice-report-period">
-                    Periodo
-                </label>
-
-                <select id="practice-report-period">
-                    <option value="current-month">
-                        Mese corrente
-                    </option>
-
-                    <option value="previous-month">
-                        Mese precedente
-                    </option>
-
-                    <option value="3-months">
-                        Ultimi 3 mesi
-                    </option>
-
-                    <option value="6-months" selected>
-                        Ultimi 6 mesi
-                    </option>
-
-                    <option value="all">
-                        Tutto il periodo
-                    </option>
-
-                    <option value="custom">
-                        Periodo personalizzato
-                    </option>
-                </select>
-            </div>
-
-            <div id="practice-report-custom-period" hidden>
-                <div class="form-group">
-                    <label for="practice-report-from">
-                        Dal
-                    </label>
-
-                    <input type="date" id="practice-report-from">
+                <div class="sidebar-user">
+                    <div id="user-button-container"></div>
                 </div>
+            </aside>
 
-                <div class="form-group">
-                    <label for="practice-report-to">
-                        Al
-                    </label>
+            <h1>Music Study Tracker</h1>
 
-                    <input type="date" id="practice-report-to">
-                </div>
-            </div>
+            <p>
+                Traccia i progressi nei tuoi esercizi musicali.
+            </p>
+
+            <h2>Nuovo dettato</h2>
 
             <div class="form-group">
-                <label for="practice-report-collection">
+                <label for="dictation-collection">
                     Raccolta
                 </label>
 
-                <select id="practice-report-collection">
+                <select id="dictation-collection">
                     <option value="">
-                        Tutte le raccolte
+                        Nessuna raccolta
                     </option>
                 </select>
+            </div>
+
+            <button id="manage-collections-button" type="button">
+                Gestisci raccolte
+            </button>
+
+            <div id="collection-manager" hidden>
+                <label for="new-collection">
+                    Nuova raccolta
+                </label>
+
+                <div class="new-collection-row">
+                    <input type="text" id="new-collection" placeholder="Es. Corali di Bach">
+
+                    <button id="add-collection-button" type="button">
+                        Aggiungi
+                    </button>
+                </div>
+
+                <div id="collections-list"></div>
             </div>
 
             <div class="form-group">
-                <label for="practice-report-type">
+                <label for="dictation-date">
+                    Data
+                </label>
+
+                <input type="date" id="dictation-date">
+            </div>
+
+            <div class="form-group">
+                <label for="dictation-name">
+                    Nome del dettato
+                </label>
+
+                <input type="text" id="dictation-name" placeholder="Es. Dettato melodico n. 1">
+            </div>
+
+            <div class="form-group">
+                <label for="youtube-link">
+                    Link YouTube
+                </label>
+
+                <input type="url" id="youtube-link" placeholder="https://youtube.com/...">
+            </div>
+
+            <div class="form-group">
+                <label for="dictation-type">
                     Tipo di dettato
                 </label>
 
-                <select id="practice-report-type">
+                <select id="dictation-type">
                     <option value="">
-                        Tutti i tipi
+                        Seleziona un tipo
                     </option>
                 </select>
             </div>
 
-            <div id="practice-report-summary"></div>
-            <div id="practice-report-months"></div>
-            <div id="practice-report-types"></div>
-            <div id="practice-report-categories"></div>
-            <div id="practice-report-insights"></div>
-            <div id="practice-report-ai-insight"></div>
-        </section>
+            <button id="manage-dictation-types-button" type="button">
+                Gestisci tipi di dettato
+            </button>
 
-        <div id="calendar-modal" class="modal" hidden>
-            <div class="modal-content">
-                <button id="close-calendar-modal" class="modal-close-button" type="button" aria-label="Chiudi">
-                    ×
-                </button>
+            <div id="dictation-type-manager" hidden>
+                <label for="new-dictation-type">
+                    Nuovo tipo di dettato
+                </label>
 
-                <h3 id="calendar-modal-title"></h3>
+                <div class="new-dictation-type-row">
+                    <input type="text" id="new-dictation-type" maxlength="50" placeholder="Es. Contrappunto">
 
-                <div id="calendar-modal-dictations"></div>
+                    <button id="add-dictation-type-button" type="button">
+                        Aggiungi
+                    </button>
+                </div>
+
+                <div id="dictation-types-list"></div>
             </div>
-        </div>
-    </main>
+
+            <p id="categories-question" hidden>
+                Cosa ho sentito correttamente?
+            </p>
+
+            <div id="category-manager" hidden>
+                <label for="new-category">
+                    Nuova categoria
+                </label>
+
+                <div class="new-category-row">
+                    <input type="text" id="new-category" placeholder="Es. Suddivisione">
+
+                    <button id="add-category-button" type="button">
+                        Aggiungi
+                    </button>
+                </div>
+            </div>
+
+            <div id="categories-container"></div>
+
+            <button id="manage-categories-button" type="button" hidden>
+                Gestisci categorie
+            </button>
+
+            <button id="save-button" type="button">
+                Salva dettato
+            </button>
+
+            <button id="show-saved-button" type="button">
+                Vedi dettati salvati
+            </button>
+
+            <section id="saved-dictations-section" hidden>
+                <h2>Dettati salvati</h2>
+
+                <div class="form-group">
+                    <label for="saved-collection-filter">
+                        Filtra per raccolta
+                    </label>
+
+                    <select id="saved-collection-filter">
+                        <option value="">
+                            Tutte le raccolte
+                        </option>
+                    </select>
+                </div>
+
+                <div id="saved-dictations-container"></div>
+            </section>
+
+            <button id="show-calendar-button" type="button">
+                Vedi calendario
+            </button>
+
+            <section id="calendar-section" hidden>
+                <h2>Calendario</h2>
+
+                <div class="form-group">
+                    <label for="calendar-collection-filter">
+                        Filtra per raccolta
+                    </label>
+
+                    <select id="calendar-collection-filter">
+                        <option value="">
+                            Tutte le raccolte
+                        </option>
+                    </select>
+                </div>
+
+                <div id="calendar-container"></div>
+            </section>
+
+            <button id="show-practice-report-button" type="button">
+                Vedi report progressi
+            </button>
+
+            <section id="practice-report-section" hidden>
+                <h2>Report progressi</h2>
+
+                <div class="form-group">
+                    <label for="practice-report-period">
+                        Periodo
+                    </label>
+
+                    <select id="practice-report-period">
+                        <option value="current-month">
+                            Mese corrente
+                        </option>
+
+                        <option value="previous-month">
+                            Mese precedente
+                        </option>
+
+                        <option value="3-months">
+                            Ultimi 3 mesi
+                        </option>
+
+                        <option value="6-months" selected>
+                            Ultimi 6 mesi
+                        </option>
+
+                        <option value="all">
+                            Tutto il periodo
+                        </option>
+
+                        <option value="custom">
+                            Periodo personalizzato
+                        </option>
+                    </select>
+                </div>
+
+                <div id="practice-report-custom-period" hidden>
+                    <div class="form-group">
+                        <label for="practice-report-from">
+                            Dal
+                        </label>
+
+                        <input type="date" id="practice-report-from">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="practice-report-to">
+                            Al
+                        </label>
+
+                        <input type="date" id="practice-report-to">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="practice-report-collection">
+                        Raccolta
+                    </label>
+
+                    <select id="practice-report-collection">
+                        <option value="">
+                            Tutte le raccolte
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="practice-report-type">
+                        Tipo di dettato
+                    </label>
+
+                    <select id="practice-report-type">
+                        <option value="">
+                            Tutti i tipi
+                        </option>
+                    </select>
+                </div>
+
+                <div id="practice-report-summary"></div>
+                <div id="practice-report-months"></div>
+                <div id="practice-report-types"></div>
+                <div id="practice-report-categories"></div>
+                <div id="practice-report-insights"></div>
+                <div id="practice-report-ai-insight"></div>
+            </section>
+
+            <div id="calendar-modal" class="modal" hidden>
+                <div class="modal-content">
+                    <button id="close-calendar-modal" class="modal-close-button" type="button" aria-label="Chiudi">
+                        ×
+                    </button>
+
+                    <h3 id="calendar-modal-title"></h3>
+
+                    <div id="calendar-modal-dictations"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
 
     <script defer crossorigin="anonymous"
         src="https://fast-collie-31.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
@@ -311,6 +345,7 @@
     <script src="practice-report-categories.js"></script>
     <script src="practice-report-insights.js"></script>
     <script src="practice-report-ai.js"></script>
+    <script src="sidebar.js"></script>
     <script src="practice-report.js"></script>
 </body>
 
