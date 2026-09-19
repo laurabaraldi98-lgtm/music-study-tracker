@@ -32,12 +32,14 @@ function mockReportQueries({
         last_date: null
     },
     months = [],
+    days = [],
     types = [],
     categories = []
 } = {}) {
     pool.query
         .mockResolvedValueOnce({ rows: [summary] })
         .mockResolvedValueOnce({ rows: months })
+        .mockResolvedValueOnce({ rows: days })
         .mockResolvedValueOnce({ rows: types })
         .mockResolvedValueOnce({ rows: categories });
 }
@@ -110,7 +112,7 @@ test("uses the last six months by default", async () => {
 
     expect(response.body.aiInsight).toBe("Commento AI di prova");
 
-    expect(pool.query).toHaveBeenCalledTimes(4);
+    expect(pool.query).toHaveBeenCalledTimes(5);
 
     for (const call of pool.query.mock.calls) {
         expect(call[1]).toEqual([
@@ -269,6 +271,26 @@ test("calculates summaries, monthly differences, types, categories and insights"
                 total_dictations: 2,
                 evaluated_categories: 6,
                 correct_categories: 5
+            },
+        ],
+        days: [
+            {
+                day: "2026-07-01",
+                total_dictations: 2,
+                evaluated_categories: 4,
+                correct_categories: 2
+            },
+            {
+                day: "2026-08-15",
+                total_dictations: 2,
+                evaluated_categories: 6,
+                correct_categories: 5
+            },
+            {
+                day: "2026-08-20",
+                total_dictations: 1,
+                evaluated_categories: 0,
+                correct_categories: 0
             }
         ],
         types: [
@@ -317,6 +339,30 @@ test("calculates summaries, monthly differences, types, categories and insights"
     expect(response.body.months[0].accuracy).toBe(50);
     expect(response.body.months[1].accuracy).toBe(83.3);
     expect(response.body.months[1].differenceFromPreviousMonth).toBe(33.3);
+
+    expect(response.body.days).toEqual([
+        {
+            date: "2026-07-01",
+            totalDictations: 2,
+            evaluatedCategories: 4,
+            correctCategories: 2,
+            accuracy: 50
+        },
+        {
+            date: "2026-08-15",
+            totalDictations: 2,
+            evaluatedCategories: 6,
+            correctCategories: 5,
+            accuracy: 83.3
+        },
+        {
+            date: "2026-08-20",
+            totalDictations: 1,
+            evaluatedCategories: 0,
+            correctCategories: 0,
+            accuracy: null
+        }
+    ]);
 
     expect(response.body.types).toEqual([
         {
@@ -385,6 +431,7 @@ test("calculates summaries, monthly differences, types, categories and insights"
             accuracy: 70
         },
         months: response.body.months,
+        days: response.body.days,
         types: response.body.types,
         categories: response.body.categories,
         insights: response.body.insights

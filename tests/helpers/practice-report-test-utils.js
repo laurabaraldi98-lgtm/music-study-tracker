@@ -47,6 +47,11 @@ function setupPracticeReportDom() {
 
 function makeReport(overrides = {}) {
     return {
+        period: {
+            type: "6-months",
+            from: "2026-04-01",
+            to: "2026-09-16"
+        },
         summary: {
             totalDictations: 8,
             evaluatedCategories: 20,
@@ -54,6 +59,7 @@ function makeReport(overrides = {}) {
             accuracy: 75
         },
         months: [],
+        days: [],
         types: [],
         categories: [],
         insights: {

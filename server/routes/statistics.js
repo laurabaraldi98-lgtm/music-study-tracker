@@ -276,6 +276,7 @@ router.get("/report", async function (request, response) {
         const [
             summaryResult,
             monthlyResult,
+            dailyResult,
             typesResult,
             categoriesResult
         ] = await Promise.all([
@@ -296,6 +297,7 @@ router.get("/report", async function (request, response) {
                 `,
                 parameters
             ),
+
             pool.query(
                 `
                 WITH filtered AS (
@@ -314,6 +316,26 @@ router.get("/report", async function (request, response) {
                 `,
                 parameters
             ),
+
+            pool.query(
+                `
+                WITH filtered AS (
+                    ${filteredDictations}
+                )
+                SELECT
+                    date::date AS day,
+                    COUNT(*)::integer AS total_dictations,
+                    COALESCE(SUM(evaluated_count), 0)::integer
+                        AS evaluated_categories,
+                    COALESCE(SUM(correct_count), 0)::integer
+                        AS correct_categories
+                FROM filtered
+                GROUP BY day
+                ORDER BY day
+                `,
+                parameters
+            ),
+
             pool.query(
                 `
                 WITH filtered AS (
@@ -343,6 +365,7 @@ router.get("/report", async function (request, response) {
                 `,
                 parameters
             ),
+
             pool.query(
                 `
                 WITH filtered AS (
@@ -411,6 +434,21 @@ router.get("/report", async function (request, response) {
             new Date()
         );
 
+        const days = dailyResult.rows.map(row => {
+            const evaluated = Number(row.evaluated_categories);
+            const correct = Number(row.correct_categories);
+
+            return {
+                date: formatDate(new Date(row.day)),
+                totalDictations: Number(row.total_dictations),
+                evaluatedCategories: evaluated,
+                correctCategories: correct,
+                accuracy: evaluated > 0
+                    ? Number((correct / evaluated * 100).toFixed(1))
+                    : null
+            };
+        });
+
         const types = typesResult.rows.map(row => {
             const evaluated = Number(row.evaluated_categories);
             const correct = Number(row.correct_categories);
@@ -457,6 +495,7 @@ router.get("/report", async function (request, response) {
                 accuracy
             },
             months,
+            days,
             types,
             categories,
             insights

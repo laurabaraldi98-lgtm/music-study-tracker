@@ -191,7 +191,7 @@ async function displayPracticeReport() {
         )
     );
 
-    renderPracticeReportMonths(report.months);
+    renderPracticeReportMonths(report);
     renderPracticeReportTypes(report.types);
     renderPracticeReportCategories(report.categories);
     renderPracticeReportInsights(report);
