@@ -105,6 +105,24 @@ function populatePracticeReportTypes() {
     }
 }
 
+function createSummaryCard(value, label) {
+    const card = document.createElement("div");
+    card.className = "practice-report-summary-card";
+
+    const valueElement = document.createElement("span");
+    valueElement.className = "practice-report-summary-value";
+    valueElement.textContent = value;
+
+    const labelElement = document.createElement("span");
+    labelElement.className = "practice-report-summary-label";
+    labelElement.textContent = label;
+
+    card.appendChild(valueElement);
+    card.appendChild(labelElement);
+
+    return card;
+}
+
 async function displayPracticeReport() {
     const filters = {
         period: practiceReportPeriod.value,
@@ -140,67 +158,44 @@ async function displayPracticeReport() {
 
     practiceReportSummary.innerHTML = "";
 
-    const totalDictations =
-        document.createElement("p");
-
-    totalDictations.textContent =
-        `Dettati completati: ${report.summary.totalDictations}`;
-
-    const evaluatedCategories =
-        document.createElement("p");
-
-    evaluatedCategories.textContent =
-        `Categorie valutate: ${report.summary.evaluatedCategories}`;
-
-    const correctCategories =
-        document.createElement("p");
-
-    correctCategories.textContent =
-        `Categorie corrette: ${report.summary.correctCategories}`;
-
-    const accuracy =
-        document.createElement("p");
-
-    accuracy.textContent =
+    const accuracyValue =
         report.summary.accuracy == null
-            ? "Accuratezza: Nessun dato"
-            : `Accuratezza: ${report.summary.accuracy}%`;
+            ? "—"
+            : `${report.summary.accuracy}%`;
 
     practiceReportSummary.appendChild(
-        totalDictations
-    );
-
-    practiceReportSummary.appendChild(
-        evaluatedCategories
-    );
-
-    practiceReportSummary.appendChild(
-        correctCategories
+        createSummaryCard(
+            report.summary.totalDictations,
+            "Dettati"
+        )
     );
 
     practiceReportSummary.appendChild(
-        accuracy
+        createSummaryCard(
+            report.summary.evaluatedCategories,
+            "Categorie valutate"
+        )
     );
 
-    renderPracticeReportMonths(
-        report.months
+    practiceReportSummary.appendChild(
+        createSummaryCard(
+            report.summary.correctCategories,
+            "Corrette"
+        )
     );
 
-    renderPracticeReportTypes(
-        report.types
+    practiceReportSummary.appendChild(
+        createSummaryCard(
+            accuracyValue,
+            "Accuratezza"
+        )
     );
 
-    renderPracticeReportCategories(
-        report.categories
-    );
-
-    renderPracticeReportInsights(
-        report
-    );
-
-    renderPracticeReportAiInsight(
-        report.aiInsight
-    );
+    renderPracticeReportMonths(report.months);
+    renderPracticeReportTypes(report.types);
+    renderPracticeReportCategories(report.categories);
+    renderPracticeReportInsights(report);
+    renderPracticeReportAiInsight(report.aiInsight);
 }
 
 practiceReportPeriod.addEventListener(
@@ -246,13 +241,6 @@ window.addEventListener(
         populatePracticeReportTypes();
     }
 );
-
-/* istanbul ignore next */
-if (typeof module !== "undefined") {
-    module.exports = {
-        displayPracticeReport
-    };
-}
 
 /* istanbul ignore next */
 if (typeof module !== "undefined") {

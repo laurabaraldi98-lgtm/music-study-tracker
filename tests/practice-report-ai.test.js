@@ -8,7 +8,7 @@ beforeEach(() => {
     `;
 });
 
-test("shows the AI insight", () => {
+test("shows the AI insight with title", () => {
     displayPracticeReportAiInsight(
         "Il rendimento è in miglioramento."
     );
@@ -17,11 +17,13 @@ test("shows the AI insight", () => {
         "practice-report-ai-insight"
     );
 
-    expect(container.textContent).toBe(
-        "Il rendimento è in miglioramento."
+    expect(container.querySelector("h3").textContent).toBe(
+        "Analisi del periodo"
     );
 
-    expect(container.querySelector("p")).not.toBeNull();
+    expect(container.querySelector("p").textContent).toBe(
+        "Il rendimento è in miglioramento."
+    );
 });
 
 test("replaces the previous AI insight", () => {
@@ -35,7 +37,11 @@ test("replaces the previous AI insight", () => {
         "Nuovo commento"
     );
 
-    expect(container.textContent).toBe(
+    expect(container.querySelector("h3").textContent).toBe(
+        "Analisi del periodo"
+    );
+
+    expect(container.querySelector("p").textContent).toBe(
         "Nuovo commento"
     );
 

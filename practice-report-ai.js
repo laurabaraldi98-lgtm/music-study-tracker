@@ -11,9 +11,13 @@ function displayPracticeReportAiInsight(aiInsight) {
         return;
     }
 
+    const title = document.createElement("h3");
+    title.textContent = "Analisi del periodo";
+
     const paragraph = document.createElement("p");
     paragraph.textContent = aiInsight;
 
+    container.appendChild(title);
     container.appendChild(paragraph);
 }
 

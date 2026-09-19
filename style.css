@@ -845,3 +845,82 @@ body::after {
 .sidebar-backdrop[hidden] {
     display: none;
 }
+
+/* Practice report dashboard */
+
+#practice-report-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.practice-report-summary-card {
+    padding: 18px 14px;
+    background: #f8f9fb;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.practice-report-summary-value {
+    display: block;
+    margin-bottom: 6px;
+    color: #5f7491;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.practice-report-summary-label {
+    display: block;
+    color: #555f6d;
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+#practice-report-months,
+#practice-report-types,
+#practice-report-categories,
+#practice-report-insights,
+#practice-report-ai-insight {
+    margin-top: 18px;
+    padding: 20px;
+    background: #f8f9fb;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+}
+
+#practice-report-months h3,
+#practice-report-types h3,
+#practice-report-categories h3,
+#practice-report-insights h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+#practice-report-ai-insight {
+    border-color: rgba(111, 134, 166, 0.35);
+    background: rgba(111, 134, 166, 0.06);
+}
+
+#practice-report-ai-insight:empty {
+    display: none;
+}
+
+#practice-report-ai-insight p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 650px) {
+    #practice-report-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    #practice-report-summary {
+        grid-template-columns: 1fr;
+    }
+}

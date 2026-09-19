@@ -141,27 +141,29 @@ test("adds custom dates to filters", async () => {
     });
 });
 
-test("displays report summary", async () => {
+test("displays report summary cards", async () => {
     await displayPracticeReport();
 
-    expect(elements.practiceReportSummary.textContent).toContain(
-        "Dettati completati: 8"
+    const cards = elements.practiceReportSummary.querySelectorAll(
+        ".practice-report-summary-card"
     );
 
-    expect(elements.practiceReportSummary.textContent).toContain(
-        "Categorie valutate: 20"
-    );
+    expect(cards).toHaveLength(4);
 
-    expect(elements.practiceReportSummary.textContent).toContain(
-        "Categorie corrette: 15"
-    );
+    expect(cards[0].textContent).toContain("8");
+    expect(cards[0].textContent).toContain("Dettati");
 
-    expect(elements.practiceReportSummary.textContent).toContain(
-        "Accuratezza: 75%"
-    );
+    expect(cards[1].textContent).toContain("20");
+    expect(cards[1].textContent).toContain("Categorie valutate");
+
+    expect(cards[2].textContent).toContain("15");
+    expect(cards[2].textContent).toContain("Corrette");
+
+    expect(cards[3].textContent).toContain("75%");
+    expect(cards[3].textContent).toContain("Accuratezza");
 });
 
-test("shows no data when summary accuracy is null", async () => {
+test("shows dash when summary accuracy is null", async () => {
     getStatisticsReportFromServerMock.mockResolvedValueOnce(
         makeReport({
             summary: {
@@ -172,9 +174,12 @@ test("shows no data when summary accuracy is null", async () => {
 
     await displayPracticeReport();
 
-    expect(elements.practiceReportSummary.textContent).toContain(
-        "Accuratezza: Nessun dato"
+    const cards = elements.practiceReportSummary.querySelectorAll(
+        ".practice-report-summary-card"
     );
+
+    expect(cards[3].textContent).toContain("—");
+    expect(cards[3].textContent).toContain("Accuratezza");
 });
 
 test("shows an error when report cannot be loaded", async () => {
