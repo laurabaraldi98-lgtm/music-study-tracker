@@ -32,7 +32,7 @@ Practice days are highlighted directly in the monthly calendar.
 
 Clicking a highlighted day opens the sessions completed on that date.
 
-![Calendar Details](screenshots/calendar-details.png)
+![Calendar Details](screenshots/calendar-detail.png)
 
 ### Saved Dictations
 
