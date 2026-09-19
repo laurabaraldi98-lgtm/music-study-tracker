@@ -6,6 +6,7 @@ const {
 } = require("./helpers/practice-report-test-utils");
 
 const getStatisticsReportFromServerMock = jest.fn();
+const getStatisticsReportAiInsightMock = jest.fn();
 
 let elements;
 let consoleErrorSpy;
@@ -14,7 +15,10 @@ let displayPracticeReport;
 beforeAll(() => {
     elements = setupPracticeReportDom();
 
-    setupGlobals(getStatisticsReportFromServerMock);
+    setupGlobals(
+        getStatisticsReportFromServerMock,
+        getStatisticsReportAiInsightMock
+    );
 
     consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => { });
 
@@ -23,7 +27,12 @@ beforeAll(() => {
 
 beforeEach(() => {
     getStatisticsReportFromServerMock.mockReset();
+    getStatisticsReportAiInsightMock.mockReset();
+
     getStatisticsReportFromServerMock.mockResolvedValue(makeReport());
+    getStatisticsReportAiInsightMock.mockResolvedValue({
+        aiInsight: "Commento AI di prova"
+    });
 
     consoleErrorSpy.mockClear();
 
@@ -48,6 +57,8 @@ beforeEach(() => {
     elements.practiceReportMonths.innerHTML = "";
     elements.practiceReportTypes.innerHTML = "";
     elements.practiceReportCategories.innerHTML = "";
+    elements.practiceReportInsights.innerHTML = "";
+    elements.practiceReportAiInsight.innerHTML = "";
     elements.practiceReportCustomPeriod.hidden = true;
 });
 
@@ -167,6 +178,9 @@ test("shows dash when summary accuracy is null", async () => {
     getStatisticsReportFromServerMock.mockResolvedValueOnce(
         makeReport({
             summary: {
+                totalDictations: 0,
+                evaluatedCategories: 0,
+                correctCategories: 0,
                 accuracy: null
             }
         })
@@ -182,6 +196,70 @@ test("shows dash when summary accuracy is null", async () => {
     expect(cards[3].textContent).toContain("Accuratezza");
 });
 
+test("requests AI analysis after loading the report", async () => {
+    const report = makeReport();
+
+    getStatisticsReportFromServerMock.mockResolvedValueOnce(report);
+
+    await displayPracticeReport();
+
+    expect(getStatisticsReportAiInsightMock).toHaveBeenCalledTimes(1);
+    expect(getStatisticsReportAiInsightMock).toHaveBeenCalledWith(report);
+});
+
+test("displays AI analysis when it is loaded", async () => {
+    getStatisticsReportAiInsightMock.mockResolvedValueOnce({
+        aiInsight: "Analisi AI caricata"
+    });
+
+    await displayPracticeReport();
+
+    expect(elements.practiceReportAiInsight.textContent).toContain(
+        "Analisi AI caricata"
+    );
+});
+
+test("shows loading message while AI analysis is pending", async () => {
+    let resolveAi;
+
+    getStatisticsReportAiInsightMock.mockReturnValueOnce(
+        new Promise(resolve => {
+            resolveAi = resolve;
+        })
+    );
+
+    const promise = displayPracticeReport();
+
+    await waitForAsyncCode();
+
+    expect(elements.practiceReportAiInsight.textContent).toContain(
+        "Generazione analisi..."
+    );
+
+    resolveAi({
+        aiInsight: "Commento finale"
+    });
+
+    await promise;
+
+    expect(elements.practiceReportAiInsight.textContent).toContain(
+        "Commento finale"
+    );
+});
+
+test("shows fallback text when AI analysis fails", async () => {
+    getStatisticsReportAiInsightMock.mockRejectedValueOnce(
+        new Error("Gemini error")
+    );
+
+    await displayPracticeReport();
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(elements.practiceReportAiInsight.textContent).toContain(
+        "Analisi non disponibile."
+    );
+});
+
 test("shows an error when report cannot be loaded", async () => {
     getStatisticsReportFromServerMock.mockRejectedValueOnce(
         new Error("Backend error")
@@ -194,4 +272,6 @@ test("shows an error when report cannot be loaded", async () => {
     expect(elements.practiceReportSummary.textContent).toBe(
         "Non è stato possibile caricare il report."
     );
+
+    expect(getStatisticsReportAiInsightMock).not.toHaveBeenCalled();
 });

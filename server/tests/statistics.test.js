@@ -110,7 +110,8 @@ test("uses the last six months by default", async () => {
         }
     });
 
-    expect(response.body.aiInsight).toBe("Commento AI di prova");
+    expect(response.body.aiInsight).toBeUndefined();
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
 
     expect(pool.query).toHaveBeenCalledTimes(5);
 
@@ -414,28 +415,8 @@ test("calculates summaries, monthly differences, types, categories and insights"
         }
     });
 
-    expect(response.body.aiInsight).toBe("Commento AI di prova");
-
-    expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
-
-    expect(generatePracticeInsight).toHaveBeenCalledWith({
-        period: {
-            type: "all",
-            from: "2026-07-01",
-            to: "2026-08-31"
-        },
-        summary: {
-            totalDictations: 4,
-            evaluatedCategories: 10,
-            correctCategories: 7,
-            accuracy: 70
-        },
-        months: response.body.months,
-        days: response.body.days,
-        types: response.body.types,
-        categories: response.body.categories,
-        insights: response.body.insights
-    });
+    expect(response.body.aiInsight).toBeUndefined();
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
 test("supports collection and dictation type filters", async () => {
@@ -604,24 +585,120 @@ test("returns 500 when the database fails", async () => {
     consoleErrorSpy.mockRestore();
 });
 
-test("returns 500 when Gemini fails", async () => {
+test("generates AI insight separately", async () => {
+    const reportData = {
+        period: {
+            type: "6-months",
+            from: "2026-04-01",
+            to: "2026-09-16"
+        },
+        summary: {
+            totalDictations: 5,
+            evaluatedCategories: 10,
+            correctCategories: 7,
+            accuracy: 70
+        },
+        insights: {
+            best: {
+                categories: ["Metrica"],
+                accuracy: 80
+            },
+            improvement: {
+                categories: ["Intervalli"],
+                accuracy: 50,
+                allEqual: false
+            },
+            trend: {
+                direction: "up",
+                slope: 10
+            }
+        }
+    };
+
+    const response = await request(app)
+        .post("/statistics/report/ai")
+        .send(reportData);
+
+    expect(response.status).toBe(200);
+
+    expect(response.body).toEqual({
+        aiInsight: "Commento AI di prova"
+    });
+
+    expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
+    expect(generatePracticeInsight).toHaveBeenCalledWith(reportData);
+    expect(pool.query).not.toHaveBeenCalled();
+});
+
+test("rejects unauthenticated AI requests", async () => {
+    getAuth.mockReturnValue({
+        isAuthenticated: false,
+        userId: null
+    });
+
+    const response = await request(app)
+        .post("/statistics/report/ai")
+        .send({
+            period: {},
+            summary: {},
+            insights: {}
+        });
+
+    expect(response.status).toBe(401);
+
+    expect(response.body).toEqual({
+        error: "Utente non autenticato"
+    });
+
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
+});
+
+test("rejects invalid AI report data", async () => {
+    const response = await request(app)
+        .post("/statistics/report/ai")
+        .send({
+            period: {},
+            summary: {}
+        });
+
+    expect(response.status).toBe(400);
+
+    expect(response.body).toEqual({
+        error: "Dati del report non validi"
+    });
+
+    expect(generatePracticeInsight).not.toHaveBeenCalled();
+});
+
+test("returns 500 when separate Gemini request fails", async () => {
     const consoleErrorSpy = jest
         .spyOn(console, "error")
         .mockImplementation(() => { });
-
-    mockReportQueries();
 
     generatePracticeInsight.mockRejectedValueOnce(
         new Error("Gemini error")
     );
 
     const response = await request(app)
-        .get("/statistics/report");
+        .post("/statistics/report/ai")
+        .send({
+            period: {
+                type: "6-months"
+            },
+            summary: {
+                totalDictations: 5
+            },
+            insights: {
+                trend: {
+                    direction: "up"
+                }
+            }
+        });
 
     expect(response.status).toBe(500);
 
     expect(response.body).toEqual({
-        error: "Errore durante il recupero del report"
+        error: "Errore durante la generazione dell'analisi"
     });
 
     expect(generatePracticeInsight).toHaveBeenCalledTimes(1);

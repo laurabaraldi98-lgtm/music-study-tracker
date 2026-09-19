@@ -77,7 +77,6 @@ function makeReport(overrides = {}) {
                 slope: null
             }
         },
-        aiInsight: "Commento AI di prova",
         ...overrides
     };
 }
@@ -87,8 +86,9 @@ async function waitForAsyncCode() {
     await Promise.resolve();
 }
 
-function setupGlobals(getStatisticsReportFromServerMock) {
+function setupGlobals(getStatisticsReportFromServerMock, getStatisticsReportAiInsightMock) {
     global.getStatisticsReportFromServer = getStatisticsReportFromServerMock;
+    global.getStatisticsReportAiInsight = getStatisticsReportAiInsightMock;
 
     global.collections = [
         { id: 1, name: "Esame" },

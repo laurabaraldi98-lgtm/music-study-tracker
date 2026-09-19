@@ -24,7 +24,8 @@ const {
     getDictationTypesFromServer,
     saveDictationTypeToServer,
     deleteDictationTypeFromServer,
-    getStatisticsReportFromServer
+    getStatisticsReportFromServer,
+    getStatisticsReportAiInsight
 } = require("../api.js");
 
 
@@ -758,6 +759,90 @@ describe("statistics report API requests", () => {
             getStatisticsReportFromServer()
         ).rejects.toThrow(
             "Errore durante il recupero del report"
+        );
+    });
+    test("gets AI insight for a report", async () => {
+        const report = {
+            period: {
+                type: "6-months",
+                from: "2026-04-01",
+                to: "2026-09-16"
+            },
+            summary: {
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70
+            },
+            insights: {
+                best: {
+                    categories: ["Metrica"],
+                    accuracy: 80
+                },
+                improvement: {
+                    categories: ["Intervalli"],
+                    accuracy: 50,
+                    allEqual: false
+                },
+                trend: {
+                    direction: "up",
+                    slope: 10
+                }
+            }
+        };
+
+        const result = {
+            aiInsight: "Commento AI"
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, result)
+        );
+
+        await expect(
+            getStatisticsReportAiInsight(report)
+        ).resolves.toEqual(result);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report/ai`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer test-token"
+                },
+                body: JSON.stringify({
+                    period: report.period,
+                    summary: report.summary,
+                    insights: report.insights
+                })
+            }
+        );
+    });
+
+    test("uses the server error when AI insight cannot be generated", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Gemini non disponibile"
+            })
+        );
+
+        await expect(
+            getStatisticsReportAiInsight({})
+        ).rejects.toThrow(
+            "Gemini non disponibile"
+        );
+    });
+
+    test("uses fallback error when AI insight cannot be generated", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            getStatisticsReportAiInsight({})
+        ).rejects.toThrow(
+            "Errore durante la generazione dell'analisi"
         );
     });
 });

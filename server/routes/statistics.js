@@ -501,17 +501,48 @@ router.get("/report", async function (request, response) {
             insights
         };
 
-        const aiInsight = await generatePracticeInsight(report);
+        response.json(report);
+    } catch (error) {
+        console.error(error);
+
+        response.status(500).json({
+            error: "Errore durante il recupero del report"
+        });
+    }
+});
+
+router.post("/report/ai", async function (request, response) {
+    const auth = getAuth(request);
+
+    if (!auth.isAuthenticated) {
+        return response.status(401).json({
+            error: "Utente non autenticato"
+        });
+    }
+
+    const { period, summary, insights } = request.body;
+
+    if (!period || !summary || !insights) {
+        return response.status(400).json({
+            error: "Dati del report non validi"
+        });
+    }
+
+    try {
+        const aiInsight = await generatePracticeInsight({
+            period,
+            summary,
+            insights
+        });
 
         response.json({
-            ...report,
             aiInsight
         });
     } catch (error) {
         console.error(error);
 
         response.status(500).json({
-            error: "Errore durante il recupero del report"
+            error: "Errore durante la generazione dell'analisi"
         });
     }
 });

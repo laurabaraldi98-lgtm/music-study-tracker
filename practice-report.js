@@ -195,7 +195,24 @@ async function displayPracticeReport() {
     renderPracticeReportTypes(report.types);
     renderPracticeReportCategories(report.categories);
     renderPracticeReportInsights(report);
-    renderPracticeReportAiInsight(report.aiInsight);
+    renderPracticeReportAiInsight("Generazione analisi...");
+
+    try {
+        const aiResult =
+            await getStatisticsReportAiInsight(
+                report
+            );
+
+        renderPracticeReportAiInsight(
+            aiResult.aiInsight
+        );
+    } catch (error) {
+        console.error(error);
+
+        renderPracticeReportAiInsight(
+            "Analisi non disponibile."
+        );
+    }
 }
 
 practiceReportPeriod.addEventListener(
