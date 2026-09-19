@@ -1,0 +1,283 @@
+#practice-report-months,
+#practice-report-types {
+    margin-top: 24px;
+}
+
+.practice-report-chart {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-top: 1rem;
+}
+
+.practice-report-chart text {
+    fill: #333333;
+    font-size: 12px;
+}
+
+.practice-report-chart-line {
+    stroke: #6f86a6;
+    stroke-width: 2;
+}
+
+.practice-report-chart-grid {
+    stroke: #6f86a6;
+    stroke-width: 1;
+    opacity: 0.15;
+}
+
+.practice-report-chart-point {
+    fill: #6f86a6;
+    cursor: pointer;
+    transition: opacity 0.1s ease;
+}
+
+.practice-report-chart-point:hover {
+    opacity: 0.7;
+}
+
+.practice-report-chart>line:not(.practice-report-chart-grid):not(.practice-report-chart-line) {
+    stroke: #6f86a6;
+}
+
+.practice-report-chart-popup {
+    pointer-events: none;
+}
+
+.practice-report-chart-popup-background {
+    fill: white;
+    stroke: #6f86a6;
+    stroke-width: 1;
+    opacity: 0.97;
+}
+
+.practice-report-chart-popup-text {
+    fill: #333333;
+    font-size: 12px;
+}
+
+.practice-report-chart-popup-title {
+    font-weight: bold;
+}
+
+/* Types */
+
+.practice-report-type-row {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.practice-report-type-row:last-child {
+    margin-bottom: 0;
+}
+
+.practice-report-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.practice-report-type-header span:first-child {
+    font-weight: bold;
+}
+
+.practice-report-type-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #e4e4e4;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.practice-report-type-bar-fill {
+    height: 100%;
+    background-color: #6f86a6;
+    border-radius: 999px;
+    cursor: pointer;
+    transition:
+        opacity 0.1s ease,
+        background-color 0.1s ease;
+}
+
+.practice-report-type-bar-fill:hover,
+.practice-report-type-bar-fill.pinned {
+    background-color: #5f7491;
+}
+
+.practice-report-type-popup {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid #6f86a6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    line-height: 1.5;
+}
+
+/* Categories */
+
+#practice-report-categories {
+    margin-top: 24px;
+}
+
+.practice-report-category-row {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.practice-report-category-row:last-child {
+    margin-bottom: 0;
+}
+
+.practice-report-category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.practice-report-category-header span:first-child {
+    font-weight: bold;
+}
+
+.practice-report-category-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #e4e4e4;
+    border-radius: 999px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.practice-report-category-bar-fill {
+    height: 100%;
+    background-color: #6f86a6;
+    border-radius: 999px;
+    transition:
+        opacity 0.1s ease,
+        background-color 0.1s ease;
+}
+
+.practice-report-category-bar:hover .practice-report-category-bar-fill,
+.practice-report-category-bar.pinned .practice-report-category-bar-fill {
+    background-color: #5f7491;
+}
+
+.practice-report-category-popup {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid #6f86a6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    line-height: 1.5;
+}
+
+#practice-report-insights {
+    margin-top: 24px;
+}
+
+/* Dashboard */
+
+#practice-report-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.practice-report-summary-card {
+    padding: 18px 14px;
+    background: #f8f9fb;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.practice-report-summary-value {
+    display: block;
+    margin-bottom: 6px;
+    color: #5f7491;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.practice-report-summary-label {
+    display: block;
+    color: #555f6d;
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+#practice-report-months,
+#practice-report-types,
+#practice-report-categories,
+#practice-report-insights,
+#practice-report-ai-insight {
+    margin-top: 18px;
+    padding: 20px;
+    background: #f8f9fb;
+    border: 1px solid #e4e7ec;
+    border-radius: 14px;
+}
+
+#practice-report-months h3,
+#practice-report-types h3,
+#practice-report-categories h3,
+#practice-report-insights h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+#practice-report-ai-insight {
+    border-color: rgba(111, 134, 166, 0.35);
+    background: rgba(111, 134, 166, 0.06);
+}
+
+#practice-report-ai-insight:empty {
+    display: none;
+}
+
+#practice-report-ai-insight h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+#practice-report-ai-insight p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 650px) {
+    #practice-report-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    .practice-report-type-header {
+        gap: 8px;
+    }
+
+    .practice-report-type-popup {
+        max-width: calc(100vw - 60px);
+    }
+}
+
+@media (max-width: 380px) {
+    #practice-report-summary {
+        grid-template-columns: 1fr;
+    }
+}

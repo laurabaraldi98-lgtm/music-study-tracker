@@ -1,0 +1,333 @@
+body {
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f7;
+    margin: 0;
+    padding: 20px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+main {
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.08);
+}
+
+h1 {
+    margin-top: 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+label {
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input,
+select {
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #cccccc;
+    border-radius: 8px;
+}
+
+#app-container button {
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        transform 0.1s ease,
+        opacity 0.1s ease,
+        background-color 0.1s ease;
+}
+
+#app-container button:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* Main full-width buttons */
+
+#manage-collections-button,
+#manage-dictation-types-button,
+#manage-categories-button,
+#save-button,
+#show-saved-button,
+#show-calendar-button,
+#show-statistics-button,
+#show-practice-report-button {
+    display: block;
+    width: 100%;
+}
+
+#manage-collections-button,
+#manage-dictation-types-button {
+    margin-bottom: 18px;
+}
+
+#manage-categories-button {
+    margin-bottom: 12px;
+}
+
+#show-saved-button,
+#show-calendar-button,
+#show-statistics-button,
+#show-practice-report-button {
+    margin-top: 12px;
+}
+
+#save-button {
+    background-color: #6f86a6;
+    color: white;
+}
+
+#save-button:hover {
+    background-color: #5f7491;
+}
+
+/* Shared manager panels */
+
+#collection-manager,
+#dictation-type-manager,
+#category-manager {
+    margin-top: 18px;
+    margin-bottom: 18px;
+}
+
+#collection-manager>label,
+#dictation-type-manager>label,
+#category-manager>label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Shared manager input rows */
+
+.new-collection-row,
+.new-dictation-type-row,
+.new-category-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.new-collection-row input,
+.new-dictation-type-row input,
+.new-category-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Shared Add buttons */
+
+#add-collection-button,
+#add-dictation-type-button,
+#add-category-button {
+    width: auto;
+    flex-shrink: 0;
+    padding: 8px 12px;
+    background-color: #6f86a6;
+    color: white;
+}
+
+#add-collection-button:hover,
+#add-dictation-type-button:hover,
+#add-category-button:hover {
+    background-color: #5f7491;
+}
+
+/* Shared manager lists */
+
+#collections-list>div,
+#dictation-types-list>div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+#collections-list>div:last-child,
+#dictation-types-list>div:last-child {
+    margin-bottom: 0;
+}
+
+/* Shared Remove buttons */
+
+.remove-collection-button,
+.remove-dictation-type-button,
+.remove-category-button {
+    width: auto;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    margin: 0;
+    font-size: 14px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.remove-collection-button:hover,
+.remove-dictation-type-button:hover,
+.remove-category-button:hover {
+    background-color: #c9302c;
+}
+
+/* Categories */
+
+#categories-question {
+    margin: 14px 0 10px;
+    font-weight: bold;
+}
+
+#categories-container {
+    margin-top: 10px;
+    margin-bottom: 12px;
+}
+
+#categories-container>div {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+    margin-bottom: 8px;
+}
+
+#categories-container>div:last-child {
+    margin-bottom: 0;
+}
+
+#categories-container input[type="checkbox"] {
+    margin: 0;
+    padding: 0;
+}
+
+#categories-container label {
+    margin: 0;
+    min-width: 0;
+}
+
+/* Saved dictations */
+
+details {
+    margin-bottom: 16px;
+}
+
+details p {
+    margin: 8px 0;
+}
+
+.delete-button {
+    width: auto;
+    padding: 8px 12px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    background-color: #d9534f;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #c9302c;
+}
+
+/* Legacy statistics */
+
+.category-stat {
+    margin-bottom: 16px;
+}
+
+.category-stat p {
+    margin-bottom: 6px;
+}
+
+.statistics-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #e4e4e4;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.statistics-bar-fill {
+    height: 100%;
+    background-color: #6f86a6;
+    border-radius: 999px;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 24px;
+}
+
+/* Generic modal */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.modal[hidden] {
+    display: none;
+}
+
+.modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: white;
+    padding: 24px;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+#app-container .modal-close-button {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: auto;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 10px;
+    }
+
+    main {
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .new-collection-row,
+    .new-dictation-type-row,
+    .new-category-row {
+        align-items: stretch;
+    }
+}
