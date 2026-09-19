@@ -23,7 +23,9 @@ const {
     deleteCollectionFromServer,
     getDictationTypesFromServer,
     saveDictationTypeToServer,
-    deleteDictationTypeFromServer
+    deleteDictationTypeFromServer,
+    getStatisticsReportFromServer,
+    getStatisticsReportAiInsight
 } = require("../api.js");
 
 
@@ -654,6 +656,193 @@ describe("dictation type API requests", () => {
             deleteDictationTypeFromServer(4)
         ).rejects.toThrow(
             "Errore durante la cancellazione del tipo di dettato"
+        );
+    });
+});
+
+describe("statistics report API requests", () => {
+    test("gets the report using the backend default period", async () => {
+        const report = {
+            summary: {
+                totalDictations: 5,
+                accuracy: 75
+            }
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, report)
+        );
+
+        await expect(
+            getStatisticsReportFromServer()
+        ).resolves.toEqual(report);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report`,
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("adds report filters to the URL", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, {})
+        );
+
+        await getStatisticsReportFromServer({
+            period: "custom",
+            from: "2026-04-15",
+            to: "2026-09-10",
+            collection: "Esame & prova",
+            dictationTypeId: 4
+        });
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report` +
+            "?period=custom" +
+            "&from=2026-04-15" +
+            "&to=2026-09-10" +
+            "&collection=Esame+%26+prova" +
+            "&dictationTypeId=4",
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("ignores null report filters", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, {})
+        );
+
+        await getStatisticsReportFromServer({
+            period: "6-months",
+            collection: null,
+            dictationTypeId: null
+        });
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report?period=6-months`,
+            {
+                headers: {
+                    Authorization: "Bearer test-token"
+                }
+            }
+        );
+    });
+
+    test("uses the server error when the report cannot be loaded", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Periodo non valido"
+            })
+        );
+
+        await expect(
+            getStatisticsReportFromServer({
+                period: "invalid"
+            })
+        ).rejects.toThrow("Periodo non valido");
+    });
+
+    test("uses the fallback error when the report has no error message", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            getStatisticsReportFromServer()
+        ).rejects.toThrow(
+            "Errore durante il recupero del report"
+        );
+    });
+    test("gets AI insight for a report", async () => {
+        const report = {
+            period: {
+                type: "6-months",
+                from: "2026-04-01",
+                to: "2026-09-16"
+            },
+            summary: {
+                totalDictations: 5,
+                evaluatedCategories: 10,
+                correctCategories: 7,
+                accuracy: 70
+            },
+            insights: {
+                best: {
+                    categories: ["Metrica"],
+                    accuracy: 80
+                },
+                improvement: {
+                    categories: ["Intervalli"],
+                    accuracy: 50,
+                    allEqual: false
+                },
+                trend: {
+                    direction: "up",
+                    slope: 10
+                }
+            }
+        };
+
+        const result = {
+            aiInsight: "Commento AI"
+        };
+
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(true, result)
+        );
+
+        await expect(
+            getStatisticsReportAiInsight(report)
+        ).resolves.toEqual(result);
+
+        expect(fetchMock).toHaveBeenCalledWith(
+            `${API_BASE_URL}/statistics/report/ai`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer test-token"
+                },
+                body: JSON.stringify({
+                    period: report.period,
+                    summary: report.summary,
+                    insights: report.insights
+                })
+            }
+        );
+    });
+
+    test("uses the server error when AI insight cannot be generated", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {
+                error: "Gemini non disponibile"
+            })
+        );
+
+        await expect(
+            getStatisticsReportAiInsight({})
+        ).rejects.toThrow(
+            "Gemini non disponibile"
+        );
+    });
+
+    test("uses fallback error when AI insight cannot be generated", async () => {
+        fetchMock.mockResolvedValueOnce(
+            makeResponse(false, {})
+        );
+
+        await expect(
+            getStatisticsReportAiInsight({})
+        ).rejects.toThrow(
+            "Errore durante la generazione dell'analisi"
         );
     });
 });

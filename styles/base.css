@@ -1,4 +1,7 @@
 body {
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
     font-family: Arial, sans-serif;
     background-color: #f4f4f7;
     margin: 0;
@@ -15,7 +18,7 @@ main {
     background-color: white;
     padding: 30px;
     border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 18px rgba(0, 0, 0, 0.08);
 }
 
 h1 {
@@ -66,7 +69,8 @@ select {
 #save-button,
 #show-saved-button,
 #show-calendar-button,
-#show-statistics-button {
+#show-statistics-button,
+#show-practice-report-button {
     display: block;
     width: 100%;
 }
@@ -82,7 +86,8 @@ select {
 
 #show-saved-button,
 #show-calendar-button,
-#show-statistics-button {
+#show-statistics-button,
+#show-practice-report-button {
     margin-top: 12px;
 }
 
@@ -239,7 +244,7 @@ details p {
     background-color: #c9302c;
 }
 
-/* Statistics */
+/* Legacy statistics */
 
 .category-stat {
     margin-bottom: 16px;
@@ -268,69 +273,7 @@ details p {
     line-height: 24px;
 }
 
-/* Calendar */
-
-.calendar-header {
-    display: grid;
-    grid-template-columns: 44px 1fr 44px;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.calendar-header h3 {
-    margin: 0;
-    text-align: center;
-}
-
-.calendar-navigation-button {
-    width: 44px;
-    height: 40px;
-    padding: 0;
-    font-size: 20px;
-    background-color: #6f86a6;
-    color: white;
-}
-
-.calendar-navigation-button:hover {
-    background-color: #5f7491;
-}
-
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-}
-
-.calendar-weekday {
-    text-align: center;
-    font-weight: bold;
-    padding: 8px 4px;
-}
-
-.calendar-day {
-    min-height: 44px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #dddddd;
-    border-radius: 8px;
-    background-color: #f7f7f9;
-}
-
-.calendar-day.empty {
-    border: none;
-    background-color: transparent;
-}
-
-.calendar-day.has-dictation {
-    background-color: #6f86a6;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-/* Modal */
+/* Generic modal */
 
 .modal {
     position: fixed;
@@ -372,140 +315,6 @@ details p {
     cursor: pointer;
 }
 
-#calendar-modal-title {
-    padding-right: 40px;
-}
-
-.calendar-modal-dictation {
-    padding: 16px 0;
-    border-bottom: 1px solid #dddddd;
-}
-
-.calendar-modal-dictation:first-child {
-    padding-top: 0;
-}
-
-.calendar-modal-dictation:last-child {
-    padding-bottom: 0;
-    border-bottom: none;
-}
-
-/* Authentication */
-
-#app-container {
-    display: none;
-}
-
-#sign-in-container {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100dvh;
-
-    padding: clamp(16px, 4vw, 40px);
-    box-sizing: border-box;
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    background:
-        radial-gradient(circle at 15% 20%,
-            rgba(111, 134, 166, 0.22),
-            transparent 32%),
-        radial-gradient(circle at 85% 80%,
-            rgba(143, 166, 197, 0.18),
-            transparent 35%),
-        linear-gradient(135deg,
-            #f4f4f7 0%,
-            #e8edf4 50%,
-            #f6f8fb 100%);
-}
-
-#sign-in-container::before,
-#sign-in-container::after {
-    position: absolute;
-    top: 0;
-    left: 0;
-    color: transparent;
-    pointer-events: none;
-    user-select: none;
-    z-index: 0;
-}
-
-#sign-in-container::before {
-    content: "♪";
-    font-size: clamp(28px, 3.5vw, 52px);
-
-    text-shadow:
-        5vw 8vh 0 rgba(111, 134, 166, 0.22),
-        18vw 22vh 0 rgba(111, 134, 166, 0.18),
-        31vw 10vh 0 rgba(111, 134, 166, 0.21),
-        44vw 31vh 0 rgba(111, 134, 166, 0.17),
-        58vw 13vh 0 rgba(111, 134, 166, 0.20),
-        72vw 26vh 0 rgba(111, 134, 166, 0.18),
-        87vw 9vh 0 rgba(111, 134, 166, 0.21),
-
-        9vw 48vh 0 rgba(111, 134, 166, 0.19),
-        23vw 60vh 0 rgba(111, 134, 166, 0.17),
-        39vw 50vh 0 rgba(111, 134, 166, 0.20),
-        64vw 54vh 0 rgba(111, 134, 166, 0.18),
-        81vw 45vh 0 rgba(111, 134, 166, 0.20),
-        93vw 61vh 0 rgba(111, 134, 166, 0.17),
-
-        4vw 82vh 0 rgba(111, 134, 166, 0.20),
-        19vw 91vh 0 rgba(111, 134, 166, 0.17),
-        34vw 76vh 0 rgba(111, 134, 166, 0.19),
-        52vw 89vh 0 rgba(111, 134, 166, 0.18),
-        69vw 73vh 0 rgba(111, 134, 166, 0.21),
-        84vw 88vh 0 rgba(111, 134, 166, 0.18),
-        95vw 78vh 0 rgba(111, 134, 166, 0.20);
-}
-
-#sign-in-container::after {
-    content: "♫";
-    font-size: clamp(22px, 2.8vw, 42px);
-
-    text-shadow:
-        11vw 15vh 0 rgba(111, 134, 166, 0.07),
-        25vw 35vh 0 rgba(111, 134, 166, 0.09),
-        37vw 21vh 0 rgba(111, 134, 166, 0.06),
-        50vw 8vh 0 rgba(111, 134, 166, 0.08),
-        66vw 35vh 0 rgba(111, 134, 166, 0.07),
-        79vw 17vh 0 rgba(111, 134, 166, 0.09),
-        91vw 33vh 0 rgba(111, 134, 166, 0.06),
-
-        15vw 70vh 0 rgba(111, 134, 166, 0.08),
-        29vw 54vh 0 rgba(111, 134, 166, 0.06),
-        46vw 67vh 0 rgba(111, 134, 166, 0.09),
-        59vw 43vh 0 rgba(111, 134, 166, 0.07),
-        75vw 63vh 0 rgba(111, 134, 166, 0.08),
-        88vw 55vh 0 rgba(111, 134, 166, 0.06),
-
-        8vw 94vh 0 rgba(111, 134, 166, 0.07),
-        42vw 94vh 0 rgba(111, 134, 166, 0.08),
-        61vw 82vh 0 rgba(111, 134, 166, 0.06),
-        78vw 96vh 0 rgba(111, 134, 166, 0.09);
-}
-
-#sign-in-container>* {
-    position: relative;
-    z-index: 1;
-}
-
-#user-button-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-}
-
-/* Responsive */
-
 @media (max-width: 500px) {
     body {
         padding: 10px;
@@ -520,38 +329,5 @@ details p {
     .new-dictation-type-row,
     .new-category-row {
         align-items: stretch;
-    }
-
-    .calendar-grid {
-        gap: 3px;
-    }
-
-    .calendar-weekday {
-        padding: 6px 1px;
-        font-size: 12px;
-    }
-
-    .calendar-day {
-        min-height: 36px;
-        font-size: 13px;
-        border-radius: 6px;
-    }
-
-    #sign-in-container {
-        padding: 16px;
-    }
-
-    #sign-in-container::before {
-        font-size: 28px;
-    }
-
-    #sign-in-container::after {
-        font-size: 22px;
-    }
-}
-
-@media (max-height: 620px) {
-    #sign-in-container {
-        align-items: flex-start;
     }
 }

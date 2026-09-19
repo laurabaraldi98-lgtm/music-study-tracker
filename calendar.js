@@ -1,8 +1,3 @@
-const showCalendarButton =
-    document.getElementById(
-        "show-calendar-button"
-    );
-
 const calendarSection =
     document.getElementById(
         "calendar-section"
@@ -527,24 +522,6 @@ calendarCollectionFilter.addEventListener(
     displayCalendar
 );
 
-showCalendarButton.addEventListener(
-    "click",
-    function () {
-        calendarSection.hidden =
-            !calendarSection.hidden;
-
-        if (calendarSection.hidden) {
-            showCalendarButton.textContent =
-                "Vedi calendario";
-        } else {
-            showCalendarButton.textContent =
-                "Nascondi calendario";
-
-            displayCalendar();
-        }
-    }
-);
-
 window.addEventListener(
     "dictations-changed",
     function () {
@@ -553,3 +530,11 @@ window.addEventListener(
         }
     }
 );
+
+/* istanbul ignore next */
+if (typeof module !== "undefined") {
+    module.exports = {
+        displayCalendar,
+        closeCalendarModal
+    };
+}

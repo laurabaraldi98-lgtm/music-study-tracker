@@ -6,9 +6,6 @@ document.body.innerHTML = `
     <button id="save-button">Salva</button>
     <div id="saved-dictations-container"></div>
 
-    <button id="show-saved-button">Vedi dettati salvati</button>
-    <section id="saved-dictations-section" hidden></section>
-
     <select id="dictation-type">
         <option value=""></option>
         <option value="1">Ritmico</option>
@@ -40,8 +37,6 @@ const saveButton = document.getElementById("save-button");
 const savedDictationsContainer = document.getElementById(
     "saved-dictations-container"
 );
-
-const showSavedButton = document.getElementById("show-saved-button");
 
 const savedDictationsSection = document.getElementById(
     "saved-dictations-section"
@@ -106,7 +101,9 @@ const consoleErrorSpy = jest
     .spyOn(console, "error")
     .mockImplementation(() => { });
 
-require("../dictations.js");
+const {
+    displaySavedDictations
+} = require("../dictations.js");
 
 async function waitForAsyncCode() {
     await Promise.resolve();
@@ -152,8 +149,8 @@ function getDeleteButtons() {
 
 async function showSavedDictations(dictations) {
     getDictationsFromServerMock.mockResolvedValueOnce(dictations);
-    showSavedButton.click();
-    await waitForAsyncCode();
+
+    await displaySavedDictations();
 }
 
 beforeEach(() => {
@@ -171,8 +168,6 @@ beforeEach(() => {
 
     categoriesContainerElement.innerHTML = "";
     savedDictationsContainer.innerHTML = "";
-    savedDictationsSection.hidden = true;
-    showSavedButton.textContent = "Vedi dettati salvati";
 });
 
 afterAll(() => {
@@ -489,40 +484,13 @@ test("shows an error when saved dictations cannot be loaded", async () => {
         new Error("Database error")
     );
 
-    showSavedButton.click();
-    await waitForAsyncCode();
+    await displaySavedDictations();
 
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     expect(alertMock).toHaveBeenCalledWith(
         "Non è stato possibile recuperare i dettati dal database."
     );
-});
-
-test("shows and hides the saved dictations section", async () => {
-    expect(savedDictationsSection.hidden).toBe(true);
-
-    showSavedButton.click();
-    await waitForAsyncCode();
-
-    expect(savedDictationsSection.hidden).toBe(false);
-
-    expect(showSavedButton.textContent).toBe(
-        "Nascondi dettati salvati"
-    );
-
-    expect(getDictationsFromServerMock).toHaveBeenCalledTimes(1);
-
-    showSavedButton.click();
-    await waitForAsyncCode();
-
-    expect(savedDictationsSection.hidden).toBe(true);
-
-    expect(showSavedButton.textContent).toBe(
-        "Vedi dettati salvati"
-    );
-
-    expect(getDictationsFromServerMock).toHaveBeenCalledTimes(1);
 });
 
 test("does not delete when confirmation is cancelled", async () => {

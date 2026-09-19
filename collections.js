@@ -29,10 +29,13 @@ let collections = [];
 
 async function loadCollections() {
     try {
-        collections =
-            await getCollectionsFromServer();
+        collections = await getCollectionsFromServer();
 
         displayCollections();
+
+        window.dispatchEvent(
+            new Event("collections-loaded")
+        );
     } catch (error) {
         console.error(error);
 
@@ -53,20 +56,16 @@ function displayCollections() {
 
     const collectionFilters = [
         savedCollectionFilter,
-        document.getElementById(
-            "calendar-collection-filter"
-        ),
-        document.getElementById(
-            "statistics-collection-filter"
-        )
+        document.getElementById("calendar-collection-filter"),
+        document.getElementById("practice-report-collection")
     ];
 
     for (const filter of collectionFilters) {
         filter.innerHTML = `
-        <option value="">
-            Tutte le raccolte
-        </option>
-    `;
+            <option value="">
+                Tutte le raccolte
+            </option>
+        `;
     }
 
     for (const collection of collections) {
@@ -78,7 +77,8 @@ function displayCollections() {
         dictationCollection.appendChild(option);
 
         for (const filter of collectionFilters) {
-            const filterOption = document.createElement("option");
+            const filterOption =
+                document.createElement("option");
 
             filterOption.value = collection.name;
             filterOption.textContent = collection.name;
@@ -86,15 +86,21 @@ function displayCollections() {
             filter.appendChild(filterOption);
         }
 
-        const collectionRow = document.createElement("div");
+        const collectionRow =
+            document.createElement("div");
 
-        const collectionName = document.createElement("span");
-        collectionName.textContent = collection.name;
+        const collectionName =
+            document.createElement("span");
+
+        collectionName.textContent =
+            collection.name;
 
         const removeCollectionButton =
             document.createElement("button");
 
-        removeCollectionButton.textContent = "Rimuovi";
+        removeCollectionButton.textContent =
+            "Rimuovi";
+
         removeCollectionButton.classList.add(
             "remove-collection-button"
         );
@@ -111,7 +117,9 @@ function displayCollections() {
                 }
 
                 try {
-                    await deleteCollectionFromServer(collection.id);
+                    await deleteCollectionFromServer(
+                        collection.id
+                    );
                 } catch (error) {
                     console.error(error);
 
@@ -125,33 +133,51 @@ function displayCollections() {
                 const collectionIndex =
                     collections.findIndex(
                         function (savedCollection) {
-                            return savedCollection.id === collection.id;
+                            return (
+                                savedCollection.id ===
+                                collection.id
+                            );
                         }
                     );
 
-                collections.splice(collectionIndex, 1);
+                collections.splice(
+                    collectionIndex,
+                    1
+                );
 
                 displayCollections();
             }
         );
 
-        collectionRow.appendChild(collectionName);
-        collectionRow.appendChild(removeCollectionButton);
+        collectionRow.appendChild(
+            collectionName
+        );
 
-        collectionsList.appendChild(collectionRow);
+        collectionRow.appendChild(
+            removeCollectionButton
+        );
+
+        collectionsList.appendChild(
+            collectionRow
+        );
     }
 }
-manageCollectionsButton.addEventListener("click", function () {
-    collectionManager.hidden = !collectionManager.hidden;
 
-    if (collectionManager.hidden) {
-        manageCollectionsButton.textContent =
-            "Gestisci raccolte";
-    } else {
-        manageCollectionsButton.textContent =
-            "Nascondi gestione raccolte";
+manageCollectionsButton.addEventListener(
+    "click",
+    function () {
+        collectionManager.hidden =
+            !collectionManager.hidden;
+
+        if (collectionManager.hidden) {
+            manageCollectionsButton.textContent =
+                "Gestisci raccolte";
+        } else {
+            manageCollectionsButton.textContent =
+                "Nascondi gestione raccolte";
+        }
     }
-});
+);
 
 addCollectionButton.addEventListener(
     "click",
@@ -167,14 +193,18 @@ addCollectionButton.addEventListener(
             return;
         }
 
-        const collectionAlreadyExists = collections.some(
-            collection =>
-                collection.name.toLowerCase() ===
-                newCollection.toLowerCase()
-        );
+        const collectionAlreadyExists =
+            collections.some(
+                collection =>
+                    collection.name.toLowerCase() ===
+                    newCollection.toLowerCase()
+            );
 
         if (collectionAlreadyExists) {
-            alert("Questa raccolta esiste già.");
+            alert(
+                "Questa raccolta esiste già."
+            );
+
             return;
         }
 
@@ -199,7 +229,9 @@ addCollectionButton.addEventListener(
             return;
         }
 
-        collections.push(savedCollection);
+        collections.push(
+            savedCollection
+        );
 
         displayCollections();
 
@@ -210,12 +242,15 @@ addCollectionButton.addEventListener(
     }
 );
 
-newCollectionInput.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        addCollectionButton.click();
+newCollectionInput.addEventListener(
+    "keydown",
+    function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            addCollectionButton.click();
+        }
     }
-});
+);
 
 window.addEventListener(
     "clerk-ready",
