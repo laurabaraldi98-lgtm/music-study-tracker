@@ -3,57 +3,34 @@ const {
     makeReport,
     waitForAsyncCode,
     setupGlobals
-} = require(
-    "./helpers/practice-report-test-utils"
-);
+} = require("./helpers/practice-report-test-utils");
 
-const getStatisticsReportFromServerMock =
-    jest.fn();
+const getStatisticsReportFromServerMock = jest.fn();
 
 let elements;
 let consoleErrorSpy;
+let displayPracticeReport;
 
 beforeAll(() => {
-    elements =
-        setupPracticeReportDom();
+    elements = setupPracticeReportDom();
 
-    setupGlobals(
-        getStatisticsReportFromServerMock
-    );
+    setupGlobals(getStatisticsReportFromServerMock);
 
-    consoleErrorSpy =
-        jest
-            .spyOn(console, "error")
-            .mockImplementation(() => { });
+    consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => { });
 
-    require("../practice-report.js");
+    ({ displayPracticeReport } = require("../practice-report.js"));
 });
 
 beforeEach(() => {
-    getStatisticsReportFromServerMock
-        .mockReset();
-
-    getStatisticsReportFromServerMock
-        .mockResolvedValue(
-            makeReport()
-        );
+    getStatisticsReportFromServerMock.mockReset();
+    getStatisticsReportFromServerMock.mockResolvedValue(makeReport());
 
     consoleErrorSpy.mockClear();
 
-    elements.practiceReportSection.hidden =
-        true;
-
-    elements.showPracticeReportButton.textContent =
-        "Vedi report progressi";
-
-    elements.practiceReportPeriod.value =
-        "6-months";
-
-    elements.practiceReportFrom.value =
-        "";
-
-    elements.practiceReportTo.value =
-        "";
+    elements.practiceReportSection.hidden = true;
+    elements.practiceReportPeriod.value = "6-months";
+    elements.practiceReportFrom.value = "";
+    elements.practiceReportTo.value = "";
 
     elements.practiceReportCollection.innerHTML = `
         <option value="">
@@ -67,293 +44,149 @@ beforeEach(() => {
         </option>
     `;
 
-    elements.practiceReportSummary.innerHTML =
-        "";
-
-    elements.practiceReportMonths.innerHTML =
-        "";
-
-    elements.practiceReportTypes.innerHTML =
-        "";
-
-    elements.practiceReportCategories.innerHTML =
-        "";
-
-    elements.practiceReportCustomPeriod.hidden =
-        true;
+    elements.practiceReportSummary.innerHTML = "";
+    elements.practiceReportMonths.innerHTML = "";
+    elements.practiceReportTypes.innerHTML = "";
+    elements.practiceReportCategories.innerHTML = "";
+    elements.practiceReportCustomPeriod.hidden = true;
 });
 
 afterAll(() => {
     consoleErrorSpy.mockRestore();
 });
 
-test(
-    "shows and hides the practice report",
-    async () => {
-        elements.showPracticeReportButton.click();
+test("shows custom dates only for custom period", async () => {
+    elements.practiceReportPeriod.value = "custom";
+    elements.practiceReportPeriod.dispatchEvent(new Event("change"));
 
-        await waitForAsyncCode();
+    await waitForAsyncCode();
 
-        expect(
-            elements.practiceReportSection.hidden
-        ).toBe(false);
+    expect(elements.practiceReportCustomPeriod.hidden).toBe(false);
 
-        expect(
-            elements.showPracticeReportButton.textContent
-        ).toBe(
-            "Nascondi report progressi"
-        );
+    elements.practiceReportPeriod.value = "6-months";
+    elements.practiceReportPeriod.dispatchEvent(new Event("change"));
 
-        expect(
-            getStatisticsReportFromServerMock
-        ).toHaveBeenCalledTimes(1);
+    await waitForAsyncCode();
 
-        elements.showPracticeReportButton.click();
+    expect(elements.practiceReportCustomPeriod.hidden).toBe(true);
+});
 
-        expect(
-            elements.practiceReportSection.hidden
-        ).toBe(true);
+test("populates collection filter", () => {
+    window.dispatchEvent(new Event("collections-loaded"));
 
-        expect(
-            elements.showPracticeReportButton.textContent
-        ).toBe(
-            "Vedi report progressi"
-        );
-    }
-);
+    const values = Array.from(elements.practiceReportCollection.options).map(
+        option => option.value
+    );
 
-test(
-    "shows custom dates only for custom period",
-    async () => {
-        elements.practiceReportPeriod.value =
-            "custom";
+    expect(values).toEqual([
+        "",
+        "Esame",
+        "Lezione"
+    ]);
+});
 
-        elements.practiceReportPeriod
-            .dispatchEvent(
-                new Event("change")
-            );
+test("populates dictation type filter", () => {
+    window.dispatchEvent(new Event("dictation-types-loaded"));
 
-        await waitForAsyncCode();
+    const values = Array.from(elements.practiceReportType.options).map(
+        option => option.value
+    );
 
-        expect(
-            elements.practiceReportCustomPeriod.hidden
-        ).toBe(false);
+    expect(values).toEqual([
+        "",
+        "1",
+        "2"
+    ]);
 
-        elements.practiceReportPeriod.value =
-            "6-months";
+    expect(
+        Array.from(elements.practiceReportType.options).map(
+            option => option.textContent.trim()
+        )
+    ).toEqual([
+        "Tutti i tipi",
+        "Ritmico",
+        "Melodico"
+    ]);
+});
 
-        elements.practiceReportPeriod
-            .dispatchEvent(
-                new Event("change")
-            );
+test("loads report with selected filters", async () => {
+    window.dispatchEvent(new Event("collections-loaded"));
+    window.dispatchEvent(new Event("dictation-types-loaded"));
 
-        await waitForAsyncCode();
+    elements.practiceReportCollection.value = "Esame";
+    elements.practiceReportType.value = "2";
 
-        expect(
-            elements.practiceReportCustomPeriod.hidden
-        ).toBe(true);
-    }
-);
+    await displayPracticeReport();
 
-test(
-    "populates collection filter",
-    () => {
-        window.dispatchEvent(
-            new Event("collections-loaded")
-        );
+    expect(getStatisticsReportFromServerMock).toHaveBeenCalledWith({
+        period: "6-months",
+        collection: "Esame",
+        dictationTypeId: "2"
+    });
+});
 
-        const values =
-            Array.from(
-                elements
-                    .practiceReportCollection
-                    .options
-            ).map(
-                option => option.value
-            );
+test("adds custom dates to filters", async () => {
+    elements.practiceReportPeriod.value = "custom";
+    elements.practiceReportFrom.value = "2026-01-01";
+    elements.practiceReportTo.value = "2026-06-30";
 
-        expect(values).toEqual([
-            "",
-            "Esame",
-            "Lezione"
-        ]);
-    }
-);
+    await displayPracticeReport();
 
-test(
-    "populates dictation type filter",
-    () => {
-        window.dispatchEvent(
-            new Event("dictation-types-loaded")
-        );
+    expect(getStatisticsReportFromServerMock).toHaveBeenCalledWith({
+        period: "custom",
+        collection: null,
+        dictationTypeId: null,
+        from: "2026-01-01",
+        to: "2026-06-30"
+    });
+});
 
-        const values =
-            Array.from(
-                elements
-                    .practiceReportType
-                    .options
-            ).map(
-                option => option.value
-            );
+test("displays report summary", async () => {
+    await displayPracticeReport();
 
-        expect(values).toEqual([
-            "",
-            "1",
-            "2"
-        ]);
+    expect(elements.practiceReportSummary.textContent).toContain(
+        "Dettati completati: 8"
+    );
 
-        expect(
-            Array.from(
-                elements
-                    .practiceReportType
-                    .options
-            ).map(
-                option =>
-                    option.textContent.trim()
-            )
-        ).toEqual([
-            "Tutti i tipi",
-            "Ritmico",
-            "Melodico"
-        ]);
-    }
-);
+    expect(elements.practiceReportSummary.textContent).toContain(
+        "Categorie valutate: 20"
+    );
 
-test(
-    "loads report with selected filters",
-    async () => {
-        window.dispatchEvent(
-            new Event("collections-loaded")
-        );
+    expect(elements.practiceReportSummary.textContent).toContain(
+        "Categorie corrette: 15"
+    );
 
-        window.dispatchEvent(
-            new Event("dictation-types-loaded")
-        );
+    expect(elements.practiceReportSummary.textContent).toContain(
+        "Accuratezza: 75%"
+    );
+});
 
-        elements.practiceReportCollection.value =
-            "Esame";
+test("shows no data when summary accuracy is null", async () => {
+    getStatisticsReportFromServerMock.mockResolvedValueOnce(
+        makeReport({
+            summary: {
+                accuracy: null
+            }
+        })
+    );
 
-        elements.practiceReportType.value =
-            "2";
+    await displayPracticeReport();
 
-        elements.showPracticeReportButton.click();
+    expect(elements.practiceReportSummary.textContent).toContain(
+        "Accuratezza: Nessun dato"
+    );
+});
 
-        await waitForAsyncCode();
+test("shows an error when report cannot be loaded", async () => {
+    getStatisticsReportFromServerMock.mockRejectedValueOnce(
+        new Error("Backend error")
+    );
 
-        expect(
-            getStatisticsReportFromServerMock
-        ).toHaveBeenCalledWith({
-            period: "6-months",
-            collection: "Esame",
-            dictationTypeId: "2"
-        });
-    }
-);
+    await displayPracticeReport();
 
-test(
-    "adds custom dates to filters",
-    async () => {
-        elements.practiceReportPeriod.value =
-            "custom";
+    expect(consoleErrorSpy).toHaveBeenCalled();
 
-        elements.practiceReportFrom.value =
-            "2026-01-01";
-
-        elements.practiceReportTo.value =
-            "2026-06-30";
-
-        elements.showPracticeReportButton.click();
-
-        await waitForAsyncCode();
-
-        expect(
-            getStatisticsReportFromServerMock
-        ).toHaveBeenCalledWith({
-            period: "custom",
-            collection: null,
-            dictationTypeId: null,
-            from: "2026-01-01",
-            to: "2026-06-30"
-        });
-    }
-);
-
-test(
-    "displays report summary",
-    async () => {
-        elements.showPracticeReportButton.click();
-
-        await waitForAsyncCode();
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toContain(
-            "Dettati completati: 8"
-        );
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toContain(
-            "Categorie valutate: 20"
-        );
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toContain(
-            "Categorie corrette: 15"
-        );
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toContain(
-            "Accuratezza: 75%"
-        );
-    }
-);
-
-test(
-    "shows no data when summary accuracy is null",
-    async () => {
-        getStatisticsReportFromServerMock
-            .mockResolvedValueOnce(
-                makeReport({
-                    summary: {
-                        accuracy: null
-                    }
-                })
-            );
-
-        elements.showPracticeReportButton.click();
-
-        await waitForAsyncCode();
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toContain(
-            "Accuratezza: Nessun dato"
-        );
-    }
-);
-
-test(
-    "shows an error when report cannot be loaded",
-    async () => {
-        getStatisticsReportFromServerMock
-            .mockRejectedValueOnce(
-                new Error("Backend error")
-            );
-
-        elements.showPracticeReportButton.click();
-
-        await waitForAsyncCode();
-
-        expect(
-            consoleErrorSpy
-        ).toHaveBeenCalled();
-
-        expect(
-            elements.practiceReportSummary.textContent
-        ).toBe(
-            "Non è stato possibile caricare il report."
-        );
-    }
-);
+    expect(elements.practiceReportSummary.textContent).toBe(
+        "Non è stato possibile caricare il report."
+    );
+});

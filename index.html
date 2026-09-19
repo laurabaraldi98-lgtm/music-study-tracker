@@ -57,129 +57,127 @@
                 Traccia i progressi nei tuoi esercizi musicali.
             </p>
 
-            <h2>Nuovo dettato</h2>
+            <section id="new-dictation-section" class="app-view">
+                <h2>Nuovo dettato</h2>
 
-            <div class="form-group">
-                <label for="dictation-collection">
-                    Raccolta
-                </label>
+                <div class="form-group">
+                    <label for="dictation-collection">
+                        Raccolta
+                    </label>
 
-                <select id="dictation-collection">
-                    <option value="">
-                        Nessuna raccolta
-                    </option>
-                </select>
-            </div>
-
-            <button id="manage-collections-button" type="button">
-                Gestisci raccolte
-            </button>
-
-            <div id="collection-manager" hidden>
-                <label for="new-collection">
-                    Nuova raccolta
-                </label>
-
-                <div class="new-collection-row">
-                    <input type="text" id="new-collection" placeholder="Es. Corali di Bach">
-
-                    <button id="add-collection-button" type="button">
-                        Aggiungi
-                    </button>
+                    <select id="dictation-collection">
+                        <option value="">
+                            Nessuna raccolta
+                        </option>
+                    </select>
                 </div>
 
-                <div id="collections-list"></div>
-            </div>
+                <button id="manage-collections-button" type="button">
+                    Gestisci raccolte
+                </button>
 
-            <div class="form-group">
-                <label for="dictation-date">
-                    Data
-                </label>
+                <div id="collection-manager" hidden>
+                    <label for="new-collection">
+                        Nuova raccolta
+                    </label>
 
-                <input type="date" id="dictation-date">
-            </div>
+                    <div class="new-collection-row">
+                        <input type="text" id="new-collection" placeholder="Es. Corali di Bach">
 
-            <div class="form-group">
-                <label for="dictation-name">
-                    Nome del dettato
-                </label>
+                        <button id="add-collection-button" type="button">
+                            Aggiungi
+                        </button>
+                    </div>
 
-                <input type="text" id="dictation-name" placeholder="Es. Dettato melodico n. 1">
-            </div>
-
-            <div class="form-group">
-                <label for="youtube-link">
-                    Link YouTube
-                </label>
-
-                <input type="url" id="youtube-link" placeholder="https://youtube.com/...">
-            </div>
-
-            <div class="form-group">
-                <label for="dictation-type">
-                    Tipo di dettato
-                </label>
-
-                <select id="dictation-type">
-                    <option value="">
-                        Seleziona un tipo
-                    </option>
-                </select>
-            </div>
-
-            <button id="manage-dictation-types-button" type="button">
-                Gestisci tipi di dettato
-            </button>
-
-            <div id="dictation-type-manager" hidden>
-                <label for="new-dictation-type">
-                    Nuovo tipo di dettato
-                </label>
-
-                <div class="new-dictation-type-row">
-                    <input type="text" id="new-dictation-type" maxlength="50" placeholder="Es. Contrappunto">
-
-                    <button id="add-dictation-type-button" type="button">
-                        Aggiungi
-                    </button>
+                    <div id="collections-list"></div>
                 </div>
 
-                <div id="dictation-types-list"></div>
-            </div>
+                <div class="form-group">
+                    <label for="dictation-date">
+                        Data
+                    </label>
 
-            <p id="categories-question" hidden>
-                Cosa ho sentito correttamente?
-            </p>
-
-            <div id="category-manager" hidden>
-                <label for="new-category">
-                    Nuova categoria
-                </label>
-
-                <div class="new-category-row">
-                    <input type="text" id="new-category" placeholder="Es. Suddivisione">
-
-                    <button id="add-category-button" type="button">
-                        Aggiungi
-                    </button>
+                    <input type="date" id="dictation-date">
                 </div>
-            </div>
 
-            <div id="categories-container"></div>
+                <div class="form-group">
+                    <label for="dictation-name">
+                        Nome del dettato
+                    </label>
 
-            <button id="manage-categories-button" type="button" hidden>
-                Gestisci categorie
-            </button>
+                    <input type="text" id="dictation-name" placeholder="Es. Dettato melodico n. 1">
+                </div>
 
-            <button id="save-button" type="button">
-                Salva dettato
-            </button>
+                <div class="form-group">
+                    <label for="youtube-link">
+                        Link YouTube
+                    </label>
 
-            <button id="show-saved-button" type="button">
-                Vedi dettati salvati
-            </button>
+                    <input type="url" id="youtube-link" placeholder="https://youtube.com/...">
+                </div>
 
-            <section id="saved-dictations-section" hidden>
+                <div class="form-group">
+                    <label for="dictation-type">
+                        Tipo di dettato
+                    </label>
+
+                    <select id="dictation-type">
+                        <option value="">
+                            Seleziona un tipo
+                        </option>
+                    </select>
+                </div>
+
+                <button id="manage-dictation-types-button" type="button">
+                    Gestisci tipi di dettato
+                </button>
+
+                <div id="dictation-type-manager" hidden>
+                    <label for="new-dictation-type">
+                        Nuovo tipo di dettato
+                    </label>
+
+                    <div class="new-dictation-type-row">
+                        <input type="text" id="new-dictation-type" maxlength="50" placeholder="Es. Contrappunto">
+
+                        <button id="add-dictation-type-button" type="button">
+                            Aggiungi
+                        </button>
+                    </div>
+
+                    <div id="dictation-types-list"></div>
+                </div>
+
+                <p id="categories-question" hidden>
+                    Cosa ho sentito correttamente?
+                </p>
+
+                <div id="category-manager" hidden>
+                    <label for="new-category">
+                        Nuova categoria
+                    </label>
+
+                    <div class="new-category-row">
+                        <input type="text" id="new-category" placeholder="Es. Suddivisione">
+
+                        <button id="add-category-button" type="button">
+                            Aggiungi
+                        </button>
+                    </div>
+                </div>
+
+                <div id="categories-container"></div>
+
+                <button id="manage-categories-button" type="button" hidden>
+                    Gestisci categorie
+                </button>
+
+                <button id="save-button" type="button">
+                    Salva dettato
+                </button>
+            </section>
+
+            <section id="saved-dictations-section" class="app-view" hidden>
                 <h2>Dettati salvati</h2>
 
                 <div class="form-group">
@@ -197,11 +195,7 @@
                 <div id="saved-dictations-container"></div>
             </section>
 
-            <button id="show-calendar-button" type="button">
-                Vedi calendario
-            </button>
-
-            <section id="calendar-section" hidden>
+            <section id="calendar-section" class="app-view" hidden>
                 <h2>Calendario</h2>
 
                 <div class="form-group">
@@ -219,11 +213,7 @@
                 <div id="calendar-container"></div>
             </section>
 
-            <button id="show-practice-report-button" type="button">
-                Vedi report progressi
-            </button>
-
-            <section id="practice-report-section" hidden>
+            <section id="practice-report-section" class="app-view" hidden>
                 <h2>Report progressi</h2>
 
                 <div class="form-group">

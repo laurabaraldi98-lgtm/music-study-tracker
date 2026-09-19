@@ -19,10 +19,6 @@ const savedDictationsContainer =
         "saved-dictations-container"
     );
 
-const showSavedButton = document.getElementById(
-    "show-saved-button"
-);
-
 const savedDictationsSection =
     document.getElementById(
         "saved-dictations-section"
@@ -315,26 +311,6 @@ savedCollectionFilter.addEventListener(
     displaySavedDictations
 );
 
-showSavedButton.addEventListener(
-    "click",
-    function () {
-        savedDictationsSection.hidden =
-            !savedDictationsSection.hidden;
-
-        if (
-            savedDictationsSection.hidden
-        ) {
-            showSavedButton.textContent =
-                "Vedi dettati salvati";
-        } else {
-            showSavedButton.textContent =
-                "Nascondi dettati salvati";
-
-            displaySavedDictations();
-        }
-    }
-);
-
 function formatDictationFromDatabase(
     dictation
 ) {
@@ -366,5 +342,13 @@ function formatDictationFromDatabase(
         correctCategories:
             dictation.correct_categories ||
             []
+    };
+}
+
+/* istanbul ignore next */
+if (typeof module !== "undefined") {
+    module.exports = {
+        displaySavedDictations,
+        formatDictationFromDatabase
     };
 }

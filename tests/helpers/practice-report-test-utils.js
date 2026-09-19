@@ -1,7 +1,5 @@
 function setupPracticeReportDom() {
     document.body.innerHTML = `
-        <button id="show-practice-report-button">Vedi report progressi</button>
-
         <section id="practice-report-section" hidden>
             <select id="practice-report-period">
                 <option value="6-months" selected>Ultimi 6 mesi</option>
@@ -31,7 +29,6 @@ function setupPracticeReportDom() {
     `;
 
     return {
-        showPracticeReportButton: document.getElementById("show-practice-report-button"),
         practiceReportSection: document.getElementById("practice-report-section"),
         practiceReportPeriod: document.getElementById("practice-report-period"),
         practiceReportCustomPeriod: document.getElementById("practice-report-custom-period"),

@@ -1,7 +1,3 @@
-const showPracticeReportButton = document.getElementById(
-    "show-practice-report-button"
-);
-
 const practiceReportSection = document.getElementById(
     "practice-report-section"
 );
@@ -207,24 +203,6 @@ async function displayPracticeReport() {
     );
 }
 
-showPracticeReportButton.addEventListener(
-    "click",
-    function () {
-        practiceReportSection.hidden =
-            !practiceReportSection.hidden;
-
-        if (practiceReportSection.hidden) {
-            showPracticeReportButton.textContent =
-                "Vedi report progressi";
-        } else {
-            showPracticeReportButton.textContent =
-                "Nascondi report progressi";
-
-            displayPracticeReport();
-        }
-    }
-);
-
 practiceReportPeriod.addEventListener(
     "change",
     function () {
@@ -268,6 +246,13 @@ window.addEventListener(
         populatePracticeReportTypes();
     }
 );
+
+/* istanbul ignore next */
+if (typeof module !== "undefined") {
+    module.exports = {
+        displayPracticeReport
+    };
+}
 
 /* istanbul ignore next */
 if (typeof module !== "undefined") {

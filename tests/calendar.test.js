@@ -1,6 +1,4 @@
 document.body.innerHTML = `
-    <button id="show-calendar-button">Vedi calendario</button>
-
     <section id="calendar-section" hidden>
         <select id="calendar-collection-filter">
             <option value=""></option>
@@ -18,7 +16,6 @@ document.body.innerHTML = `
     </div>
 `;
 
-const showCalendarButton = document.getElementById("show-calendar-button");
 const calendarSection = document.getElementById("calendar-section");
 const calendarContainer = document.getElementById("calendar-container");
 const calendarModal = document.getElementById("calendar-modal");
@@ -74,7 +71,10 @@ const consoleErrorSpy = jest
     .spyOn(console, "error")
     .mockImplementation(() => { });
 
-require("../calendar.js");
+const {
+    displayCalendar,
+    closeCalendarModal
+} = require("../calendar.js");
 
 const monthNames = [
     "Gennaio",
@@ -150,9 +150,9 @@ function getNavigationButtons() {
 }
 
 async function showCalendar(dictations = []) {
+    calendarSection.hidden = false;
     getDictationsFromServerMock.mockResolvedValueOnce(dictations);
-    showCalendarButton.click();
-    await waitForAsyncCode();
+    await displayCalendar();
 }
 
 async function rerenderCalendar(dictations = []) {
@@ -224,7 +224,6 @@ beforeEach(() => {
 
     calendarModal.hidden = true;
     calendarSection.hidden = true;
-    showCalendarButton.textContent = "Vedi calendario";
     calendarCollectionFilter.value = "";
     calendarContainer.innerHTML = "";
     calendarModalTitle.textContent = "";
@@ -235,36 +234,12 @@ afterAll(() => {
     consoleErrorSpy.mockRestore();
 });
 
-test("shows and hides the calendar", async () => {
-    expect(calendarSection.hidden).toBe(true);
-
-    showCalendarButton.click();
-    await waitForAsyncCode();
-
-    expect(calendarSection.hidden).toBe(false);
-    expect(showCalendarButton.textContent).toBe("Nascondi calendario");
-    expect(getDictationsFromServerMock).toHaveBeenCalledTimes(1);
-
-    expect(
-        calendarContainer.querySelector(".calendar-header")
-    ).not.toBeNull();
-
-    showCalendarButton.click();
-    await waitForAsyncCode();
-
-    expect(calendarSection.hidden).toBe(true);
-    expect(showCalendarButton.textContent).toBe("Vedi calendario");
-    expect(getDictationsFromServerMock).toHaveBeenCalledTimes(1);
-});
-
 test("shows an error when the calendar cannot be loaded", async () => {
     getDictationsFromServerMock.mockRejectedValueOnce(
         new Error("Database error")
     );
 
-    showCalendarButton.click();
-    await waitForAsyncCode();
-
+    await displayCalendar();
     expect(consoleErrorSpy).toHaveBeenCalled();
 
     expect(alertMock).toHaveBeenCalledWith(
