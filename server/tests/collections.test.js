@@ -1,18 +1,32 @@
-// Mock Clerk authentication to control auth state during tests
 jest.mock("@clerk/express", () => ({
     clerkMiddleware: () => (request, response, next) => next(),
     getAuth: jest.fn()
 }));
 
-// Mock the database to avoid real PostgreSQL queries during tests
-jest.mock("../db", () => ({
-    query: jest.fn()
+jest.mock("../db-context", () => ({
+    withUserContext: jest.fn()
 }));
 
 const request = require("supertest");
 const { getAuth } = require("@clerk/express");
-const pool = require("../db");
+const { withUserContext } = require("../db-context");
 const app = require("../app");
+
+let client;
+
+beforeEach(function () {
+    client = {
+        query: jest.fn()
+    };
+
+    withUserContext.mockImplementation(async function (userId, callback) {
+        return callback(client);
+    });
+});
+
+afterEach(function () {
+    jest.resetAllMocks();
+});
 
 describe("GET /collections", function () {
     test("returns 401 when the user is not authenticated", async function () {
@@ -26,9 +40,10 @@ describe("GET /collections", function () {
         expect(response.body).toEqual({
             error: "Utente non autenticato"
         });
+        expect(withUserContext).not.toHaveBeenCalled();
     });
 
-    test("returns saved collections for an authenticated user", async function () {
+    test("returns the authenticated user's collections", async function () {
         getAuth.mockReturnValue({
             isAuthenticated: true,
             userId: "user_test"
@@ -37,17 +52,17 @@ describe("GET /collections", function () {
         const savedCollections = [
             {
                 id: 1,
-                name: "Corali di Bach",
+                name: "Berklee",
                 user_id: "user_test"
             },
             {
                 id: 2,
-                name: "Dettati armonici",
+                name: "Esame",
                 user_id: "user_test"
             }
         ];
 
-        pool.query.mockResolvedValue({
+        client.query.mockResolvedValue({
             rows: savedCollections
         });
 
@@ -55,15 +70,25 @@ describe("GET /collections", function () {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(savedCollections);
+
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("FROM collections"),
+            ["user_test"]
+        );
     });
 
-    test("returns 500 when the database query fails", async function () {
+    test("returns 500 when retrieving collections fails", async function () {
         getAuth.mockReturnValue({
             isAuthenticated: true,
             userId: "user_test"
         });
 
-        pool.query.mockRejectedValue(
+        client.query.mockRejectedValue(
             new Error("Database error")
         );
 
@@ -90,9 +115,11 @@ describe("POST /collections", function () {
         expect(response.body).toEqual({
             error: "Utente non autenticato"
         });
+        expect(withUserContext).not.toHaveBeenCalled();
     });
 
     test.each([
+        ["missing", undefined],
         ["empty", "   "],
         ["not a string", 123],
         ["too long", "a".repeat(101)]
@@ -114,33 +141,47 @@ describe("POST /collections", function () {
             expect(response.body).toEqual({
                 error: "Nome della raccolta non valido"
             });
+            expect(withUserContext).not.toHaveBeenCalled();
         }
     );
 
-    test("creates and returns a new collection", async function () {
+    test("creates and returns a collection", async function () {
         getAuth.mockReturnValue({
             isAuthenticated: true,
             userId: "user_test"
         });
 
-        const newSavedCollection = {
+        const savedCollection = {
             id: 3,
-            name: "Dettati melodici",
+            name: "Berklee",
             user_id: "user_test"
         };
 
-        pool.query.mockResolvedValue({
-            rows: [newSavedCollection]
+        client.query.mockResolvedValue({
+            rows: [savedCollection]
         });
 
         const response = await request(app)
             .post("/collections")
             .send({
-                name: "Dettati melodici"
+                name: "  Berklee  "
             });
 
         expect(response.status).toBe(201);
-        expect(response.body).toEqual(newSavedCollection);
+        expect(response.body).toEqual(savedCollection);
+
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("INSERT INTO collections"),
+            [
+                "Berklee",
+                "user_test"
+            ]
+        );
     });
 
     test("returns 500 when creating a collection fails", async function () {
@@ -149,14 +190,14 @@ describe("POST /collections", function () {
             userId: "user_test"
         });
 
-        pool.query.mockRejectedValue(
+        client.query.mockRejectedValue(
             new Error("Database error")
         );
 
         const response = await request(app)
             .post("/collections")
             .send({
-                name: "Dettati melodici"
+                name: "Berklee"
             });
 
         expect(response.status).toBe(500);
@@ -179,6 +220,7 @@ describe("DELETE /collections/:id", function () {
         expect(response.body).toEqual({
             error: "Utente non autenticato"
         });
+        expect(withUserContext).not.toHaveBeenCalled();
     });
 
     test.each([
@@ -201,6 +243,7 @@ describe("DELETE /collections/:id", function () {
             expect(response.body).toEqual({
                 error: "ID della raccolta non valido"
             });
+            expect(withUserContext).not.toHaveBeenCalled();
         }
     );
 
@@ -210,7 +253,7 @@ describe("DELETE /collections/:id", function () {
             userId: "user_test"
         });
 
-        pool.query.mockResolvedValue({
+        client.query.mockResolvedValue({
             rows: []
         });
 
@@ -221,6 +264,11 @@ describe("DELETE /collections/:id", function () {
         expect(response.body).toEqual({
             error: "Raccolta non trovata"
         });
+
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
     });
 
     test("deletes and returns the collection", async function () {
@@ -231,11 +279,11 @@ describe("DELETE /collections/:id", function () {
 
         const deletedCollection = {
             id: 3,
-            name: "Dettati melodici",
+            name: "Berklee",
             user_id: "user_test"
         };
 
-        pool.query.mockResolvedValue({
+        client.query.mockResolvedValue({
             rows: [deletedCollection]
         });
 
@@ -244,6 +292,19 @@ describe("DELETE /collections/:id", function () {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(deletedCollection);
+
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("DELETE FROM collections"),
+            [
+                3,
+                "user_test"
+            ]
+        );
     });
 
     test("returns 500 when deleting a collection fails", async function () {
@@ -252,7 +313,7 @@ describe("DELETE /collections/:id", function () {
             userId: "user_test"
         });
 
-        pool.query.mockRejectedValue(
+        client.query.mockRejectedValue(
             new Error("Database error")
         );
 

@@ -1,6 +1,6 @@
 const express = require("express");
 const { getAuth } = require("@clerk/express");
-const pool = require("../db");
+const { withUserContext } = require("../db-context");
 
 const router = express.Router();
 
@@ -14,14 +14,19 @@ router.get("/", async function (request, response) {
     }
 
     try {
-        const result = await pool.query(
-            `
-            SELECT *
-            FROM collections
-            WHERE user_id = $1
-            ORDER BY id
-            `,
-            [auth.userId]
+        const result = await withUserContext(
+            auth.userId,
+            async function (client) {
+                return client.query(
+                    `
+                    SELECT id, name, user_id
+                    FROM collections
+                    WHERE user_id = $1
+                    ORDER BY id
+                    `,
+                    [auth.userId]
+                );
+            }
         );
 
         response.json(result.rows);
@@ -56,19 +61,24 @@ router.post("/", async function (request, response) {
     }
 
     try {
-        const result = await pool.query(
-            `
-            INSERT INTO collections (
-                name,
-                user_id
-            )
-            VALUES ($1, $2)
-            RETURNING *
-            `,
-            [
-                name.trim(),
-                auth.userId
-            ]
+        const result = await withUserContext(
+            auth.userId,
+            async function (client) {
+                return client.query(
+                    `
+                    INSERT INTO collections (
+                        name,
+                        user_id
+                    )
+                    VALUES ($1, $2)
+                    RETURNING *
+                    `,
+                    [
+                        name.trim(),
+                        auth.userId
+                    ]
+                );
+            }
         );
 
         response.status(201).json(result.rows[0]);
@@ -102,17 +112,22 @@ router.delete("/:id", async function (request, response) {
     }
 
     try {
-        const result = await pool.query(
-            `
-            DELETE FROM collections
-            WHERE id = $1
-            AND user_id = $2
-            RETURNING *
-            `,
-            [
-                collectionId,
-                auth.userId
-            ]
+        const result = await withUserContext(
+            auth.userId,
+            async function (client) {
+                return client.query(
+                    `
+                    DELETE FROM collections
+                    WHERE id = $1
+                    AND user_id = $2
+                    RETURNING *
+                    `,
+                    [
+                        collectionId,
+                        auth.userId
+                    ]
+                );
+            }
         );
 
         if (result.rows.length === 0) {

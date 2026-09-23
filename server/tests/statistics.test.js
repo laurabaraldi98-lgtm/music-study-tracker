@@ -1,11 +1,11 @@
 const express = require("express");
 const request = require("supertest");
-const pool = require("../db");
 const { getAuth } = require("@clerk/express");
+const { withUserContext } = require("../db-context");
 const { generatePracticeInsight } = require("../services/gemini");
 
-jest.mock("../db", () => ({
-    query: jest.fn()
+jest.mock("../db-context", () => ({
+    withUserContext: jest.fn()
 }));
 
 jest.mock("@clerk/express", () => ({
@@ -17,11 +17,12 @@ jest.mock("../services/gemini", () => ({
 }));
 
 const statisticsRouter = require("../routes/statistics");
-
 const app = express();
 
 app.use(express.json());
 app.use("/statistics", statisticsRouter);
+
+let client;
 
 function mockReportQueries({
     summary = {
@@ -36,7 +37,7 @@ function mockReportQueries({
     types = [],
     categories = []
 } = {}) {
-    pool.query
+    client.query
         .mockResolvedValueOnce({ rows: [summary] })
         .mockResolvedValueOnce({ rows: months })
         .mockResolvedValueOnce({ rows: days })
@@ -50,9 +51,15 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-    pool.query.mockReset();
+    client = { query: jest.fn() };
+
+    withUserContext.mockReset();
     getAuth.mockReset();
     generatePracticeInsight.mockReset();
+
+    withUserContext.mockImplementation(async function (userId, callback) {
+        return callback(client);
+    });
 
     getAuth.mockReturnValue({
         isAuthenticated: true,
@@ -75,10 +82,9 @@ test("rejects unauthenticated users", async () => {
     const response = await request(app).get("/statistics/report");
 
     expect(response.status).toBe(401);
-    expect(response.body).toEqual({
-        error: "Utente non autenticato"
-    });
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(response.body).toEqual({ error: "Utente non autenticato" });
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
@@ -112,10 +118,10 @@ test("uses the last six months by default", async () => {
 
     expect(response.body.aiInsight).toBeUndefined();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
+    expect(withUserContext).toHaveBeenCalledWith("user_test", expect.any(Function));
+    expect(client.query).toHaveBeenCalledTimes(5);
 
-    expect(pool.query).toHaveBeenCalledTimes(5);
-
-    for (const call of pool.query.mock.calls) {
+    for (const call of client.query.mock.calls) {
         expect(call[1]).toEqual([
             "user_test",
             "2026-04-01",
@@ -272,7 +278,7 @@ test("calculates summaries, monthly differences, types, categories and insights"
                 total_dictations: 2,
                 evaluated_categories: 6,
                 correct_categories: 5
-            },
+            }
         ],
         days: [
             {
@@ -431,7 +437,7 @@ test("supports collection and dictation type filters", async () => {
 
     expect(response.status).toBe(200);
 
-    expect(pool.query.mock.calls[0][1]).toEqual([
+    expect(client.query.mock.calls[0][1]).toEqual([
         "user_test",
         "2026-04-01",
         "2026-09-16",
@@ -446,20 +452,15 @@ test("rejects an invalid period", async () => {
         .query({ period: "banana" });
 
     expect(response.status).toBe(400);
-
-    expect(response.body).toEqual({
-        error: "Periodo non valido"
-    });
-
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(response.body).toEqual({ error: "Periodo non valido" });
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
 test.each([
     {},
-    {
-        from: "2026-01-01"
-    },
+    { from: "2026-01-01" },
     {
         from: "2026/01/01",
         to: "2026-02-01"
@@ -478,7 +479,8 @@ test.each([
 
     expect(response.status).toBe(400);
     expect(response.body.error).toContain("formato YYYY-MM-DD");
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
 });
 
 test("rejects a reversed custom period", async () => {
@@ -495,6 +497,8 @@ test("rejects a reversed custom period", async () => {
     expect(response.body).toEqual({
         error: "La data iniziale non può essere successiva alla data finale"
     });
+
+    expect(withUserContext).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -506,12 +510,9 @@ test.each([
         .query({ collection });
 
     expect(response.status).toBe(400);
-
-    expect(response.body).toEqual({
-        error: "Raccolta non valida"
-    });
-
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(response.body).toEqual({ error: "Raccolta non valida" });
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
 });
 
 test.each([
@@ -525,12 +526,9 @@ test.each([
         .query({ dictationTypeId });
 
     expect(response.status).toBe(400);
-
-    expect(response.body).toEqual({
-        error: "Tipo di dettato non valido"
-    });
-
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(response.body).toEqual({ error: "Tipo di dettato non valido" });
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
 });
 
 test("returns null accuracy when no categories were evaluated", async () => {
@@ -566,19 +564,12 @@ test("returns 500 when the database fails", async () => {
         .spyOn(console, "error")
         .mockImplementation(() => { });
 
-    pool.query.mockRejectedValueOnce(
-        new Error("Database error")
-    );
+    client.query.mockRejectedValueOnce(new Error("Database error"));
 
-    const response = await request(app)
-        .get("/statistics/report");
+    const response = await request(app).get("/statistics/report");
 
     expect(response.status).toBe(500);
-
-    expect(response.body).toEqual({
-        error: "Errore durante il recupero del report"
-    });
-
+    expect(response.body).toEqual({ error: "Errore durante il recupero del report" });
     expect(consoleErrorSpy).toHaveBeenCalled();
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 
@@ -620,14 +611,11 @@ test("generates AI insight separately", async () => {
         .send(reportData);
 
     expect(response.status).toBe(200);
-
-    expect(response.body).toEqual({
-        aiInsight: "Commento AI di prova"
-    });
-
+    expect(response.body).toEqual({ aiInsight: "Commento AI di prova" });
     expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
     expect(generatePracticeInsight).toHaveBeenCalledWith(reportData);
-    expect(pool.query).not.toHaveBeenCalled();
+    expect(withUserContext).not.toHaveBeenCalled();
+    expect(client.query).not.toHaveBeenCalled();
 });
 
 test("rejects unauthenticated AI requests", async () => {
@@ -645,11 +633,7 @@ test("rejects unauthenticated AI requests", async () => {
         });
 
     expect(response.status).toBe(401);
-
-    expect(response.body).toEqual({
-        error: "Utente non autenticato"
-    });
-
+    expect(response.body).toEqual({ error: "Utente non autenticato" });
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
@@ -662,11 +646,7 @@ test("rejects invalid AI report data", async () => {
         });
 
     expect(response.status).toBe(400);
-
-    expect(response.body).toEqual({
-        error: "Dati del report non validi"
-    });
-
+    expect(response.body).toEqual({ error: "Dati del report non validi" });
     expect(generatePracticeInsight).not.toHaveBeenCalled();
 });
 
@@ -675,9 +655,7 @@ test("returns 500 when separate Gemini request fails", async () => {
         .spyOn(console, "error")
         .mockImplementation(() => { });
 
-    generatePracticeInsight.mockRejectedValueOnce(
-        new Error("Gemini error")
-    );
+    generatePracticeInsight.mockRejectedValueOnce(new Error("Gemini error"));
 
     const response = await request(app)
         .post("/statistics/report/ai")
@@ -696,11 +674,7 @@ test("returns 500 when separate Gemini request fails", async () => {
         });
 
     expect(response.status).toBe(500);
-
-    expect(response.body).toEqual({
-        error: "Errore durante la generazione dell'analisi"
-    });
-
+    expect(response.body).toEqual({ error: "Errore durante la generazione dell'analisi" });
     expect(generatePracticeInsight).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalled();
 
