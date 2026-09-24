@@ -5,3 +5,5 @@ server/.env
 server/coverage/
 node_modules/
 coverage/
+playwright-report/
+test-results/

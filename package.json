@@ -5,7 +5,9 @@
   "main": "api.js",
   "scripts": {
     "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "serve:e2e": "http-server . -p 5500 -c-1",
+    "test:e2e": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,8 @@
   },
   "homepage": "https://github.com/laurabaraldi98-lgtm/music-study-tracker#readme",
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "http-server": "^14.1.1",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1"
   },
