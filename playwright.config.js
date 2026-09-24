@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const { defineConfig, devices } = require("@playwright/test");
 
 module.exports = defineConfig({
@@ -20,8 +22,18 @@ module.exports = defineConfig({
 
     projects: [
         {
+            name: "setup",
+            testMatch: /global\.setup\.js/
+        },
+        {
             name: "chromium",
-            use: { ...devices["Desktop Chrome"] }
+            dependencies: ["setup"],
+            use: {
+                ...devices["Desktop Chrome"],
+
+                // Reuse the Clerk session created by global.setup.js.
+                storageState: "e2e/.auth/user.json"
+            }
         }
     ]
 });
