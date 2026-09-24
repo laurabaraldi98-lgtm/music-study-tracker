@@ -230,17 +230,20 @@ describe("DELETE /dictation-types/:id", function () {
         );
     });
 
-    test("returns 409 when the type is already in use", async function () {
-        getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
-        client.query.mockRejectedValue({ code: "23503" });
+    test.each(["23503", "23001"])(
+        "returns 409 when the type is already in use (%s)",
+        async function (errorCode) {
+            getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
+            client.query.mockRejectedValue({ code: errorCode });
 
-        const response = await request(app).delete("/dictation-types/1");
+            const response = await request(app).delete("/dictation-types/1");
 
-        expect(response.status).toBe(409);
-        expect(response.body).toEqual({
-            error: "Non puoi eliminare un tipo utilizzato da dettati o categorie"
-        });
-    });
+            expect(response.status).toBe(409);
+            expect(response.body).toEqual({
+                error: "Non puoi eliminare un tipo utilizzato da dettati o categorie"
+            });
+        }
+    );
 
     test("returns 500 when deleting a type fails", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
