@@ -10,7 +10,7 @@ module.exports = defineConfig({
     reporter: "html",
 
     webServer: {
-        command: "npm.cmd run serve:e2e",
+        command: "npm run serve:e2e",
         url: "http://127.0.0.1:5500",
         reuseExistingServer: true
     },
