@@ -3,7 +3,16 @@ const { test, expect } = require("@playwright/test");
 test("user can create and delete a collection", async function ({ page }) {
     const collectionName = `E2E Collection ${Date.now()}`;
 
+    const collectionsLoaded = page.waitForResponse(function (response) {
+        return (
+            response.url().endsWith("/collections") &&
+            response.request().method() === "GET" &&
+            response.ok()
+        );
+    });
+
     await page.goto("/");
+    await collectionsLoaded;
 
     await page.getByRole("button", { name: "Gestisci raccolte" }).click();
 
