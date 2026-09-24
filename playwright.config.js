@@ -9,11 +9,18 @@ module.exports = defineConfig({
     workers: process.env.CI ? 1 : undefined,
     reporter: "html",
 
-    webServer: {
-        command: "npm run serve:e2e",
-        url: "http://127.0.0.1:5500",
-        reuseExistingServer: true
-    },
+    webServer: [
+        {
+            command: "npm run serve:e2e",
+            url: "http://127.0.0.1:5500",
+            reuseExistingServer: true
+        },
+        {
+            command: "node server/server.js",
+            url: "http://127.0.0.1:3000",
+            reuseExistingServer: true
+        }
+    ],
 
     use: {
         baseURL: "http://127.0.0.1:5500",
