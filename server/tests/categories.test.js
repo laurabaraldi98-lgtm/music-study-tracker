@@ -1,216 +1,205 @@
 jest.mock("@clerk/express", () => ({
-    clerkMiddleware: () => (
-        request,
-        response,
-        next
-    ) => next(),
+    clerkMiddleware: () => (request, response, next) => next(),
     getAuth: jest.fn()
 }));
 
-jest.mock("../db", () => ({
-    query: jest.fn()
+jest.mock("../db-context", () => ({
+    withUserContext: jest.fn()
 }));
 
 const request = require("supertest");
 const { getAuth } = require("@clerk/express");
-const pool = require("../db");
+const { withUserContext } = require("../db-context");
 const app = require("../app");
+
+let client;
+
+beforeEach(function () {
+    client = {
+        query: jest.fn()
+    };
+
+    withUserContext.mockImplementation(async function (userId, callback) {
+        return callback(client);
+    });
+});
 
 afterEach(function () {
     jest.resetAllMocks();
 });
 
 describe("GET /categories", function () {
-    test(
-        "returns 401 when the user is not authenticated",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: false
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
+
+        const response = await request(app).get("/categories");
+
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+        expect(withUserContext).not.toHaveBeenCalled();
+    });
+
+    test("returns the authenticated user's categories", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const savedCategories = [
+            {
+                id: 1,
+                name: "Tonalità",
+                user_id: "user_test",
+                dictation_type_id: 2
+            },
+            {
+                id: 2,
+                name: "Ritmo",
+                user_id: "user_test",
+                dictation_type_id: 2
+            }
+        ];
+
+        client.query
+            .mockResolvedValueOnce({
+                rows: [{
+                    categories_initialized: true
+                }]
+            })
+            .mockResolvedValueOnce({
+                rows: savedCategories
             });
 
-            const response = await request(app)
-                .get("/categories");
+        const response = await request(app).get("/categories");
 
-            expect(response.status).toBe(401);
-            expect(response.body).toEqual({
-                error: "Utente non autenticato"
-            });
-        }
-    );
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(savedCategories);
 
-    test(
-        "returns the authenticated user's categories",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
 
-            const savedCategories = [
-                {
-                    id: 1,
-                    name: "Tonalità",
-                    user_id: "user_test",
-                    dictation_type_id: 2
-                },
-                {
-                    id: 2,
-                    name: "Ritmo",
-                    user_id: "user_test",
-                    dictation_type_id: 2
-                }
-            ];
+        expect(client.query).toHaveBeenLastCalledWith(
+            expect.stringContaining("dictation_type_id"),
+            ["user_test"]
+        );
+    });
 
-            pool.query
-                .mockResolvedValueOnce({
-                    rows: [{
-                        categories_initialized: true
-                    }]
-                })
-                .mockResolvedValueOnce({
-                    rows: savedCategories
-                });
+    test("initializes default types and categories for a new user", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "new_user"
+        });
 
-            const response = await request(app)
-                .get("/categories");
+        const savedCategories = [
+            {
+                id: 1,
+                name: "Metrica",
+                user_id: "new_user",
+                dictation_type_id: 1
+            },
+            {
+                id: 2,
+                name: "Pause",
+                user_id: "new_user",
+                dictation_type_id: 1
+            },
+            {
+                id: 3,
+                name: "Gruppi irregolari",
+                user_id: "new_user",
+                dictation_type_id: 1
+            }
+        ];
 
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual(
-                savedCategories
-            );
-
-            expect(pool.query).toHaveBeenLastCalledWith(
-                expect.stringContaining(
-                    "dictation_type_id"
-                ),
-                ["user_test"]
-            );
-        }
-    );
-
-    test(
-        "initializes default types and categories for a new user",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "new_user"
+        client.query
+            .mockResolvedValueOnce({
+                rows: [{
+                    categories_initialized: false
+                }]
+            })
+            .mockResolvedValue({
+                rows: savedCategories
             });
 
-            const savedCategories = [
-                {
-                    id: 1,
-                    name: "Metrica",
-                    user_id: "new_user",
-                    dictation_type_id: 1
-                },
-                {
-                    id: 2,
-                    name: "Pause",
-                    user_id: "new_user",
-                    dictation_type_id: 1
-                },
-                {
-                    id: 3,
-                    name: "Gruppi irregolari",
-                    user_id: "new_user",
-                    dictation_type_id: 1
-                }
-            ];
+        const response = await request(app).get("/categories");
 
-            pool.query
-                .mockResolvedValueOnce({
-                    rows: [{
-                        categories_initialized: false
-                    }]
-                })
-                .mockResolvedValue({
-                    rows: savedCategories
-                });
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(savedCategories);
 
-            const response = await request(app)
-                .get("/categories");
+        expect(withUserContext).toHaveBeenCalledWith(
+            "new_user",
+            expect.any(Function)
+        );
 
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual(
-                savedCategories
-            );
-
-            expect(pool.query).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    "INSERT INTO dictation_types"
-                ),
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("INSERT INTO dictation_types"),
+            [
+                "new_user",
                 [
-                    "new_user",
-                    [
-                        "Ritmico",
-                        "Melodico",
-                        "Armonico"
-                    ]
+                    "Ritmico",
+                    "Melodico",
+                    "Armonico"
                 ]
-            );
+            ]
+        );
 
-            expect(pool.query).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    "INSERT INTO categories"
-                ),
-                [
-                    "rhythmic",
-                    "Metrica",
-                    "new_user",
-                    "Ritmico"
-                ]
-            );
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("INSERT INTO categories"),
+            [
+                "rhythmic",
+                "Metrica",
+                "new_user",
+                "Ritmico"
+            ]
+        );
 
-            expect(pool.query).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    "dictation_types_initialized = TRUE"
-                ),
-                ["new_user"]
-            );
-        }
-    );
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("dictation_types_initialized = TRUE"),
+            ["new_user"]
+        );
+    });
 
-    test(
-        "returns 500 when retrieving categories fails",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+    test("returns 500 when retrieving categories fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
 
-            pool.query.mockRejectedValue(
-                new Error("Database error")
-            );
+        client.query.mockRejectedValue(
+            new Error("Database error")
+        );
 
-            const response = await request(app)
-                .get("/categories");
+        const response = await request(app).get("/categories");
 
-            expect(response.status).toBe(500);
-            expect(response.body).toEqual({
-                error: "Errore durante il recupero delle categorie"
-            });
-        }
-    );
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante il recupero delle categorie"
+        });
+    });
 });
 
 describe("POST /categories", function () {
-    test(
-        "returns 401 when the user is not authenticated",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: false
-            });
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
 
-            const response = await request(app)
-                .post("/categories")
-                .send({});
+        const response = await request(app)
+            .post("/categories")
+            .send({});
 
-            expect(response.status).toBe(401);
-            expect(response.body).toEqual({
-                error: "Utente non autenticato"
-            });
-        }
-    );
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+        expect(withUserContext).not.toHaveBeenCalled();
+    });
 
     test.each([
         ["missing", undefined],
@@ -237,6 +226,7 @@ describe("POST /categories", function () {
             expect(response.body).toEqual({
                 error: "Tipo di dettato non valido"
             });
+            expect(withUserContext).not.toHaveBeenCalled();
         }
     );
 
@@ -263,123 +253,119 @@ describe("POST /categories", function () {
             expect(response.body).toEqual({
                 error: "Nome della categoria non valido"
             });
+            expect(withUserContext).not.toHaveBeenCalled();
         }
     );
 
-    test(
-        "returns 404 when the dictation type does not belong to the user",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
+    test("returns 404 when the dictation type does not belong to the user", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        client.query.mockResolvedValue({
+            rows: []
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                dictationTypeId: 99,
+                name: "Memoria melodica"
             });
 
-            pool.query.mockResolvedValue({
-                rows: []
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Tipo di dettato non trovato"
+        });
+
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
+    });
+
+    test("creates a category linked to the selected dictation type", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        const savedCategory = {
+            id: 11,
+            name: "Memoria melodica",
+            user_id: "user_test",
+            dictation_type_id: 2
+        };
+
+        client.query.mockResolvedValue({
+            rows: [savedCategory]
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                dictationTypeId: 2,
+                name: "Memoria melodica"
             });
 
-            const response = await request(app)
-                .post("/categories")
-                .send({
-                    dictationTypeId: 99,
-                    name: "Memoria melodica"
-                });
+        expect(response.status).toBe(201);
+        expect(response.body).toEqual(savedCategory);
 
-            expect(response.status).toBe(404);
-            expect(response.body).toEqual({
-                error: "Tipo di dettato non trovato"
-            });
-        }
-    );
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
 
-    test(
-        "creates a category linked to the selected dictation type",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("dictation_types.id"),
+            [
+                "Memoria melodica",
+                "user_test",
+                2
+            ]
+        );
+    });
 
-            const savedCategory = {
-                id: 11,
-                name: "Memoria melodica",
-                user_id: "user_test",
-                dictation_type_id: 2
-            };
+    test("returns 500 when creating a category fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
 
-            pool.query.mockResolvedValue({
-                rows: [savedCategory]
-            });
+        client.query.mockRejectedValue(
+            new Error("Database error")
+        );
 
-            const response = await request(app)
-                .post("/categories")
-                .send({
-                    dictationTypeId: 2,
-                    name: "Memoria melodica"
-                });
-
-            expect(response.status).toBe(201);
-            expect(response.body).toEqual(
-                savedCategory
-            );
-
-            expect(pool.query).toHaveBeenCalledWith(
-                expect.stringContaining(
-                    "dictation_types.id"
-                ),
-                [
-                    "Memoria melodica",
-                    "user_test",
-                    2
-                ]
-            );
-        }
-    );
-
-    test(
-        "returns 500 when creating a category fails",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                dictationTypeId: 2,
+                name: "Memoria melodica"
             });
 
-            pool.query.mockRejectedValue(
-                new Error("Database error")
-            );
-
-            const response = await request(app)
-                .post("/categories")
-                .send({
-                    dictationTypeId: 2,
-                    name: "Memoria melodica"
-                });
-
-            expect(response.status).toBe(500);
-            expect(response.body).toEqual({
-                error: "Errore durante il salvataggio della categoria"
-            });
-        }
-    );
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante il salvataggio della categoria"
+        });
+    });
 });
 
 describe("DELETE /categories/:id", function () {
-    test(
-        "returns 401 when the user is not authenticated",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: false
-            });
+    test("returns 401 when the user is not authenticated", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: false
+        });
 
-            const response = await request(app)
-                .delete("/categories/1");
+        const response = await request(app)
+            .delete("/categories/1");
 
-            expect(response.status).toBe(401);
-            expect(response.body).toEqual({
-                error: "Utente non autenticato"
-            });
-        }
-    );
+        expect(response.status).toBe(401);
+        expect(response.body).toEqual({
+            error: "Utente non autenticato"
+        });
+        expect(withUserContext).not.toHaveBeenCalled();
+    });
 
     test.each([
         ["not a number", "abc"],
@@ -401,79 +387,87 @@ describe("DELETE /categories/:id", function () {
             expect(response.body).toEqual({
                 error: "ID della categoria non valido"
             });
+            expect(withUserContext).not.toHaveBeenCalled();
         }
     );
 
-    test(
-        "returns 404 when the category is not found",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+    test("returns 404 when the category is not found", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
 
-            pool.query.mockResolvedValue({
-                rows: []
-            });
+        client.query.mockResolvedValue({
+            rows: []
+        });
 
-            const response = await request(app)
-                .delete("/categories/1");
+        const response = await request(app)
+            .delete("/categories/1");
 
-            expect(response.status).toBe(404);
-            expect(response.body).toEqual({
-                error: "Categoria non trovata"
-            });
-        }
-    );
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Categoria non trovata"
+        });
 
-    test(
-        "deletes and returns the category",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
+    });
 
-            const deletedCategory = {
-                id: 11,
-                name: "Memoria melodica",
-                user_id: "user_test",
-                dictation_type_id: 2
-            };
+    test("deletes and returns the category", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
 
-            pool.query.mockResolvedValue({
-                rows: [deletedCategory]
-            });
+        const deletedCategory = {
+            id: 11,
+            name: "Memoria melodica",
+            user_id: "user_test",
+            dictation_type_id: 2
+        };
 
-            const response = await request(app)
-                .delete("/categories/11");
+        client.query.mockResolvedValue({
+            rows: [deletedCategory]
+        });
 
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual(
-                deletedCategory
-            );
-        }
-    );
+        const response = await request(app)
+            .delete("/categories/11");
 
-    test(
-        "returns 500 when deleting a category fails",
-        async function () {
-            getAuth.mockReturnValue({
-                isAuthenticated: true,
-                userId: "user_test"
-            });
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(deletedCategory);
 
-            pool.query.mockRejectedValue(
-                new Error("Database error")
-            );
+        expect(withUserContext).toHaveBeenCalledWith(
+            "user_test",
+            expect.any(Function)
+        );
 
-            const response = await request(app)
-                .delete("/categories/11");
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("DELETE FROM categories"),
+            [
+                11,
+                "user_test"
+            ]
+        );
+    });
 
-            expect(response.status).toBe(500);
-            expect(response.body).toEqual({
-                error: "Errore durante la cancellazione della categoria"
-            });
-        }
-    );
+    test("returns 500 when deleting a category fails", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        client.query.mockRejectedValue(
+            new Error("Database error")
+        );
+
+        const response = await request(app)
+            .delete("/categories/11");
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({
+            error: "Errore durante la cancellazione della categoria"
+        });
+    });
 });
