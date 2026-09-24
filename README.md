@@ -202,6 +202,7 @@ The AI section is updated separately when its response becomes available.
 
 - PostgreSQL
 - Neon
+- PostgreSQL Row Level Security
 - `pg`
 
 ### Development and Infrastructure
@@ -227,12 +228,20 @@ Clerk session token
         ↓
 Node.js + Express REST API on Vercel
         ↓
-PostgreSQL on Neon
+Authenticated Clerk user ID
+        ↓
+Transaction-local app.user_id
+        ↓
+PostgreSQL RLS on Neon
 ```
 
 Authenticated frontend requests include a Clerk session token in the `Authorization` header.
 
-The backend verifies the authenticated user and applies the corresponding Clerk user ID when accessing application data.
+The backend verifies the authenticated user and uses the corresponding Clerk user ID when accessing application data.
+
+User-specific database operations run through `withUserContext`, which opens a transaction and sets the authenticated user ID as the transaction-local PostgreSQL setting `app.user_id`.
+
+PostgreSQL Row Level Security policies then use this value to enforce data isolation at the database level.
 
 ### Practice Report Architecture
 
@@ -357,6 +366,14 @@ server/routes/
 └── statistics.js
 ```
 
+Database context handling is centralized in:
+
+```text
+server/db-context.js
+```
+
+This helper ensures that user-specific database operations run inside a transaction with the appropriate `app.user_id` value available to PostgreSQL Row Level Security policies.
+
 Services used by the Practice Report include deterministic insight calculation and Gemini integration.
 
 This keeps external AI communication separate from the core statistical logic.
@@ -432,9 +449,28 @@ The frontend obtains a Clerk session token and includes it in authenticated API 
 
 The Express backend uses Clerk middleware to verify the request and determine the authenticated user.
 
-Database queries use the authenticated Clerk user ID when reading, creating, or deleting user-specific records.
+Application queries continue to explicitly filter user-owned data using the authenticated Clerk user ID.
 
-This prevents one application user from accessing another user's data through the API.
+In addition, user-specific database operations run through `withUserContext`.
+
+For each operation, the backend opens a PostgreSQL transaction and sets:
+
+```text
+app.user_id
+```
+
+to the authenticated Clerk user ID for the duration of that transaction.
+
+PostgreSQL Row Level Security policies compare each row's `user_id` with this transaction-local value.
+
+This creates two layers of user isolation:
+
+1. explicit user filtering in application queries
+2. Row Level Security enforced directly by PostgreSQL
+
+The runtime backend connects to PostgreSQL using the restricted `music_app` database role, which does not have `BYPASSRLS`.
+
+Administrative database access is kept separate from the runtime application and is used for database administration and migrations.
 
 ## Security
 
@@ -443,6 +479,10 @@ The application includes several security measures:
 - Clerk authentication
 - server-side authentication verification
 - authenticated user IDs applied to database queries
+- PostgreSQL Row Level Security on user-owned tables
+- transaction-local user context through `app.user_id`
+- restricted runtime PostgreSQL role without `BYPASSRLS`
+- separate runtime and administrative database credentials
 - backend request validation
 - restricted CORS origins
 - environment variables for backend secrets
@@ -470,6 +510,8 @@ Dictations and categories are associated with both a user and a dictation type.
 
 This allows each account to maintain an independent study configuration.
 
+User-owned tables are protected with PostgreSQL Row Level Security so database access remains scoped to the authenticated application's user context.
+
 ## Database Migrations
 
 Database schema changes are versioned inside:
@@ -483,11 +525,14 @@ Current migrations include:
 ```text
 001_initial_schema.sql
 002_add_dictation_types.sql
+003_enable_rls.sql
 ```
 
 The initial migration creates the original PostgreSQL structure.
 
 The second migration introduces custom dictation types, associates existing categories and dictations with the new type records, and migrates existing rhythmic, melodic, and harmonic data.
+
+The third migration enables Row Level Security on the user-owned tables and creates policies based on the transaction-local `app.user_id` setting.
 
 Migrations should be applied in filename order.
 
@@ -496,17 +541,20 @@ Example:
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/003_enable_rls.sql
 ```
+
+Administrative credentials should be used when applying migrations, while the deployed application uses the restricted runtime database role.
 
 Future schema changes should be implemented as additional numbered migration files rather than modifying already-applied migrations.
 
-Docker can be used to run PostgreSQL locally and validate migrations without requiring a native PostgreSQL installation.
+Docker can be used to run PostgreSQL tools and apply migrations without requiring a native PostgreSQL installation.
 
 ## Testing
 
 The project includes independent automated test suites for the frontend and backend.
 
-External systems are mocked where appropriate so application behavior can be tested without depending on live authentication, databases, or AI services.
+External systems are mocked where appropriate, while database security behavior is also verified separately through integration tests against a dedicated Neon test branch.
 
 ### Frontend Testing
 
@@ -563,7 +611,7 @@ npm run test:coverage
 
 Backend tests use Jest and Supertest.
 
-The test suite covers areas including:
+The unit and route test suite covers areas including:
 
 - unauthenticated requests
 - authenticated API requests
@@ -590,7 +638,7 @@ The test suite covers areas including:
 - invalid AI report requests
 - Gemini failure handling
 
-PostgreSQL queries, Clerk authentication, and Gemini calls are mocked during automated testing.
+PostgreSQL queries, Clerk authentication, and Gemini calls are mocked in the unit and route test suite.
 
 The tested backend application logic achieves:
 
@@ -599,7 +647,7 @@ The tested backend application logic achieves:
 - 100% function coverage
 - 100% line coverage
 
-Run backend tests from the `server` directory:
+Run backend unit and route tests from the `server` directory:
 
 ```bash
 npm test
@@ -611,25 +659,72 @@ Run them with coverage:
 npm test -- --coverage
 ```
 
+### Database and RLS Integration Testing
+
+The project also includes integration tests against a dedicated Neon test branch.
+
+Unlike the unit and route tests, these tests use:
+
+- a real PostgreSQL connection
+- the restricted `music_app` database role
+- real PostgreSQL transactions
+- the real `withUserContext` implementation
+- the real `app.user_id` transaction-local setting
+- the deployed Row Level Security policies
+
+The integration suite verifies that:
+
+- a user can access their own data
+- another user cannot read that data
+- a user cannot insert records belonging to another user
+- a user cannot update another user's records
+- a user cannot delete another user's records
+
+Synthetic user IDs are used because Clerk authentication itself is not under test at this layer.
+
+The purpose of this suite is to test the integration between the backend database context and PostgreSQL RLS.
+
+A dedicated Neon branch keeps integration-test data isolated from production data.
+
+The tests require:
+
+```env
+TEST_DATABASE_URL=your_test_postgresql_connection_string
+```
+
+Run the RLS integration tests from the `server` directory:
+
+```bash
+npm test -- tests/integration/rls.integration.test.js --runInBand
+```
+
+Integration tests are run serially because they interact with a real shared test database.
+
 ## CI/CD
 
 The project uses GitHub Actions for continuous integration.
 
 Automated tests are run on repository pushes and pull requests so regressions can be detected before changes are merged.
 
+Backend CI runs the unit and route test suite with coverage separately from the PostgreSQL RLS integration suite.
+
+The integration suite connects to the dedicated Neon test branch through the `TEST_DATABASE_URL` GitHub Actions secret.
+
 Continuous deployment is handled by:
 
 - Netlify for the frontend
 - Vercel for the backend
 
-The production architecture is therefore:
+The production workflow is therefore:
 
 ```text
 GitHub
    ↓
 GitHub Actions
    ↓
-Automated tests
+Unit and route tests with coverage
++
+RLS integration tests
    ↓
 Netlify / Vercel deployment
 ```
@@ -673,20 +768,29 @@ DATABASE_URL=your_postgresql_connection_string
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
+For local database integration testing, configure a separate connection to the dedicated Neon test branch:
+
+```env
+TEST_DATABASE_URL=your_test_postgresql_connection_string
+```
+
 The Clerk environment for the backend must also be configured with the credentials for the Clerk instance used by the application.
 
 Never commit secret credentials or `.env` files.
 
 ### 5. Prepare the Database
 
-Apply database migrations in order:
+Apply database migrations in order using administrative database credentials:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/003_enable_rls.sql
 ```
 
-Alternatively, Docker can be used to run and validate the PostgreSQL environment locally.
+The runtime `DATABASE_URL` should use the restricted application database role rather than administrative credentials.
+
+Alternatively, Docker can be used as a PostgreSQL client to apply and validate migrations without requiring a native PostgreSQL installation.
 
 ### 6. Start the Backend
 
@@ -738,6 +842,8 @@ That process led to the addition of:
 - daily and monthly progress visualization
 - deterministic performance insights
 - AI-assisted report commentary
+- database-level Row Level Security
+- database integration testing
 
 The application was progressively converted into a complete full-stack system using Node.js, Express, PostgreSQL, Clerk, and cloud deployment.
 
@@ -745,7 +851,7 @@ The application was progressively converted into a complete full-stack system us
 
 The application is deployed and its main workflows are functional.
 
-Recent development has focused on the Practice Report and application architecture, including:
+Recent development has focused on the Practice Report, application architecture, testing, and database security, including:
 
 - custom dictation types
 - modular navigation
@@ -756,9 +862,14 @@ Recent development has focused on the Practice Report and application architectu
 - Google Gemini integration
 - separation of statistical and AI requests
 - non-blocking AI analysis loading
+- PostgreSQL Row Level Security
+- restricted runtime database access
+- dedicated RLS integration tests
+- dedicated Neon integration-test environment
 - comprehensive frontend testing
-- comprehensive backend testing
+- comprehensive backend unit and route testing
 - 100% statement, branch, function, and line coverage for the tested application logic
+- GitHub Actions integration-test execution
 
 ## Planned Improvements
 

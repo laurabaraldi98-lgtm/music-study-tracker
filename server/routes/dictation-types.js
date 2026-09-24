@@ -144,7 +144,7 @@ router.delete("/:id", async function (request, response) {
 
         response.json(result.rows[0]);
     } catch (error) {
-        if (error.code === "23503") {
+        if (error.code === "23503" || error.code === "23001") {
             return response.status(409).json({ error: "Non puoi eliminare un tipo utilizzato da dettati o categorie" });
         }
 
