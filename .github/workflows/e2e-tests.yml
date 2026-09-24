@@ -17,9 +17,15 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
 
-      - name: Install dependencies
+      - name: Install frontend and E2E dependencies
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: server
         run: npm ci
 
       - name: Install Playwright Chromium
