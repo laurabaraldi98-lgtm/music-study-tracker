@@ -3,6 +3,7 @@ const { getAuth } = require("@clerk/express");
 const { withUserContext } = require("../db-context");
 const { generatePracticeInsight } = require("../services/gemini");
 const { calculatePracticeInsights } = require("../services/practice-insights");
+const { reportLimiter, aiReportLimiter } = require("../rate-limit");
 
 const router = express.Router();
 const validPeriods = new Set(["current-month", "previous-month", "3-months", "6-months", "all", "custom"]);
@@ -129,7 +130,7 @@ function buildMonthlyResults(rows, period, from, to, today) {
     return months;
 }
 
-router.get("/report", async function (request, response) {
+router.get("/report", reportLimiter, async function (request, response) {
     const auth = getAuth(request);
 
     if (!auth.isAuthenticated) {
@@ -379,7 +380,7 @@ router.get("/report", async function (request, response) {
     }
 });
 
-router.post("/report/ai", async function (request, response) {
+router.post("/report/ai", aiReportLimiter, async function (request, response) {
     const auth = getAuth(request);
 
     if (!auth.isAuthenticated) {

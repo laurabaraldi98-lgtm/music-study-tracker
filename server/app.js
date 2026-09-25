@@ -2,6 +2,8 @@ const express = require("express");
 const { clerkMiddleware } = require("@clerk/express");
 const cors = require("cors");
 
+const { generalLimiter } = require("./rate-limit");
+
 const dictationsRouter = require("./routes/dictations");
 const categoriesRouter = require("./routes/categories");
 const collectionsRouter = require("./routes/collections");
@@ -11,6 +13,7 @@ const statisticsRouter = require("./routes/statistics");
 const app = express();
 
 app.use(clerkMiddleware());
+app.use(generalLimiter);
 
 const allowedOrigins = [
     "http://127.0.0.1:5500",

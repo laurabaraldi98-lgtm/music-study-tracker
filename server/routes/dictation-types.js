@@ -1,6 +1,7 @@
 const express = require("express");
 const { getAuth } = require("@clerk/express");
 const { withUserContext } = require("../db-context");
+const { writeLimiter } = require("../rate-limit");
 
 const router = express.Router();
 const defaultDictationTypes = ["Ritmico", "Melodico", "Armonico"];
@@ -72,7 +73,7 @@ router.get("/", async function (request, response) {
     }
 });
 
-router.post("/", async function (request, response) {
+router.post("/", writeLimiter, async function (request, response) {
     const auth = getAuth(request);
 
     if (!auth.isAuthenticated) {
@@ -112,7 +113,7 @@ router.post("/", async function (request, response) {
     }
 });
 
-router.delete("/:id", async function (request, response) {
+router.delete("/:id", writeLimiter, async function (request, response) {
     const auth = getAuth(request);
 
     if (!auth.isAuthenticated) {
