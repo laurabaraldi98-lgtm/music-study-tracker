@@ -193,6 +193,7 @@ The AI section is updated separately when its response becomes available.
 - REST API
 - Clerk server-side authentication
 - Google Gemini API
+- express-rate-limit
 - CORS
 - Jest
 - Supertest
@@ -373,7 +374,17 @@ Database context handling is centralized in:
 server/db-context.js
 ```
 
-This helper ensures that user-specific database operations run inside a transaction with the appropriate `app.user_id` value available to PostgreSQL Row Level Security policies.
+Rate limiting is configured in:
+
+```text
+server/rate-limit.js
+```
+
+This module defines reusable rate limiters for general API traffic, write operations, statistical reports, and AI analysis requests.
+
+The rate-limit key uses the authenticated Clerk user ID when available and falls back to the request IP address for unauthenticated requests.
+
+Database context handling ensures that user-specific database operations run inside a transaction with the appropriate `app.user_id` value available to PostgreSQL Row Level Security policies.
 
 Services used by the Practice Report include deterministic insight calculation and Gemini integration.
 
@@ -440,7 +451,52 @@ The backend also handles:
 - missing resources
 - database errors
 - user-specific filtering
+- API rate limiting
 - appropriate HTTP error responses
+
+## API Rate Limiting
+
+The Express API uses `express-rate-limit` to reduce excessive traffic, protect database operations, limit accidental request loops, and restrict repeated calls to external AI services.
+
+The current limits are:
+
+| Request type | Limit |
+| --- | ---: |
+| General API traffic | 100 requests per minute |
+| Write operations | 30 requests per minute |
+| Practice Report requests | 30 requests per minute |
+| AI analysis requests | 5 requests per minute |
+
+A general limiter is applied across the API as a safety net.
+
+More restrictive limiters are applied to operations that are either more expensive or modify application data.
+
+Write limits apply to creation and deletion operations for:
+
+- dictations
+- categories
+- collections
+- custom dictation types
+
+Practice Report requests have a dedicated limit because they execute multiple PostgreSQL aggregation queries.
+
+AI report requests use the strictest limit because they also trigger an external Gemini API request.
+
+For authenticated requests, rate-limit counters are keyed by the Clerk user ID.
+
+For requests without an authenticated user, the limiter falls back to an IP-based key.
+
+When a limit is exceeded, the backend responds with HTTP status:
+
+```text
+429 Too Many Requests
+```
+
+The current limiter uses the default in-memory store.
+
+This is sufficient as an application-level protection layer for the current deployment, but counters are local to each running process. In a multi-instance or serverless environment such as Vercel, the limits therefore should not be interpreted as a strict globally shared quota across every instance.
+
+A shared external store such as Redis could be introduced in the future if globally coordinated rate-limit counters become necessary.
 
 ## Authentication and Data Isolation
 
@@ -485,6 +541,9 @@ The application includes several security measures:
 - restricted runtime PostgreSQL role without `BYPASSRLS`
 - separate runtime and administrative database credentials
 - backend request validation
+- API rate limiting
+- stricter rate limiting for database writes and AI requests
+- authenticated-user rate-limit keys with IP fallback
 - restricted CORS origins
 - environment variables for backend secrets
 - `.env` files excluded from version control
@@ -687,8 +746,17 @@ The unit and route test suite covers areas including:
 - separate Gemini analysis requests
 - invalid AI report requests
 - Gemini failure handling
+- authenticated-user rate-limit keys
+- IP-based rate-limit fallback
+- general API rate limiting
+- write-operation rate limiting
+- Practice Report rate limiting
+- AI analysis rate limiting
+- HTTP 429 responses after configured limits are exceeded
 
-PostgreSQL queries, Clerk authentication, and Gemini calls are mocked in the unit and route test suite.
+PostgreSQL queries, Clerk authentication, Gemini calls, and rate limiting are mocked where appropriate in route-focused tests so those tests remain isolated from infrastructure concerns.
+
+The rate-limit implementation is tested independently using real Express middleware and Supertest requests.
 
 The tested backend application logic achieves:
 
@@ -707,6 +775,12 @@ Run them with coverage:
 
 ```bash
 npm test -- --coverage
+```
+
+The CI coverage run excludes the real-database integration suite so unit and route coverage remains isolated from integration infrastructure:
+
+```bash
+npm test -- --coverage --testPathIgnorePatterns=tests/integration
 ```
 
 ### Database and RLS Integration Testing
@@ -830,6 +904,8 @@ For local database integration testing, configure a separate connection to the d
 TEST_DATABASE_URL=your_test_postgresql_connection_string
 ```
 
+The production `DATABASE_URL` and test `TEST_DATABASE_URL` should point to separate Neon branches so integration-test writes remain isolated from production data.
+
 The Clerk environment for the backend must also be configured with the credentials for the Clerk instance used by the application.
 
 Playwright E2E tests additionally require the Clerk test environment and dedicated E2E user configuration.
@@ -903,6 +979,7 @@ That process led to the addition of:
 - database-level Row Level Security
 - database integration testing
 - browser-based end-to-end testing
+- API rate limiting
 
 The application was progressively converted into a complete full-stack system using Node.js, Express, PostgreSQL, Clerk, and cloud deployment.
 
@@ -910,7 +987,7 @@ The application was progressively converted into a complete full-stack system us
 
 The application is deployed and its main workflows are functional.
 
-Recent development has focused on the Practice Report, application architecture, testing, and database security, including:
+Recent development has focused on the Practice Report, application architecture, testing, database security, and API protection, including:
 
 - custom dictation types
 - modular navigation
@@ -928,6 +1005,10 @@ Recent development has focused on the Practice Report, application architecture,
 - Playwright end-to-end testing
 - authenticated browser test setup with Clerk
 - dedicated E2E test data and cleanup
+- API rate limiting
+- stricter limits for write operations and AI requests
+- authenticated-user rate-limit keys with IP fallback
+- dedicated rate-limit tests
 - comprehensive frontend testing
 - comprehensive backend unit and route testing
 - 100% statement, branch, function, and line coverage for the tested application logic
@@ -943,6 +1024,6 @@ Possible future improvements include:
 - further accessibility improvements
 - additional statistical visualizations
 - a pre-populated public demo mode
-- API rate limiting
+- shared rate-limit storage for globally coordinated counters across multiple backend instances
 - continued UI refinements
 - additional mobile interface improvements
