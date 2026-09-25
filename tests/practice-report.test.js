@@ -120,6 +120,14 @@ test("populates dictation type filter", () => {
     ]);
 });
 
+test("updates dictation type filter when types change", () => {
+    window.dispatchEvent(new Event("dictation-types-changed"));
+
+    const values = Array.from(elements.practiceReportType.options).map(option => option.value);
+
+    expect(values).toEqual(["", "1", "2"]);
+});
+
 test("loads report with selected filters", async () => {
     window.dispatchEvent(new Event("collections-loaded"));
     window.dispatchEvent(new Event("dictation-types-loaded"));
