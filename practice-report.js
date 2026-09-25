@@ -1,34 +1,11 @@
-const practiceReportSection = document.getElementById(
-    "practice-report-section"
-);
-
-const practiceReportPeriod = document.getElementById(
-    "practice-report-period"
-);
-
-const practiceReportCustomPeriod = document.getElementById(
-    "practice-report-custom-period"
-);
-
-const practiceReportFrom = document.getElementById(
-    "practice-report-from"
-);
-
-const practiceReportTo = document.getElementById(
-    "practice-report-to"
-);
-
-const practiceReportCollection = document.getElementById(
-    "practice-report-collection"
-);
-
-const practiceReportType = document.getElementById(
-    "practice-report-type"
-);
-
-const practiceReportSummary = document.getElementById(
-    "practice-report-summary"
-);
+const practiceReportSection = document.getElementById("practice-report-section");
+const practiceReportPeriod = document.getElementById("practice-report-period");
+const practiceReportCustomPeriod = document.getElementById("practice-report-custom-period");
+const practiceReportFrom = document.getElementById("practice-report-from");
+const practiceReportTo = document.getElementById("practice-report-to");
+const practiceReportCollection = document.getElementById("practice-report-collection");
+const practiceReportType = document.getElementById("practice-report-type");
+const practiceReportSummary = document.getElementById("practice-report-summary");
 
 let renderPracticeReportMonths;
 let renderPracticeReportTypes;
@@ -37,29 +14,12 @@ let renderPracticeReportInsights;
 let renderPracticeReportAiInsight;
 
 /* istanbul ignore else */
-if (
-    typeof module !== "undefined" &&
-    module.exports
-) {
-    renderPracticeReportMonths =
-        require("./practice-report-months.js")
-            .displayPracticeReportMonths;
-
-    renderPracticeReportTypes =
-        require("./practice-report-types.js")
-            .displayPracticeReportTypes;
-
-    renderPracticeReportCategories =
-        require("./practice-report-categories.js")
-            .displayPracticeReportCategories;
-
-    renderPracticeReportInsights =
-        require("./practice-report-insights.js")
-            .displayPracticeReportInsights;
-
-    renderPracticeReportAiInsight =
-        require("./practice-report-ai.js")
-            .displayPracticeReportAiInsight;
+if (typeof module !== "undefined" && module.exports) {
+    renderPracticeReportMonths = require("./practice-report-months.js").displayPracticeReportMonths;
+    renderPracticeReportTypes = require("./practice-report-types.js").displayPracticeReportTypes;
+    renderPracticeReportCategories = require("./practice-report-categories.js").displayPracticeReportCategories;
+    renderPracticeReportInsights = require("./practice-report-insights.js").displayPracticeReportInsights;
+    renderPracticeReportAiInsight = require("./practice-report-ai.js").displayPracticeReportAiInsight;
 } else {
     renderPracticeReportMonths = displayPracticeReportMonths;
     renderPracticeReportTypes = displayPracticeReportTypes;
@@ -69,8 +29,7 @@ if (
 }
 
 function updateCustomPeriodVisibility() {
-    practiceReportCustomPeriod.hidden =
-        practiceReportPeriod.value !== "custom";
+    practiceReportCustomPeriod.hidden = practiceReportPeriod.value !== "custom";
 }
 
 function populatePracticeReportCollections() {
@@ -84,7 +43,6 @@ function populatePracticeReportCollections() {
         const option = document.createElement("option");
         option.value = collection.name;
         option.textContent = collection.name;
-
         practiceReportCollection.appendChild(option);
     }
 }
@@ -100,7 +58,6 @@ function populatePracticeReportTypes() {
         const option = document.createElement("option");
         option.value = String(type.id);
         option.textContent = type.name;
-
         practiceReportType.appendChild(option);
     }
 }
@@ -126,70 +83,33 @@ function createSummaryCard(value, label) {
 async function displayPracticeReport() {
     const filters = {
         period: practiceReportPeriod.value,
-        collection:
-            practiceReportCollection.value || null,
-        dictationTypeId:
-            practiceReportType.value || null
+        collection: practiceReportCollection.value || null,
+        dictationTypeId: practiceReportType.value || null
     };
 
     if (practiceReportPeriod.value === "custom") {
-        filters.from =
-            practiceReportFrom.value || null;
-
-        filters.to =
-            practiceReportTo.value || null;
+        filters.from = practiceReportFrom.value || null;
+        filters.to = practiceReportTo.value || null;
     }
 
     let report;
 
     try {
-        report =
-            await getStatisticsReportFromServer(
-                filters
-            );
+        report = await getStatisticsReportFromServer(filters);
     } catch (error) {
         console.error(error);
-
-        practiceReportSummary.textContent =
-            "Non è stato possibile caricare il report.";
-
+        practiceReportSummary.textContent = "Non è stato possibile caricare il report.";
         return;
     }
 
     practiceReportSummary.innerHTML = "";
 
-    const accuracyValue =
-        report.summary.accuracy == null
-            ? "—"
-            : `${report.summary.accuracy}%`;
+    const accuracyValue = report.summary.accuracy == null ? "—" : `${report.summary.accuracy}%`;
 
-    practiceReportSummary.appendChild(
-        createSummaryCard(
-            report.summary.totalDictations,
-            "Dettati"
-        )
-    );
-
-    practiceReportSummary.appendChild(
-        createSummaryCard(
-            report.summary.evaluatedCategories,
-            "Categorie valutate"
-        )
-    );
-
-    practiceReportSummary.appendChild(
-        createSummaryCard(
-            report.summary.correctCategories,
-            "Corrette"
-        )
-    );
-
-    practiceReportSummary.appendChild(
-        createSummaryCard(
-            accuracyValue,
-            "Accuratezza"
-        )
-    );
+    practiceReportSummary.appendChild(createSummaryCard(report.summary.totalDictations, "Dettati"));
+    practiceReportSummary.appendChild(createSummaryCard(report.summary.evaluatedCategories, "Categorie valutate"));
+    practiceReportSummary.appendChild(createSummaryCard(report.summary.correctCategories, "Corrette"));
+    practiceReportSummary.appendChild(createSummaryCard(accuracyValue, "Accuratezza"));
 
     renderPracticeReportMonths(report);
     renderPracticeReportTypes(report.types);
@@ -198,66 +118,37 @@ async function displayPracticeReport() {
     renderPracticeReportAiInsight("Generazione analisi...");
 
     try {
-        const aiResult =
-            await getStatisticsReportAiInsight(
-                report
-            );
-
-        renderPracticeReportAiInsight(
-            aiResult.aiInsight
-        );
+        const aiResult = await getStatisticsReportAiInsight(report);
+        renderPracticeReportAiInsight(aiResult.aiInsight);
     } catch (error) {
         console.error(error);
-
-        renderPracticeReportAiInsight(
-            "Analisi non disponibile."
-        );
+        renderPracticeReportAiInsight("Analisi non disponibile.");
     }
 }
 
-practiceReportPeriod.addEventListener(
-    "change",
-    function () {
-        updateCustomPeriodVisibility();
-        displayPracticeReport();
-    }
-);
+practiceReportPeriod.addEventListener("change", function () {
+    updateCustomPeriodVisibility();
+    displayPracticeReport();
+});
 
-practiceReportCollection.addEventListener(
-    "change",
-    displayPracticeReport
-);
-
-practiceReportType.addEventListener(
-    "change",
-    displayPracticeReport
-);
-
-practiceReportFrom.addEventListener(
-    "change",
-    displayPracticeReport
-);
-
-practiceReportTo.addEventListener(
-    "change",
-    displayPracticeReport
-);
+practiceReportCollection.addEventListener("change", displayPracticeReport);
+practiceReportType.addEventListener("change", displayPracticeReport);
+practiceReportFrom.addEventListener("change", displayPracticeReport);
+practiceReportTo.addEventListener("change", displayPracticeReport);
 
 updateCustomPeriodVisibility();
 
-window.addEventListener(
-    "collections-loaded",
-    function () {
-        populatePracticeReportCollections();
-    }
-);
+window.addEventListener("collections-loaded", function () {
+    populatePracticeReportCollections();
+});
 
-window.addEventListener(
-    "dictation-types-loaded",
-    function () {
-        populatePracticeReportTypes();
-    }
-);
+window.addEventListener("dictation-types-loaded", function () {
+    populatePracticeReportTypes();
+});
+
+window.addEventListener("dictation-types-changed", function () {
+    populatePracticeReportTypes();
+});
 
 /* istanbul ignore next */
 if (typeof module !== "undefined") {
