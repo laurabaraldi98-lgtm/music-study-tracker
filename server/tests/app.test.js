@@ -10,6 +10,15 @@ jest.mock("../db", () => ({
 }));
 
 const request = require("supertest");
+
+// Disable rate limiting here so app tests only test app behavior.
+jest.mock("../rate-limit", () => ({
+    generalLimiter: (request, response, next) => next(),
+    writeLimiter: (request, response, next) => next(),
+    reportLimiter: (request, response, next) => next(),
+    aiReportLimiter: (request, response, next) => next()
+}));
+
 const app = require("../app");
 
 describe("GET /", function () {

@@ -7,6 +7,14 @@ jest.mock("../db-context", () => ({
     withUserContext: jest.fn()
 }));
 
+// Disable rate limiting here so route tests only test route logic.
+jest.mock("../rate-limit", () => ({
+    generalLimiter: (request, response, next) => next(),
+    writeLimiter: (request, response, next) => next(),
+    reportLimiter: (request, response, next) => next(),
+    aiReportLimiter: (request, response, next) => next()
+}));
+
 const request = require("supertest");
 const { getAuth } = require("@clerk/express");
 const { withUserContext } = require("../db-context");
