@@ -210,6 +210,7 @@ The AI section is updated separately when its response becomes available.
 - Git
 - GitHub
 - GitHub Actions
+- Playwright
 - Docker
 - Visual Studio Code
 
@@ -552,9 +553,9 @@ Docker can be used to run PostgreSQL tools and apply migrations without requirin
 
 ## Testing
 
-The project includes independent automated test suites for the frontend and backend.
+The project includes separate automated test layers for frontend logic, backend logic, database security, and complete browser-level user flows.
 
-External systems are mocked where appropriate, while database security behavior is also verified separately through integration tests against a dedicated Neon test branch.
+External systems are mocked where appropriate, while database security behavior is verified separately against a dedicated Neon test branch and complete user flows are exercised through Playwright.
 
 ### Frontend Testing
 
@@ -605,6 +606,55 @@ Run them with coverage:
 
 ```bash
 npm run test:coverage
+```
+
+### End-to-End Testing
+
+End-to-end tests use Playwright and run against the complete local application stack.
+
+The E2E environment uses:
+
+- the frontend served through a local HTTP server
+- the Express backend running locally
+- Chromium through Playwright
+- Clerk authentication with a dedicated test user
+- a dedicated Neon test database
+
+Unlike the Jest unit tests, these tests exercise real user flows through the browser, frontend, backend, authentication layer, and database.
+
+The E2E suite covers:
+
+- authenticated application access
+- sidebar navigation
+- collection creation and deletion
+- custom dictation type creation and deletion
+- complete dictation creation and deletion flows
+- protection against deleting dictation types that are still in use
+- filtering saved dictations by collection
+- calendar rendering and session details
+- calendar filtering by collection
+- navigation between calendar months
+- Practice Report summary statistics
+- Practice Report filtering by dictation type
+- Practice Report filtering by collection
+- custom Practice Report date ranges
+
+Test data uses unique names and is cleaned up after each flow so the tests remain isolated from one another and from existing test data.
+
+The suite waits for relevant network responses and UI updates rather than relying on arbitrary delays.
+
+The authenticated browser session is created during Playwright setup and reused through Playwright storage state.
+
+Run the complete E2E suite from the project root:
+
+```bash
+npm run test:e2e
+```
+
+Run an individual Playwright test:
+
+```bash
+npx playwright test e2e/practice-report-filters.spec.js
 ```
 
 ### Backend Testing
@@ -708,7 +758,9 @@ Automated tests are run on repository pushes and pull requests so regressions ca
 
 Backend CI runs the unit and route test suite with coverage separately from the PostgreSQL RLS integration suite.
 
-The integration suite connects to the dedicated Neon test branch through the `TEST_DATABASE_URL` GitHub Actions secret.
+A separate Playwright workflow runs the end-to-end suite using Chromium, the local frontend and backend, a dedicated Clerk test user, and the dedicated Neon test database.
+
+The RLS integration and E2E workflows connect to the dedicated Neon test branch through the `TEST_DATABASE_URL` GitHub Actions secret.
 
 Continuous deployment is handled by:
 
@@ -722,9 +774,13 @@ GitHub
    ↓
 GitHub Actions
    ↓
-Unit and route tests with coverage
+Frontend Jest tests
 +
-RLS integration tests
+Backend unit and route tests with coverage
++
+PostgreSQL RLS integration tests
++
+Playwright end-to-end tests
    ↓
 Netlify / Vercel deployment
 ```
@@ -738,7 +794,7 @@ git clone https://github.com/laurabaraldi98-lgtm/music-study-tracker.git
 cd music-study-tracker
 ```
 
-### 2. Install Frontend Test Dependencies
+### 2. Install Frontend and E2E Dependencies
 
 From the project root:
 
@@ -775,6 +831,8 @@ TEST_DATABASE_URL=your_test_postgresql_connection_string
 ```
 
 The Clerk environment for the backend must also be configured with the credentials for the Clerk instance used by the application.
+
+Playwright E2E tests additionally require the Clerk test environment and dedicated E2E user configuration.
 
 Never commit secret credentials or `.env` files.
 
@@ -844,6 +902,7 @@ That process led to the addition of:
 - AI-assisted report commentary
 - database-level Row Level Security
 - database integration testing
+- browser-based end-to-end testing
 
 The application was progressively converted into a complete full-stack system using Node.js, Express, PostgreSQL, Clerk, and cloud deployment.
 
@@ -866,10 +925,13 @@ Recent development has focused on the Practice Report, application architecture,
 - restricted runtime database access
 - dedicated RLS integration tests
 - dedicated Neon integration-test environment
+- Playwright end-to-end testing
+- authenticated browser test setup with Clerk
+- dedicated E2E test data and cleanup
 - comprehensive frontend testing
 - comprehensive backend unit and route testing
 - 100% statement, branch, function, and line coverage for the tested application logic
-- GitHub Actions integration-test execution
+- GitHub Actions execution for backend, RLS integration, and Playwright E2E tests
 
 ## Planned Improvements
 
