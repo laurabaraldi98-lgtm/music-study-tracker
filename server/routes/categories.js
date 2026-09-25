@@ -201,6 +201,7 @@ router.post("/", writeLimiter, async function (request, response) {
                     FROM dictation_types
                     WHERE dictation_types.id = $3
                     AND dictation_types.user_id = $2
+                    AND dictation_types.is_archived = FALSE
                     RETURNING
                         id,
                         name,

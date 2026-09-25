@@ -16,7 +16,7 @@ module.exports = defineConfig({
             reuseExistingServer: true
         },
         {
-            command: "node server/server.js",
+            command: "cd server && node server.js",
             url: "http://127.0.0.1:3000",
             reuseExistingServer: true
         }

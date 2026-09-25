@@ -60,6 +60,7 @@ router.get("/", async function (request, response) {
                 SELECT *
                 FROM dictation_types
                 WHERE user_id = $1
+                AND is_archived = FALSE
                 ORDER BY id
                 `,
                 [auth.userId]
@@ -86,9 +87,30 @@ router.post("/", writeLimiter, async function (request, response) {
         return response.status(400).json({ error: "Nome del tipo di dettato non valido" });
     }
 
+    const cleanName = name.trim();
+
     try {
         const result = await withUserContext(auth.userId, async function (client) {
-            return client.query(
+            const reactivatedResult = await client.query(
+                `
+                UPDATE dictation_types
+                SET is_archived = FALSE
+                WHERE user_id = $1
+                AND LOWER(name) = LOWER($2)
+                AND is_archived = TRUE
+                RETURNING *
+                `,
+                [auth.userId, cleanName]
+            );
+
+            if (reactivatedResult.rows.length > 0) {
+                return {
+                    dictationType: reactivatedResult.rows[0],
+                    reactivated: true
+                };
+            }
+
+            const createdResult = await client.query(
                 `
                 INSERT INTO dictation_types (
                     name,
@@ -98,11 +120,18 @@ router.post("/", writeLimiter, async function (request, response) {
                 VALUES ($1, $2, FALSE)
                 RETURNING *
                 `,
-                [name.trim(), auth.userId]
+                [cleanName, auth.userId]
             );
+
+            return {
+                dictationType: createdResult.rows[0],
+                reactivated: false
+            };
         });
 
-        response.status(201).json(result.rows[0]);
+        response
+            .status(result.reactivated ? 200 : 201)
+            .json(result.dictationType);
     } catch (error) {
         if (error.code === "23505") {
             return response.status(409).json({ error: "Esiste già un tipo di dettato con questo nome" });
@@ -128,7 +157,56 @@ router.delete("/:id", writeLimiter, async function (request, response) {
 
     try {
         const result = await withUserContext(auth.userId, async function (client) {
-            return client.query(
+            const typeResult = await client.query(
+                `
+                SELECT *
+                FROM dictation_types
+                WHERE id = $1
+                AND user_id = $2
+                AND is_archived = FALSE
+                `,
+                [typeId, auth.userId]
+            );
+
+            if (typeResult.rows.length === 0) {
+                return null;
+            }
+
+            const usageResult = await client.query(
+                `
+                SELECT
+                    EXISTS (
+                        SELECT 1
+                        FROM dictations
+                        WHERE dictation_type_id = $1
+                        AND user_id = $2
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM categories
+                        WHERE dictation_type_id = $1
+                        AND user_id = $2
+                    ) AS is_used
+                `,
+                [typeId, auth.userId]
+            );
+
+            if (usageResult.rows[0].is_used) {
+                const archivedResult = await client.query(
+                    `
+                    UPDATE dictation_types
+                    SET is_archived = TRUE
+                    WHERE id = $1
+                    AND user_id = $2
+                    RETURNING *
+                    `,
+                    [typeId, auth.userId]
+                );
+
+                return archivedResult.rows[0];
+            }
+
+            const deletedResult = await client.query(
                 `
                 DELETE FROM dictation_types
                 WHERE id = $1
@@ -137,18 +215,16 @@ router.delete("/:id", writeLimiter, async function (request, response) {
                 `,
                 [typeId, auth.userId]
             );
+
+            return deletedResult.rows[0];
         });
 
-        if (result.rows.length === 0) {
+        if (!result) {
             return response.status(404).json({ error: "Tipo di dettato non trovato" });
         }
 
-        response.json(result.rows[0]);
+        response.json(result);
     } catch (error) {
-        if (error.code === "23503" || error.code === "23001") {
-            return response.status(409).json({ error: "Non puoi eliminare un tipo utilizzato da dettati o categorie" });
-        }
-
         console.error(error);
         response.status(500).json({ error: "Errore durante la cancellazione del tipo di dettato" });
     }
