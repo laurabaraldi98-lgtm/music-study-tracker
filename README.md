@@ -65,6 +65,22 @@ The application includes the default rhythmic, melodic, and harmonic dictation t
 
 Categories are associated with a specific dictation type, allowing the system to support study workflows beyond the original predefined categories.
 
+Custom dictation types that have never been used can be permanently deleted.
+
+If a dictation type is already referenced by saved dictations or categories, removing it archives the type instead of deleting the underlying database record.
+
+Archived types:
+
+- are hidden from the list of available types
+- cannot be selected for new dictations
+- cannot be used when creating new categories
+- remain associated with previously saved data
+- preserve the original type name when historical dictations are displayed
+
+Creating a new type with the same name as an archived type reactivates the existing database record instead of creating a duplicate.
+
+This preserves historical relationships while still allowing users to remove unused options from their current study workflow.
+
 ### Interactive Calendar
 
 - Browse practice sessions through a monthly calendar
@@ -402,6 +418,10 @@ The backend exposes REST endpoints for the application's main resources.
 
 Supports retrieving, creating, and deleting user-specific practice sessions.
 
+New dictations can only reference active dictation types.
+
+Previously saved dictations continue to resolve the name of an archived type so historical data remains readable.
+
 ### Categories
 
 ```text
@@ -409,6 +429,8 @@ Supports retrieving, creating, and deleting user-specific practice sessions.
 ```
 
 Supports retrieving, creating, and deleting categories associated with the authenticated user.
+
+New categories can only be associated with active dictation types.
 
 ### Collections
 
@@ -425,6 +447,14 @@ Supports retrieving, creating, and deleting optional practice collections.
 ```
 
 Supports the default dictation types as well as custom user-created types.
+
+The endpoint returns active types only.
+
+Deleting an unused custom type permanently removes it.
+
+Deleting a type that is already referenced by dictations or categories archives it instead.
+
+Creating a type whose name matches an archived type reactivates the existing record.
 
 ### Statistics
 
@@ -451,6 +481,7 @@ The backend also handles:
 - missing resources
 - database errors
 - user-specific filtering
+- archived-resource validation
 - API rate limiting
 - appropriate HTTP error responses
 
@@ -458,7 +489,7 @@ The backend also handles:
 
 The Express API uses `express-rate-limit` to reduce excessive traffic, protect database operations, limit accidental request loops, and restrict repeated calls to external AI services.
 
-The current limits are:
+The current production limits are:
 
 | Request type | Limit |
 | --- | ---: |
@@ -491,6 +522,12 @@ When a limit is exceeded, the backend responds with HTTP status:
 ```text
 429 Too Many Requests
 ```
+
+The Playwright E2E environment explicitly enables a dedicated test mode with higher rate-limit thresholds.
+
+This prevents a full automated browser suite running with the same dedicated Clerk test user from being blocked by production-oriented request limits.
+
+Production limits remain unchanged.
 
 The current limiter uses the default in-memory store.
 
@@ -568,7 +605,9 @@ The main application data includes:
 
 Dictations and categories are associated with both a user and a dictation type.
 
-This allows each account to maintain an independent study configuration.
+Dictation types also include an archive state used to preserve historical references while removing inactive types from new study workflows.
+
+This allows each account to maintain an independent study configuration without deleting type records that are still referenced by existing data.
 
 User-owned tables are protected with PostgreSQL Row Level Security so database access remains scoped to the authenticated application's user context.
 
@@ -586,6 +625,7 @@ Current migrations include:
 001_initial_schema.sql
 002_add_dictation_types.sql
 003_enable_rls.sql
+004_archive_dictation_types.sql
 ```
 
 The initial migration creates the original PostgreSQL structure.
@@ -594,14 +634,17 @@ The second migration introduces custom dictation types, associates existing cate
 
 The third migration enables Row Level Security on the user-owned tables and creates policies based on the transaction-local `app.user_id` setting.
 
+The fourth migration adds the `is_archived` state to dictation types so types already referenced by historical data can be archived instead of permanently deleted.
+
 Migrations should be applied in filename order.
 
 Example:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/003_enable_rls.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/003_enable_rls.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/004_archive_dictation_types.sql
 ```
 
 Administrative credentials should be used when applying migrations, while the deployed application uses the restricted runtime database role.
@@ -678,6 +721,7 @@ The E2E environment uses:
 - Chromium through Playwright
 - Clerk authentication with a dedicated test user
 - a dedicated Neon test database
+- elevated rate-limit thresholds enabled only for the E2E environment
 
 Unlike the Jest unit tests, these tests exercise real user flows through the browser, frontend, backend, authentication layer, and database.
 
@@ -687,8 +731,11 @@ The E2E suite covers:
 - sidebar navigation
 - collection creation and deletion
 - custom dictation type creation and deletion
+- archiving dictation types that are already in use
+- preservation of saved dictations when their type is archived
+- hiding archived types from new dictations
+- reactivating an archived type when the same name is created again
 - complete dictation creation and deletion flows
-- protection against deleting dictation types that are still in use
 - filtering saved dictations by collection
 - calendar rendering and session details
 - calendar filtering by collection
@@ -698,7 +745,11 @@ The E2E suite covers:
 - Practice Report filtering by collection
 - custom Practice Report date ranges
 
-Test data uses unique names and is cleaned up after each flow so the tests remain isolated from one another and from existing test data.
+The E2E suite runs serially because the tests share a dedicated authenticated user and test database.
+
+Running the browser flows with one worker prevents shared-state interference between tests.
+
+Test data uses unique names so individual test runs remain isolated from existing test data.
 
 The suite waits for relevant network responses and UI updates rather than relying on arbitrary delays.
 
@@ -732,6 +783,11 @@ The unit and route test suite covers areas including:
 - collection management
 - category management
 - custom dictation type management
+- archiving used dictation types
+- permanently deleting unused dictation types
+- reactivating archived dictation types
+- rejecting archived types for new dictations
+- rejecting archived types for new categories
 - report period resolution
 - custom report date ranges
 - collection filters
@@ -752,18 +808,14 @@ The unit and route test suite covers areas including:
 - write-operation rate limiting
 - Practice Report rate limiting
 - AI analysis rate limiting
+- elevated E2E rate-limit configuration
 - HTTP 429 responses after configured limits are exceeded
 
 PostgreSQL queries, Clerk authentication, Gemini calls, and rate limiting are mocked where appropriate in route-focused tests so those tests remain isolated from infrastructure concerns.
 
 The rate-limit implementation is tested independently using real Express middleware and Supertest requests.
 
-The tested backend application logic achieves:
-
-- 100% statement coverage
-- 100% branch coverage
-- 100% function coverage
-- 100% line coverage
+The tested backend application logic achieves full coverage for the application modules included in the backend coverage target, with the database connection module handled separately from route and service coverage.
 
 Run backend unit and route tests from the `server` directory:
 
@@ -895,8 +947,13 @@ The backend requires a PostgreSQL connection string and Gemini API key:
 
 ```env
 DATABASE_URL=your_postgresql_connection_string
+ADMIN_DATABASE_URL=your_admin_postgresql_connection_string
 GEMINI_API_KEY=your_gemini_api_key
 ```
+
+`DATABASE_URL` should use the restricted runtime database role.
+
+`ADMIN_DATABASE_URL` should use the administrative database role and is intended for migrations and database administration.
 
 For local database integration testing, configure a separate connection to the dedicated Neon test branch:
 
@@ -920,6 +977,7 @@ Apply database migrations in order using administrative database credentials:
 psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/001_initial_schema.sql
 psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/002_add_dictation_types.sql
 psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/003_enable_rls.sql
+psql "$ADMIN_DATABASE_URL" -v ON_ERROR_STOP=1 -f database/migrations/004_archive_dictation_types.sql
 ```
 
 The runtime `DATABASE_URL` should use the restricted application database role rather than administrative credentials.
@@ -972,6 +1030,7 @@ That process led to the addition of:
 - an interactive calendar
 - improved mobile usability
 - custom dictation types
+- safe archiving and reactivation of used dictation types
 - backend-generated analytics
 - daily and monthly progress visualization
 - deterministic performance insights
@@ -987,9 +1046,12 @@ The application was progressively converted into a complete full-stack system us
 
 The application is deployed and its main workflows are functional.
 
-Recent development has focused on the Practice Report, application architecture, testing, database security, and API protection, including:
+Recent development has focused on the Practice Report, application architecture, testing, database security, API protection, and safer lifecycle management of user-created study data, including:
 
 - custom dictation types
+- archive-and-reactivate behavior for used dictation types
+- preservation of historical dictation relationships
+- prevention of archived types being used for new dictations and categories
 - modular navigation
 - modular CSS
 - backend statistical aggregation
@@ -1004,14 +1066,14 @@ Recent development has focused on the Practice Report, application architecture,
 - dedicated Neon integration-test environment
 - Playwright end-to-end testing
 - authenticated browser test setup with Clerk
-- dedicated E2E test data and cleanup
+- serial E2E execution against shared test infrastructure
+- E2E-specific elevated rate-limit thresholds
 - API rate limiting
 - stricter limits for write operations and AI requests
 - authenticated-user rate-limit keys with IP fallback
 - dedicated rate-limit tests
 - comprehensive frontend testing
 - comprehensive backend unit and route testing
-- 100% statement, branch, function, and line coverage for the tested application logic
 - GitHub Actions execution for backend, RLS integration, and Playwright E2E tests
 
 ## Planned Improvements
@@ -1025,5 +1087,6 @@ Possible future improvements include:
 - additional statistical visualizations
 - a pre-populated public demo mode
 - shared rate-limit storage for globally coordinated counters across multiple backend instances
+- expanded real-database integration coverage across additional user-owned resources
 - continued UI refinements
 - additional mobile interface improvements
