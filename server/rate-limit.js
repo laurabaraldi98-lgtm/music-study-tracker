@@ -1,6 +1,8 @@
 const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 const { getAuth } = require("@clerk/express");
 
+const isE2ETest = process.env.E2E_TEST === "true";
+
 function getRateLimitKey(request) {
     const auth = getAuth(request);
 
@@ -13,7 +15,7 @@ function getRateLimitKey(request) {
 
 const generalLimiter = rateLimit({
     windowMs: 60 * 1000,
-    limit: 100,
+    limit: isE2ETest ? 1000 : 100,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     keyGenerator: getRateLimitKey,
@@ -24,7 +26,7 @@ const generalLimiter = rateLimit({
 
 const writeLimiter = rateLimit({
     windowMs: 60 * 1000,
-    limit: 30,
+    limit: isE2ETest ? 1000 : 30,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     keyGenerator: getRateLimitKey,
@@ -35,7 +37,7 @@ const writeLimiter = rateLimit({
 
 const reportLimiter = rateLimit({
     windowMs: 60 * 1000,
-    limit: 30,
+    limit: isE2ETest ? 1000 : 30,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     keyGenerator: getRateLimitKey,
@@ -46,7 +48,7 @@ const reportLimiter = rateLimit({
 
 const aiReportLimiter = rateLimit({
     windowMs: 60 * 1000,
-    limit: 5,
+    limit: isE2ETest ? 1000 : 5,
     standardHeaders: "draft-8",
     legacyHeaders: false,
     keyGenerator: getRateLimitKey,

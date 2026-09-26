@@ -107,3 +107,26 @@ test("AI report limiter blocks requests after 5 per minute", async function () {
         error: "Troppe richieste di analisi AI. Riprova tra poco."
     });
 });
+
+test("uses higher rate limits during E2E tests", function () {
+    const originalE2ETest = process.env.E2E_TEST;
+
+    process.env.E2E_TEST = "true";
+
+    jest.resetModules();
+
+    jest.isolateModules(function () {
+        const e2eRateLimit = require("../rate-limit");
+
+        expect(e2eRateLimit.generalLimiter).toBeDefined();
+        expect(e2eRateLimit.writeLimiter).toBeDefined();
+        expect(e2eRateLimit.reportLimiter).toBeDefined();
+        expect(e2eRateLimit.aiReportLimiter).toBeDefined();
+    });
+
+    if (originalE2ETest === undefined) {
+        delete process.env.E2E_TEST;
+    } else {
+        process.env.E2E_TEST = originalE2ETest;
+    }
+});

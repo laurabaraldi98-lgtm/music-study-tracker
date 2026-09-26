@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE dictation_types
+ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT FALSE;
+
+COMMIT;

@@ -1,27 +1,33 @@
 const { test, expect } = require("@playwright/test");
 
-test("user cannot delete a dictation type that is used by a dictation", async function ({ page }) {
+test("used dictation type is archived without deleting saved dictations and can be reactivated", async function ({ page }) {
     const uniqueId = Date.now();
-    const typeName = `E2E Restricted Type ${uniqueId}`;
-    const dictationName = `E2E Restricted Dictation ${uniqueId}`;
+    const typeName = `E2E Archived Type ${uniqueId}`;
+    const dictationName = `E2E Archived Dictation ${uniqueId}`;
 
     const dictationTypesLoaded = page.waitForResponse(function (response) {
-        return response.url().endsWith("/dictation-types") && response.request().method() === "GET" && response.ok();
+        return response.url().endsWith("/dictation-types") &&
+            response.request().method() === "GET" &&
+            response.ok();
     });
 
     await page.goto("/");
     await dictationTypesLoaded;
 
+    // Create a custom dictation type.
     await page.getByRole("button", { name: "Gestisci tipi di dettato" }).click();
     await page.locator("#new-dictation-type").fill(typeName);
 
     const typeCreated = page.waitForResponse(function (response) {
-        return response.url().endsWith("/dictation-types") && response.request().method() === "POST" && response.ok();
+        return response.url().endsWith("/dictation-types") &&
+            response.request().method() === "POST" &&
+            response.status() === 201;
     });
 
     await page.locator("#add-dictation-type-button").click();
     await typeCreated;
 
+    // Create a dictation that uses the custom type.
     const typeOption = page.locator("#dictation-type option").filter({ hasText: typeName });
     const typeId = await typeOption.getAttribute("value");
 
@@ -31,76 +37,67 @@ test("user cannot delete a dictation type that is used by a dictation", async fu
     await page.locator("#youtube-link").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
 
     const dictationCreated = page.waitForResponse(function (response) {
-        return response.url().endsWith("/dictations") && response.request().method() === "POST" && response.ok();
+        return response.url().endsWith("/dictations") &&
+            response.request().method() === "POST" &&
+            response.ok();
     });
 
     await page.locator("#save-button").click();
     await dictationCreated;
 
+    // Removing a used type should archive it instead of deleting it.
     const typeRow = page.locator("#dictation-types-list div").filter({ hasText: typeName });
 
-    // The first dialog is the delete confirmation; the second is the backend 409 error shown as an alert.
     page.once("dialog", async function (dialog) {
         await dialog.accept();
     });
 
-    const deleteRejected = page.waitForResponse(function (response) {
-        return response.url().includes("/dictation-types/") && response.request().method() === "DELETE" && response.status() === 409;
-    });
-
-    const errorDialog = page.waitForEvent("dialog", {
-        predicate: function (dialog) {
-            return dialog.type() === "alert";
-        }
+    const typeArchived = page.waitForResponse(function (response) {
+        return response.url().includes("/dictation-types/") &&
+            response.request().method() === "DELETE" &&
+            response.ok();
     });
 
     await typeRow.getByRole("button", { name: "Rimuovi" }).click();
-    await deleteRejected;
+    await typeArchived;
 
-    const dialog = await errorDialog;
+    // The archived type should no longer be available for new dictations.
+    await expect(page.locator("#dictation-types-list")).not.toContainText(typeName);
+    await expect(page.locator("#dictation-type")).not.toContainText(typeName);
 
-    expect(dialog.message()).toBe("Non puoi eliminare un tipo utilizzato da dettati o categorie");
-    await dialog.accept();
-
-    await expect(page.locator("#dictation-types-list")).toContainText(typeName);
-
+    // The existing dictation must remain saved.
     const savedDictationsLoaded = page.waitForResponse(function (response) {
-        return response.url().endsWith("/dictations") && response.request().method() === "GET" && response.ok();
+        return response.url().endsWith("/dictations") &&
+            response.request().method() === "GET" &&
+            response.ok();
     });
 
     await page.locator("#sidebar-toggle").click();
     await page.getByRole("button", { name: "Dettati salvati" }).click();
     await savedDictationsLoaded;
 
-    const savedDictation = page.locator("#saved-dictations-container details").filter({ hasText: dictationName });
-
-    await savedDictation.locator("summary").click();
-
-    page.once("dialog", async function (dialog) {
-        await dialog.accept();
+    const savedDictation = page.locator("#saved-dictations-container details").filter({
+        hasText: dictationName
     });
 
-    const dictationDeleted = page.waitForResponse(function (response) {
-        return response.url().includes("/dictations/") && response.request().method() === "DELETE" && response.ok();
-    });
+    await expect(savedDictation).toHaveCount(1);
 
-    await savedDictation.getByRole("button", { name: "Elimina" }).click();
-    await dictationDeleted;
-
+    // Creating the same type again should reactivate the archived record.
     await page.locator("#sidebar-toggle").click();
     await page.getByRole("button", { name: "Nuovo dettato" }).click();
+    await page.locator("#new-dictation-type").fill(typeName);
 
-    // Cleanup: once the dependent dictation is gone, the type can be deleted normally.
-    page.once("dialog", async function (dialog) {
-        await dialog.accept();
+    const typeReactivated = page.waitForResponse(function (response) {
+        return response.url().endsWith("/dictation-types") &&
+            response.request().method() === "POST";
     });
 
-    const typeDeleted = page.waitForResponse(function (response) {
-        return response.url().includes("/dictation-types/") && response.request().method() === "DELETE" && response.ok();
-    });
+    await page.locator("#add-dictation-type-button").click();
 
-    await typeRow.getByRole("button", { name: "Rimuovi" }).click();
-    await typeDeleted;
+    const reactivationResponse = await typeReactivated;
 
-    await expect(page.locator("#dictation-types-list")).not.toContainText(typeName);
+    expect(reactivationResponse.status()).toBe(200);
+
+    await expect(page.locator("#dictation-types-list")).toContainText(typeName);
+    await expect(page.locator("#dictation-type")).toContainText(typeName);
 });

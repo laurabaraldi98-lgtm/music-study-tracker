@@ -246,6 +246,21 @@ describe("POST /dictations", function () {
         expect(withUserContext).toHaveBeenCalledWith("user_test", expect.any(Function));
     });
 
+    test("does not create a dictation with an archived type", async function () {
+        getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
+        client.query.mockResolvedValue({ rows: [] });
+
+        const response = await request(app).post("/dictations").send(validBody);
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({ error: "Tipo di dettato non trovato" });
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("AND dictation_types.is_archived = FALSE"),
+            expect.any(Array)
+        );
+    });
+
     test("creates a dictation linked to the selected type", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
 

@@ -294,6 +294,34 @@ describe("POST /categories", function () {
         );
     });
 
+    test("does not create a category with an archived dictation type", async function () {
+        getAuth.mockReturnValue({
+            isAuthenticated: true,
+            userId: "user_test"
+        });
+
+        client.query.mockResolvedValue({
+            rows: []
+        });
+
+        const response = await request(app)
+            .post("/categories")
+            .send({
+                dictationTypeId: 2,
+                name: "Memoria melodica"
+            });
+
+        expect(response.status).toBe(404);
+        expect(response.body).toEqual({
+            error: "Tipo di dettato non trovato"
+        });
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("AND dictation_types.is_archived = FALSE"),
+            expect.any(Array)
+        );
+    });
+
     test("creates a category linked to the selected dictation type", async function () {
         getAuth.mockReturnValue({
             isAuthenticated: true,

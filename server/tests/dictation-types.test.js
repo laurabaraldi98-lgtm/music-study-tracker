@@ -11,7 +11,6 @@ const request = require("supertest");
 const { getAuth } = require("@clerk/express");
 const { withUserContext } = require("../db-context");
 
-// Disable rate limiting here so route tests only test route logic.
 jest.mock("../rate-limit", () => ({
     generalLimiter: (request, response, next) => next(),
     writeLimiter: (request, response, next) => next(),
@@ -25,6 +24,7 @@ let client;
 
 beforeEach(function () {
     client = { query: jest.fn() };
+
     withUserContext.mockImplementation(async function (userId, callback) {
         return callback(client);
     });
@@ -45,13 +45,13 @@ describe("GET /dictation-types", function () {
         expect(withUserContext).not.toHaveBeenCalled();
     });
 
-    test("returns the authenticated user's dictation types", async function () {
+    test("returns the authenticated user's active dictation types", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
 
         const savedTypes = [
-            { id: 1, name: "Ritmico", user_id: "user_test", is_default: true },
-            { id: 2, name: "Melodico", user_id: "user_test", is_default: true },
-            { id: 3, name: "Armonico", user_id: "user_test", is_default: true }
+            { id: 1, name: "Ritmico", user_id: "user_test", is_default: true, is_archived: false },
+            { id: 2, name: "Melodico", user_id: "user_test", is_default: true, is_archived: false },
+            { id: 3, name: "Armonico", user_id: "user_test", is_default: true, is_archived: false }
         ];
 
         client.query
@@ -64,7 +64,7 @@ describe("GET /dictation-types", function () {
         expect(response.body).toEqual(savedTypes);
         expect(withUserContext).toHaveBeenCalledWith("user_test", expect.any(Function));
         expect(client.query).toHaveBeenLastCalledWith(
-            expect.stringContaining("FROM dictation_types"),
+            expect.stringContaining("AND is_archived = FALSE"),
             ["user_test"]
         );
     });
@@ -73,9 +73,9 @@ describe("GET /dictation-types", function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "new_user" });
 
         const defaultTypes = [
-            { id: 1, name: "Ritmico", user_id: "new_user", is_default: true },
-            { id: 2, name: "Melodico", user_id: "new_user", is_default: true },
-            { id: 3, name: "Armonico", user_id: "new_user", is_default: true }
+            { id: 1, name: "Ritmico", user_id: "new_user", is_default: true, is_archived: false },
+            { id: 2, name: "Melodico", user_id: "new_user", is_default: true, is_archived: false },
+            { id: 3, name: "Armonico", user_id: "new_user", is_default: true, is_archived: false }
         ];
 
         client.query
@@ -137,10 +137,13 @@ describe("POST /dictation-types", function () {
             id: 4,
             name: "Contrappuntistico",
             user_id: "user_test",
-            is_default: false
+            is_default: false,
+            is_archived: false
         };
 
-        client.query.mockResolvedValue({ rows: [savedType] });
+        client.query
+            .mockResolvedValueOnce({ rows: [] })
+            .mockResolvedValueOnce({ rows: [savedType] });
 
         const response = await request(app)
             .post("/dictation-types")
@@ -149,15 +152,53 @@ describe("POST /dictation-types", function () {
         expect(response.status).toBe(201);
         expect(response.body).toEqual(savedType);
         expect(withUserContext).toHaveBeenCalledWith("user_test", expect.any(Function));
-        expect(client.query).toHaveBeenCalledWith(
+
+        expect(client.query).toHaveBeenNthCalledWith(
+            1,
+            expect.stringContaining("SET is_archived = FALSE"),
+            ["user_test", "Contrappuntistico"]
+        );
+
+        expect(client.query).toHaveBeenNthCalledWith(
+            2,
             expect.stringContaining("INSERT INTO dictation_types"),
             ["Contrappuntistico", "user_test"]
         );
     });
 
+    test("reactivates an archived dictation type with the same name", async function () {
+        getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
+
+        const reactivatedType = {
+            id: 4,
+            name: "Contrappuntistico",
+            user_id: "user_test",
+            is_default: false,
+            is_archived: false
+        };
+
+        client.query.mockResolvedValueOnce({ rows: [reactivatedType] });
+
+        const response = await request(app)
+            .post("/dictation-types")
+            .send({ name: "  contrappuntistico  " });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(reactivatedType);
+        expect(client.query).toHaveBeenCalledTimes(1);
+
+        expect(client.query).toHaveBeenCalledWith(
+            expect.stringContaining("SET is_archived = FALSE"),
+            ["user_test", "contrappuntistico"]
+        );
+    });
+
     test("returns 409 when the name already exists", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
-        client.query.mockRejectedValue({ code: "23505" });
+
+        client.query
+            .mockResolvedValueOnce({ rows: [] })
+            .mockRejectedValueOnce({ code: "23505" });
 
         const response = await request(app)
             .post("/dictation-types")
@@ -167,7 +208,7 @@ describe("POST /dictation-types", function () {
         expect(response.body).toEqual({ error: "Esiste già un tipo di dettato con questo nome" });
     });
 
-    test("returns 500 when creating a type fails", async function () {
+    test("returns 500 when creating or reactivating a type fails", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
         client.query.mockRejectedValue(new Error("Database error"));
 
@@ -208,7 +249,7 @@ describe("DELETE /dictation-types/:id", function () {
 
     test("returns 404 when the type is not found", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
-        client.query.mockResolvedValue({ rows: [] });
+        client.query.mockResolvedValueOnce({ rows: [] });
 
         const response = await request(app).delete("/dictation-types/10");
 
@@ -217,52 +258,72 @@ describe("DELETE /dictation-types/:id", function () {
         expect(withUserContext).toHaveBeenCalledWith("user_test", expect.any(Function));
     });
 
-    test("deletes and returns the dictation type", async function () {
+    test("deletes a dictation type when it is unused", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
 
-        const deletedType = {
+        const type = {
             id: 4,
             name: "Contrappuntistico",
             user_id: "user_test",
-            is_default: false
+            is_default: false,
+            is_archived: false
         };
 
-        client.query.mockResolvedValue({ rows: [deletedType] });
+        client.query
+            .mockResolvedValueOnce({ rows: [type] })
+            .mockResolvedValueOnce({ rows: [{ is_used: false }] })
+            .mockResolvedValueOnce({ rows: [type] });
 
         const response = await request(app).delete("/dictation-types/4");
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(deletedType);
-        expect(client.query).toHaveBeenCalledWith(
+        expect(response.body).toEqual(type);
+
+        expect(client.query).toHaveBeenLastCalledWith(
             expect.stringContaining("DELETE FROM dictation_types"),
             [4, "user_test"]
         );
     });
 
-    test.each(["23503", "23001"])(
-        "returns 409 when the type is already in use (%s)",
-        async function (errorCode) {
-            getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
-            client.query.mockRejectedValue({ code: errorCode });
+    test("archives a dictation type when it is already used", async function () {
+        getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
 
-            const response = await request(app).delete("/dictation-types/1");
+        const type = {
+            id: 4,
+            name: "Contrappuntistico",
+            user_id: "user_test",
+            is_default: false,
+            is_archived: false
+        };
 
-            expect(response.status).toBe(409);
-            expect(response.body).toEqual({
-                error: "Non puoi eliminare un tipo utilizzato da dettati o categorie"
-            });
-        }
-    );
+        const archivedType = {
+            ...type,
+            is_archived: true
+        };
 
-    test("returns 500 when deleting a type fails", async function () {
+        client.query
+            .mockResolvedValueOnce({ rows: [type] })
+            .mockResolvedValueOnce({ rows: [{ is_used: true }] })
+            .mockResolvedValueOnce({ rows: [archivedType] });
+
+        const response = await request(app).delete("/dictation-types/4");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(archivedType);
+
+        expect(client.query).toHaveBeenLastCalledWith(
+            expect.stringContaining("SET is_archived = TRUE"),
+            [4, "user_test"]
+        );
+    });
+
+    test("returns 500 when deleting or archiving a type fails", async function () {
         getAuth.mockReturnValue({ isAuthenticated: true, userId: "user_test" });
         client.query.mockRejectedValue(new Error("Database error"));
 
         const response = await request(app).delete("/dictation-types/4");
 
         expect(response.status).toBe(500);
-        expect(response.body).toEqual({
-            error: "Errore durante la cancellazione del tipo di dettato"
-        });
+        expect(response.body).toEqual({ error: "Errore durante la cancellazione del tipo di dettato" });
     });
 });
